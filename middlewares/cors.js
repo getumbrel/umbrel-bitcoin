@@ -2,9 +2,8 @@ const corsOptions = {
   origin: (origin, callback) => {
     const whitelist = [
       'http://localhost:3000',
-      'http://casa-node.local',
-      'http://debug.keys.casa',
-      'chrome-extension://lnaedehiikghclgaikolambpbpeknpef',
+      'http://localhost:8080',
+      'http://umbrel.local',
       process.env.DEVICE_HOST,
     ];
 
