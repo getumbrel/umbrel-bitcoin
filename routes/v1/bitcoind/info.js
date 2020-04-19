@@ -35,4 +35,9 @@ router.get('/version', auth.jwt, safeHandler((req, res) =>
     .then(version => res.json(version))
 ));
 
+router.get('/blockinfotest', auth.jwt, safeHandler((req, res) =>
+  bitcoind.getBlock("00000000000000000003d5f7a3c07bac4ebb492bad180a3ce3f6d001fbb1dcd3")
+    .then(blockhash => res.json(blockhash))
+));
+
 module.exports = router;
