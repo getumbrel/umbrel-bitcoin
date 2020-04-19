@@ -102,7 +102,37 @@ async function getVersion() {
   return {version: version}; // eslint-disable-line object-shorthand
 }
 
+async function getBlock(hash) {
+  const blockObj = await bitcoindService.getBlock(hash);
+  return {
+    block: hash,
+    confirmations: blockObj.result.confirmations,
+    size: blockObj.result.size,
+    height: blockObj.result.height,
+    blocktime: blockObj.result.time,
+    prevblock: blockObj.result.previousblockhash,
+    nextblock: blockObj.result.nextblockhash,
+    transactions: blockObj.result.tx
+  }
+}
+
+async function getTransaction(txid) {
+  const transactionObj = await bitcoindService.getTransaction(txid);
+  return {
+    txid: txid,
+    timestamp: transactionObj.result.time,
+    confirmations: transactionObj.result.confirmations,
+    blockhash: transactionObj.result.blockhash,
+    size: transactionObj.result.size,
+    input: transactionObj.result.vin.txid,
+    utxo: transactionObj.result.vout,
+    rawtx: transactionObj.result.hex
+  }
+}
+
 module.exports = {
+  getTransaction,
+  getBlock,
   getBlockCount,
   getConnectionsCount,
   getMempoolInfo,

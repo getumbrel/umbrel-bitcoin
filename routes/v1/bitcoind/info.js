@@ -35,4 +35,15 @@ router.get('/version', auth.jwt, safeHandler((req, res) =>
     .then(version => res.json(version))
 ));
 
+// /v1/bitcoind/info/block/<hash>
+router.get('/block/:id', auth.jwt, safeHandler((req, res) =>
+  bitcoind.getBlock(req.params.id)
+    .then(blockhash => res.json(blockhash))
+));
+
+router.get('/txid/:id', auth.jwt, safeHandler((req,res) =>
+  bitcoind.getTransaction(req.params.id)
+    .then(txhash => res.json(txhash))
+));
+
 module.exports = router;
