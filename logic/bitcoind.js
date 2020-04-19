@@ -116,7 +116,22 @@ async function getBlock(hash) {
   }
 }
 
+async function getTransaction(txid) {
+  const transactionObj = await bitcoindService.getTransaction(txid);
+  return {
+    txid: txid,
+    timestamp: transactionObj.result.time,
+    confirmations: transactionObj.result.confirmations,
+    blockhash: transactionObj.result.blockhash,
+    size: transactionObj.result.size,
+    input: transactionObj.result.vin.txid,
+    utxo: transactionObj.result.vout,
+    rawtx: transactionObj.result.hex
+  }
+}
+
 module.exports = {
+  getTransaction,
   getBlock,
   getBlockCount,
   getConnectionsCount,
