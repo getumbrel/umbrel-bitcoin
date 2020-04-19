@@ -32,6 +32,26 @@ function promiseify(rpcObj, rpcFn, what) {
   });
 }
 
+function promiseifyParam(rpcObj, rpcFn, param, what) {
+  return new Promise((resolve, reject) => {
+    try {
+      rpcFn.call(rpcObj, param, (err, info) => {
+        if (err) {
+          reject(new BitcoindError(`Unable to obtain ${what}`, err));
+        } else {
+          resolve(camelizeKeys(info, '_'));
+        }
+      });
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+function getBlock(hash) {
+  return promiseifyParam(rpcClient, rpcClient.getBlock, hash, 'block info');
+}
+
 function getBlockChainInfo() {
   return promiseify(rpcClient, rpcClient.getBlockchainInfo, 'blockchain info');
 }
@@ -65,6 +85,7 @@ function help() {
 }
 
 module.exports = {
+  getBlock,
   getBlockChainInfo,
   getBlockCount,
   getPeerInfo,

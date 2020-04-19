@@ -102,7 +102,22 @@ async function getVersion() {
   return {version: version}; // eslint-disable-line object-shorthand
 }
 
+async function getBlock(hash) {
+  const blockObj = await bitcoindService.getBlock(hash);
+  return {
+    block: hash,
+    confirmations: blockObj.result.confirmations,
+    size: blockObj.result.size,
+    height: blockObj.result.height,
+    blocktime: blockObj.result.time,
+    prevblock: blockObj.result.previousblockhash,
+    nextblock: blockObj.result.nextblockhash,
+    transactions: blockObj.result.tx
+  }
+}
+
 module.exports = {
+  getBlock,
   getBlockCount,
   getConnectionsCount,
   getMempoolInfo,
