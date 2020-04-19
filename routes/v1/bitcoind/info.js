@@ -35,8 +35,9 @@ router.get('/version', auth.jwt, safeHandler((req, res) =>
     .then(version => res.json(version))
 ));
 
-router.get('/blockinfotest', auth.jwt, safeHandler((req, res) =>
-  bitcoind.getBlock("00000000000000000003d5f7a3c07bac4ebb492bad180a3ce3f6d001fbb1dcd3")
+// /v1/bitcoind/info/block/<hash>
+router.get('/block/:id', auth.jwt, safeHandler((req, res) =>
+  bitcoind.getBlock(req.params.id)
     .then(blockhash => res.json(blockhash))
 ));
 
