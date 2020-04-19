@@ -1,8 +1,8 @@
 {
-  "name": "lnapi",
-  "version": "1.18.0",
-  "description": "Application endpoints for Casa Lightning Node",
-  "author": "Casa, INC",
+  "name": "umbrel-middleware",
+  "version": "0.0.2",
+  "description": "Middleware for Umbrel Node",
+  "author": "Umbrel",
   "scripts": {
     "lint": "eslint",
     "start": "node ./bin/www",
