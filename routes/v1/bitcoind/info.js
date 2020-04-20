@@ -35,6 +35,17 @@ router.get('/version', auth.jwt, safeHandler((req, res) =>
     .then(version => res.json(version))
 ));
 
+router.get('/block', auth.jwt, safeHandler((req, res) => {
+    if (req.query.hash !== undefined && req.query.hash !== null) {
+      bitcoind.getBlock(req.query.hash)
+        .then(blockhash => res.json(blockhash))
+    } else if (req.query.height !== undefined && req.query.height !== null) {
+      bitcoind.getBlockHash(req.query.height)
+        .then(blockhash => res.json(blockhash))
+    }
+  }
+));
+
 // /v1/bitcoind/info/block/<hash>
 router.get('/block/:id', auth.jwt, safeHandler((req, res) =>
   bitcoind.getBlock(req.params.id)
