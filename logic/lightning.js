@@ -57,7 +57,7 @@ const OUTPUT_IS_DUST_ERROR = {
 function toHexString(byteObject) {
   const bytes = Object.values(byteObject);
 
-  return bytes.map(function(byte) {
+  return bytes.map(function (byte) {
 
     return ('00' + (byte & 0xFF).toString(16)).slice(-2); // eslint-disable-line no-magic-numbers
   }).join('');
@@ -72,18 +72,18 @@ async function addInvoice(amt, memo) {
 }
 
 // Creates a new managed channel.
-async function addManagedChannel(channelPoint, name, purpose) {
-  const managedChannels = await getManagedChannels();
+// async function addManagedChannel(channelPoint, name, purpose) {
+//   const managedChannels = await getManagedChannels();
 
-  // Create a new managed channel. If one exists, it will be rewritten.
-  // However, Lnd should guarantee chanId is always unique.
-  managedChannels[channelPoint] = {
-    name: name, // eslint-disable-line object-shorthand
-    purpose: purpose, // eslint-disable-line object-shorthand
-  };
+//   // Create a new managed channel. If one exists, it will be rewritten.
+//   // However, Lnd should guarantee chanId is always unique.
+//   managedChannels[channelPoint] = {
+//     name: name, // eslint-disable-line object-shorthand
+//     purpose: purpose, // eslint-disable-line object-shorthand
+//   };
 
-  await setManagedChannels(managedChannels);
-}
+//   await setManagedChannels(managedChannels);
+// }
 
 // Change your lnd password. Wallet must exist and be unlocked.
 async function changePassword(currentPassword, newPassword) {
@@ -189,9 +189,9 @@ async function estimateFeeSweep(address, fullAmtToEstimate, mempoolMinFee, confT
 
 async function estimateFeeGroupSweep(address, amt, mempoolMinFee) {
   const calls = [estimateFeeSweep(address, amt, mempoolMinFee, FAST_BLOCK_CONF_TARGET, 0, amt),
-    estimateFeeSweep(address, amt, mempoolMinFee, NORMAL_BLOCK_CONF_TARGET, 0, amt),
-    estimateFeeSweep(address, amt, mempoolMinFee, SLOW_BLOCK_CONF_TARGET, 0, amt),
-    estimateFeeSweep(address, amt, mempoolMinFee, CHEAPEST_BLOCK_CONF_TARGET, 0, amt),
+  estimateFeeSweep(address, amt, mempoolMinFee, NORMAL_BLOCK_CONF_TARGET, 0, amt),
+  estimateFeeSweep(address, amt, mempoolMinFee, SLOW_BLOCK_CONF_TARGET, 0, amt),
+  estimateFeeSweep(address, amt, mempoolMinFee, CHEAPEST_BLOCK_CONF_TARGET, 0, amt),
   ];
 
   const [fast, normal, slow, cheapest]
@@ -217,9 +217,9 @@ async function estimateFeeWrapper(address, amt, mempoolMinFee, confTarget) {
 
 async function estimateFeeGroup(address, amt, mempoolMinFee) {
   const calls = [estimateFeeWrapper(address, amt, mempoolMinFee, FAST_BLOCK_CONF_TARGET),
-    estimateFeeWrapper(address, amt, mempoolMinFee, NORMAL_BLOCK_CONF_TARGET),
-    estimateFeeWrapper(address, amt, mempoolMinFee, SLOW_BLOCK_CONF_TARGET),
-    estimateFeeWrapper(address, amt, mempoolMinFee, CHEAPEST_BLOCK_CONF_TARGET),
+  estimateFeeWrapper(address, amt, mempoolMinFee, NORMAL_BLOCK_CONF_TARGET),
+  estimateFeeWrapper(address, amt, mempoolMinFee, SLOW_BLOCK_CONF_TARGET),
+  estimateFeeWrapper(address, amt, mempoolMinFee, CHEAPEST_BLOCK_CONF_TARGET),
   ];
 
   const [fast, normal, slow, cheapest]
@@ -259,7 +259,7 @@ async function generateSeed() {
   if (lndStatus.operational) {
     const response = await lndService.generateSeed();
 
-    return {seed: response.cipherSeedMnemonic};
+    return { seed: response.cipherSeedMnemonic };
   }
 
   throw new LndError('Lnd is not operational, therefore a seed cannot be created.');
@@ -273,7 +273,7 @@ function getChannelBalance() {
 // Returns a count of all open channels.
 function getChannelCount() {
   return lndService.getOpenChannels()
-    .then(response => ({count: response.length}));
+    .then(response => ({ count: response.length }));
 }
 
 function getChannelPolicy() {
@@ -299,9 +299,9 @@ async function getInvoices() {
 
 // Return all managed channels. Managed channels are channels the user has manually created.
 // TODO: how to handle if file becomes corrupt? Suggest simply wiping the file. The channel will still exist.
-function getManagedChannels() {
-  return diskLogic.readManagedChannelsFile();
-}
+// function getManagedChannels() {
+//   return diskLogic.readManagedChannelsFile();
+// }
 
 // Returns a list of all on chain transactions.
 async function getOnChainTransactions() {
@@ -362,9 +362,9 @@ async function getOnChainTransactions() {
     } else if (transaction.amount > 0 && transaction.destAddresses.length > 0) {
       transaction.type = 'ON_CHAIN_TRANSACTION_RECEIVED';
 
-    // Positive amounts are either incoming transactions or a WaitingCloseChannel. There is no way to determine which
-    // until the transaction has at least one confirmation. Then a WaitingCloseChannel will become a pending Closing
-    // channel and will have an associated tx id.
+      // Positive amounts are either incoming transactions or a WaitingCloseChannel. There is no way to determine which
+      // until the transaction has at least one confirmation. Then a WaitingCloseChannel will become a pending Closing
+      // channel and will have an associated tx id.
     } else if (transaction.amount > 0 && transaction.destAddresses.length === 0) {
       transaction.type = 'PENDING_CLOSE';
     } else {
@@ -382,8 +382,8 @@ function getTxnHashFromChannelPoint(channelPoint) {
 }
 
 // Returns a list of all open channels.
-const getChannels = async() => {
-  const managedChannelsCall = getManagedChannels();
+const getChannels = async () => {
+  // const managedChannelsCall = getManagedChannels();
   const openChannelsCall = lndService.getOpenChannels();
   const pendingChannels = await lndService.getPendingChannels();
 
@@ -456,7 +456,7 @@ const getChannels = async() => {
 
   // Add additional managed channel data if it exists
   // Call this async, because it reads from disk
-  const managedChannels = await managedChannelsCall;
+  // const managedChannels = await managedChannelsCall;
 
   if (chainTxnCall !== null) {
     const chainTxnList = await chainTxnCall;
@@ -511,15 +511,15 @@ const getChannels = async() => {
     }
 
     // If a managed channel exists, set the name and purpose
-    if (Object.prototype.hasOwnProperty.call(managedChannels, channel.channelPoint)) {
-      channel.managed = true;
-      channel.name = managedChannels[channel.channelPoint].name;
-      channel.purpose = managedChannels[channel.channelPoint].purpose;
-    } else {
-      channel.managed = false;
-      channel.name = '';
-      channel.purpose = '';
-    }
+    // if (Object.prototype.hasOwnProperty.call(managedChannels, channel.channelPoint)) {
+    //   channel.managed = true;
+    //   channel.name = managedChannels[channel.channelPoint].name;
+    //   channel.purpose = managedChannels[channel.channelPoint].purpose;
+    // } else {
+    //   channel.managed = false;
+    //   channel.name = '';
+    //   channel.purpose = '';
+    // }
   }
 
   return allChannels;
@@ -660,7 +660,9 @@ async function openChannel(pubKey, ip, port, amt, satPerByte, name, purpose) { /
   // Lnd only allows one channel to be created with a node per block. By searching pending open channels, we can find
   // a unique identifier for the newly created channe. We will use ChannelPoint.
   const pendingChannel = await getPendingChannelDetails(PENDING_OPEN_CHANNELS, pubKey);
-  await addManagedChannel(pendingChannel.channelPoint, name, purpose);
+
+  //No need for disk logic for now
+  // await addManagedChannel(pendingChannel.channelPoint, name, purpose);
 
   return channel;
 }
@@ -711,9 +713,9 @@ function sendCoins(addr, amt, satPerByte, sendAll) {
 // Sets the managed channel data store.
 // TODO: How to prevent this from getting out of data with multiple calling threads?
 // perhaps create a mutex for reading and writing?
-function setManagedChannels(managedChannelsObject) {
-  return diskLogic.writeManagedChannelsFile(managedChannelsObject);
-}
+// function setManagedChannels(managedChannelsObject) {
+//   return diskLogic.writeManagedChannelsFile(managedChannelsObject);
+// }
 
 // Returns if lnd is operation and if the wallet is unlocked.
 async function getStatus() {
@@ -804,7 +806,13 @@ async function getVersion() {
   // Remove all beta/commit info. Fragile, LND may one day GA.
   const version = unformattedVersion.split('-', 1)[0];
 
-  return {version: version}; // eslint-disable-line object-shorthand
+  return { version: version }; // eslint-disable-line object-shorthand
+}
+
+async function getNodeAlias(pubkey) {
+  const includeChannels = false;
+  const nodeInfo = await lndService.getNodeInfo(pubkey, includeChannels);
+  return { alias: nodeInfo.node.alias }; // eslint-disable-line object-shorthand
 }
 
 function updateChannelPolicy(global, fundingTxid, outputIndex, baseFeeMsat, feeRate, timeLockDelta) {
@@ -820,6 +828,7 @@ module.exports = {
   estimateFee,
   generateAddress,
   generateSeed,
+  getNodeAlias,
   getChannelBalance,
   getChannelPolicy,
   getChannelCount,
