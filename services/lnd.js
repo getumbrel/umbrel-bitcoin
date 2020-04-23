@@ -230,6 +230,15 @@ function getInfo() {
     .then(({ lightning }) => promiseify(lightning, lightning.GetInfo, {}, 'get lnd information'));
 }
 
+function getNodeInfo(pubkey, includeChannels) {
+  const rpcPayload = {
+    pub_key: pubkey,
+    include_channels: includeChannels
+  };
+  return initializeRPCClient()
+    .then(({ lightning }) => promiseify(lightning, lightning.GetNodeInfo, rpcPayload, 'get node information'));
+}
+
 // Returns a list of lnd's currently open channels. Channels are considered open by this node and it's directly
 // connected peer after three confirmation. After six confirmations, the channel is broadcasted by this node and it's
 // directly connected peer to the broader lightning network.
@@ -422,6 +431,7 @@ module.exports = {
   getFeeReport,
   getForwardingEvents,
   getInfo,
+  getNodeInfo,
   getInvoices,
   getOpenChannels,
   getPayments,
