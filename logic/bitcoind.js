@@ -130,7 +130,16 @@ async function getTransaction(txid) {
   }
 }
 
+async function getBlockHash(height) {
+  const getBlockHashObj = await bitcoindService.getBlockHash(height);
+
+  return {
+    hash: getBlockHashObj.result
+  }
+}
+
 module.exports = {
+  getBlockHash,
   getTransaction,
   getBlock,
   getBlockCount,

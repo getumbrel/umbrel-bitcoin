@@ -64,6 +64,10 @@ function promiseifyParamTwo(rpcObj, rpcFn, param1, param2, what) {
   });
 }
 
+function getBlockHash(height) {
+  return promiseifyParam(rpcClient, rpcClient.getBlockHash, height, 'block height');
+}
+
 function getBlock(hash) {
   return promiseifyParam(rpcClient, rpcClient.getBlock, hash, 'block info');
 }
@@ -105,6 +109,7 @@ function help() {
 }
 
 module.exports = {
+  getBlockHash,
   getBlock,
   getTransaction,
   getBlockChainInfo,
