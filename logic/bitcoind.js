@@ -134,7 +134,7 @@ async function getBlockHash(height) {
   const getBlockHashObj = await bitcoindService.getBlockHash(height);
 
   return {
-    height: getBlockHashObj.result
+    hash: getBlockHashObj.result
   }
 }
 
