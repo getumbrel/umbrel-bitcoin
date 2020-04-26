@@ -71,17 +71,13 @@ async function getLocalSyncInfo() {
 
   var blockCount = blockChainInfo.blocks;
   var headerCount = blockChainInfo.headers;
-  var blockchainDifficulty = blockChainInfo.difficulty;
-  var blockchainSize = blockChainInfo.sizeOnDisk;
 
   const percentSynced = (Math.trunc(blockCount / headerCount * 10000) / 10000).toFixed(4); // eslint-disable-line no-magic-numbers, max-len
 
   return {
     percent: percentSynced,
     currentBlock: blockCount,
-    headerCount: headerCount, // eslint-disable-line object-shorthand,
-    difficulty: blockchainDifficulty,
-    size: blockchainSize
+    headerCount: headerCount // eslint-disable-line object-shorthand,
   };
 }
 
@@ -169,10 +165,9 @@ async function nodeStatusSummary() {
   const miningInfo = await bitcoindService.getMiningInfo();
 
   return {
-      blocks: blockchainInfo.result.blocks,
       difficulty: blockchainInfo.result.difficulty,
       size: blockchainInfo.result.sizeOnDisk,
-      mempool: mempoolInfo.result,
+      mempool: mempoolInfo.result.bytes,
       connections: networkInfo.result.connections,
       networkhashps: miningInfo.result.networkhashps
   }
