@@ -40,6 +40,11 @@ router.get('/version', auth.jwt, safeHandler((req, res) =>
     .then(version => res.json(version))
 ));
 
+router.get('/stats', auth.jwt, safeHandler((req, res) =>
+  bitcoind.nodeStatusDump()
+    .then(statusdump => res.json(statusdump))
+));
+
 router.get('/block', auth.jwt, safeHandler((req, res) => {
     if (req.query.hash !== undefined && req.query.hash !== null) {
       bitcoind.getBlock(req.query.hash)
