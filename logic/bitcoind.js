@@ -152,10 +152,13 @@ async function nodeStatusDump() {
   const blockchainInfo = await bitcoindService.getBlockChainInfo();
   const networkInfo = await bitcoindService.getNetworkInfo();
   const mempoolInfo = await bitcoindService.getMempoolInfo();
+  const miningInfo = await bitcoindService.getMiningInfo();
+
   return {
     blockchain_info: blockchainInfo.result,
     network_info: networkInfo.result,
-    mempool: mempoolInfo.result
+    mempool: mempoolInfo.result,
+    mining_info: miningInfo.result
   }
 }
 
