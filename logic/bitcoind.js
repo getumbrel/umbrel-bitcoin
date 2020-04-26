@@ -77,7 +77,7 @@ async function getLocalSyncInfo() {
   return {
     percent: percentSynced,
     currentBlock: blockCount,
-    headerCount: headerCount // eslint-disable-line object-shorthand
+    headerCount: headerCount // eslint-disable-line object-shorthand,
   };
 }
 
@@ -130,11 +130,46 @@ async function getTransaction(txid) {
   }
 }
 
+async function getNetworkInfo() {
+  const networkInfo = await bitcoindService.getNetworkInfo();
+
+  return networkInfo.result; // eslint-disable-line object-shorthand
+}
+
 async function getBlockHash(height) {
   const getBlockHashObj = await bitcoindService.getBlockHash(height);
 
   return {
     hash: getBlockHashObj.result
+  }
+}
+
+async function nodeStatusDump() {
+  const blockchainInfo = await bitcoindService.getBlockChainInfo();
+  const networkInfo = await bitcoindService.getNetworkInfo();
+  const mempoolInfo = await bitcoindService.getMempoolInfo();
+  const miningInfo = await bitcoindService.getMiningInfo();
+
+  return {
+    blockchain_info: blockchainInfo.result,
+    network_info: networkInfo.result,
+    mempool: mempoolInfo.result,
+    mining_info: miningInfo.result
+  }
+}
+
+async function nodeStatusSummary() {
+  const blockchainInfo = await bitcoindService.getBlockChainInfo();
+  const networkInfo = await bitcoindService.getNetworkInfo();
+  const mempoolInfo = await bitcoindService.getMempoolInfo();
+  const miningInfo = await bitcoindService.getMiningInfo();
+
+  return {
+      difficulty: blockchainInfo.result.difficulty,
+      size: blockchainInfo.result.sizeOnDisk,
+      mempool: mempoolInfo.result.bytes,
+      connections: networkInfo.result.connections,
+      networkhashps: miningInfo.result.networkhashps
   }
 }
 
@@ -144,8 +179,11 @@ module.exports = {
   getBlock,
   getBlockCount,
   getConnectionsCount,
+  getNetworkInfo,
   getMempoolInfo,
   getStatus,
   getSyncStatus,
-  getVersion
+  getVersion,
+  nodeStatusDump,
+  nodeStatusSummary
 };

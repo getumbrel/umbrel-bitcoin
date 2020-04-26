@@ -96,6 +96,9 @@ function getNetworkInfo() {
   return promiseify(rpcClient, rpcClient.getNetworkInfo, 'network info');
 }
 
+function getMiningInfo() {
+    return promiseify(rpcClient, rpcClient.getMiningInfo, 'mining info');
+}
 function help() {
   // TODO: missing from the library, but can add it not sure how to package.
   // rpc.uptime(function (err, res) {
@@ -109,6 +112,7 @@ function help() {
 }
 
 module.exports = {
+  getMiningInfo,
   getBlockHash,
   getBlock,
   getTransaction,

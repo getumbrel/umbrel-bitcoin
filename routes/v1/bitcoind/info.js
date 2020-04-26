@@ -5,6 +5,11 @@ const bitcoind = require('logic/bitcoind.js');
 const auth = require('middlewares/auth.js');
 const safeHandler = require('utils/safeHandler');
 
+router.get('/mempool', auth.jwt, safeHandler((req, res) =>
+  bitcoind.getMempoolInfo()
+    .then(mempool => res.json(mempool.result))
+));
+
 router.get('/addresses', auth.jwt, safeHandler((req, res) =>
   networkLogic.getBitcoindAddresses()
     .then(addresses => res.json(addresses))
@@ -33,6 +38,16 @@ router.get('/sync', auth.jwt, safeHandler((req, res) =>
 router.get('/version', auth.jwt, safeHandler((req, res) =>
   bitcoind.getVersion()
     .then(version => res.json(version))
+));
+
+router.get('/statsDump', auth.jwt, safeHandler((req, res) =>
+  bitcoind.nodeStatusDump()
+    .then(statusdump => res.json(statusdump))
+));
+
+router.get('/stats', auth.jwt, safeHandler((req, res) =>
+  bitcoind.nodeStatusSummary()
+    .then(statussumarry => res.json(statussumarry))
 ));
 
 router.get('/block', auth.jwt, safeHandler((req, res) => {
