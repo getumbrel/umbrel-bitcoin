@@ -159,6 +159,20 @@ async function nodeStatusDump() {
   }
 }
 
+async function nodeStatusSummary() {
+  const blockchainInfo = await bitcoindService.getBlockChainInfo();
+  const networkInfo = await bitcoindService.getNetworkInfo();
+  const mempoolInfo = await bitcoindService.getMempoolInfo();
+
+  return {
+      blocks: blockchainInfo.result.blocks,
+      difficulty: blockchainInfo.result.difficulty,
+      size: blockchainInfo.result.sizeOnDisk,
+      mempool: mempoolInfo.result,
+      connections: networkInfo.result.connections,
+  }
+}
+
 module.exports = {
   getBlockHash,
   getTransaction,
@@ -170,5 +184,6 @@ module.exports = {
   getStatus,
   getSyncStatus,
   getVersion,
-  nodeStatusDump
+  nodeStatusDump,
+  nodeStatusSummary
 };

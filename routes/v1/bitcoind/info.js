@@ -40,9 +40,14 @@ router.get('/version', auth.jwt, safeHandler((req, res) =>
     .then(version => res.json(version))
 ));
 
-router.get('/stats', auth.jwt, safeHandler((req, res) =>
+router.get('/statsDump', auth.jwt, safeHandler((req, res) =>
   bitcoind.nodeStatusDump()
     .then(statusdump => res.json(statusdump))
+));
+
+router.get('/stats', auth.jwt, safeHandler((req, res) =>
+  bitcoind.nodeStatusSummary()
+    .then(statussumarry => res.json(statussumarry))
 ));
 
 router.get('/block', auth.jwt, safeHandler((req, res) => {
