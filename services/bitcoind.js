@@ -96,6 +96,10 @@ function getNetworkInfo() {
   return promiseify(rpcClient, rpcClient.getNetworkInfo, 'network info');
 }
 
+function getHashesPerSec() {
+  return promiseify(rpcClient, rpcClient.getNetworkHashPs, 'network hash per second');
+}
+
 function help() {
   // TODO: missing from the library, but can add it not sure how to package.
   // rpc.uptime(function (err, res) {
@@ -109,6 +113,7 @@ function help() {
 }
 
 module.exports = {
+  getHashesPerSec,
   getBlockHash,
   getBlock,
   getTransaction,

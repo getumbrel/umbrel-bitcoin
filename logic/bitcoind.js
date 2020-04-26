@@ -164,12 +164,17 @@ async function nodeStatusSummary() {
   const networkInfo = await bitcoindService.getNetworkInfo();
   const mempoolInfo = await bitcoindService.getMempoolInfo();
 
+  // This line requires upstream changes
+  //const hashespersec = await bitcoindService.getHashesPerSec();
+
   return {
       blocks: blockchainInfo.result.blocks,
       difficulty: blockchainInfo.result.difficulty,
       size: blockchainInfo.result.sizeOnDisk,
       mempool: mempoolInfo.result,
-      connections: networkInfo.result.connections,
+      connections: networkInfo.result.connections
+      // Below requires upstream changes to bitcoind-rpc library
+      // hashespersec: hashespersec.result
   }
 }
 
