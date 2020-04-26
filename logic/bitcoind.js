@@ -71,13 +71,17 @@ async function getLocalSyncInfo() {
 
   var blockCount = blockChainInfo.blocks;
   var headerCount = blockChainInfo.headers;
+  var blockchainDifficulty = blockChainInfo.difficulty;
+  var blockchainSize = blockChainInfo.sizeOnDisk;
 
   const percentSynced = (Math.trunc(blockCount / headerCount * 10000) / 10000).toFixed(4); // eslint-disable-line no-magic-numbers, max-len
 
   return {
     percent: percentSynced,
     currentBlock: blockCount,
-    headerCount: headerCount // eslint-disable-line object-shorthand
+    headerCount: headerCount, // eslint-disable-line object-shorthand,
+    difficulty: blockchainDifficulty,
+    size: blockchainSize
   };
 }
 
@@ -130,6 +134,12 @@ async function getTransaction(txid) {
   }
 }
 
+async function getNetworkInfo() {
+  const networkInfo = await bitcoindService.getNetworkInfo();
+
+  return networkInfo.result; // eslint-disable-line object-shorthand
+}
+
 async function getBlockHash(height) {
   const getBlockHashObj = await bitcoindService.getBlockHash(height);
 
@@ -144,6 +154,7 @@ module.exports = {
   getBlock,
   getBlockCount,
   getConnectionsCount,
+  getNetworkInfo,
   getMempoolInfo,
   getStatus,
   getSyncStatus,
