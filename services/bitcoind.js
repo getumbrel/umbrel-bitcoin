@@ -97,6 +97,7 @@ function getNetworkInfo() {
 }
 
 function getHashesPerSec() {
+  // This requires an upstream change
   return promiseify(rpcClient, rpcClient.getNetworkHashPs, 'network hash per second');
 }
 
