@@ -1,5 +1,7 @@
 require('module-alias/register');
 require('module-alias').addPath('.');
+require('dotenv').config();
+
 const express = require('express');
 const path = require('path');
 const morgan = require('morgan');
@@ -36,7 +38,7 @@ app.use(onionOriginMiddleware);
 app.use(cors(corsOptions));
 
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({extended: true}));
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(passport.initialize());
 app.use(passport.session());

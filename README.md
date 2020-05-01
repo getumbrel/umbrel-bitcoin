@@ -13,8 +13,8 @@
                 volumes:
                     - "/home/umbrel/lnd:/lnd"
                 environment:
-                    BITCOIN_NETWORK: "mainnet"
                     BITCOIN_HOST: "0.0.0.0"
+                    RPC_PORT: "8332"
                     RPC_USER: "<your rpc username>"
                     RPC_PASSWORD: "<your rpc password>"
                     LND_NETWORK: "mainnet"
