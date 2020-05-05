@@ -4,7 +4,7 @@ const BitcoindError = require('models/errors.js').BitcoindError;
 async function getBlockCount() {
   const blockCount = await bitcoindService.getBlockCount();
 
-  return {blockCount: blockCount.result};
+  return { blockCount: blockCount.result };
 }
 
 async function getConnectionsCount() {
@@ -13,7 +13,7 @@ async function getConnectionsCount() {
   var outBoundConnections = 0;
   var inBoundConnections = 0;
 
-  peerInfo.result.forEach(function(peer) {
+  peerInfo.result.forEach(function (peer) {
     if (peer.inbound === false) {
       outBoundConnections++;
 
@@ -35,10 +35,10 @@ async function getStatus() {
   try {
     await bitcoindService.help();
 
-    return {operational: true};
+    return { operational: true };
   } catch (error) {
     if (error instanceof BitcoindError) {
-      return {operational: false};
+      return { operational: false };
     }
 
     throw error;
@@ -53,7 +53,7 @@ async function getMaxSyncHeader() {
     return -1;
   }
 
-  const maxPeer = peerInfo.reduce(function(prev, current) {
+  const maxPeer = peerInfo.reduce(function (prev, current) {
     return prev.syncedHeaders > current.syncedHeaders ? prev : current;
   });
 
@@ -68,13 +68,14 @@ async function getLocalSyncInfo() {
   const info = await bitcoindService.getBlockChainInfo();
 
   var blockChainInfo = info.result;
-
+  var chain = blockChainInfo.chain;
   var blockCount = blockChainInfo.blocks;
   var headerCount = blockChainInfo.headers;
 
   const percentSynced = (Math.trunc(blockCount / headerCount * 10000) / 10000).toFixed(4); // eslint-disable-line no-magic-numbers, max-len
 
   return {
+    chain: chain,
     percent: percentSynced,
     currentBlock: blockCount,
     headerCount: headerCount // eslint-disable-line object-shorthand,
@@ -99,7 +100,7 @@ async function getVersion() {
   // Remove all non-digits or decimals.
   const version = unformattedVersion.replace(/[^\d.]/g, '');
 
-  return {version: version}; // eslint-disable-line object-shorthand
+  return { version: version }; // eslint-disable-line object-shorthand
 }
 
 async function getBlock(hash) {
@@ -165,11 +166,11 @@ async function nodeStatusSummary() {
   const miningInfo = await bitcoindService.getMiningInfo();
 
   return {
-      difficulty: blockchainInfo.result.difficulty,
-      size: blockchainInfo.result.sizeOnDisk,
-      mempool: mempoolInfo.result.bytes,
-      connections: networkInfo.result.connections,
-      networkhashps: miningInfo.result.networkhashps
+    difficulty: blockchainInfo.result.difficulty,
+    size: blockchainInfo.result.sizeOnDisk,
+    mempool: mempoolInfo.result.bytes,
+    connections: networkInfo.result.connections,
+    networkhashps: miningInfo.result.networkhashps
   }
 }
 

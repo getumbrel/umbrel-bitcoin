@@ -8,6 +8,5 @@ logs/
 package-lock.json
 *.bak
 lb_settings.json
-.env
 .nyc_output
 coverage

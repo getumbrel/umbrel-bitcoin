@@ -3,7 +3,7 @@ const camelizeKeys = require('camelize-keys');
 
 const BitcoindError = require('models/errors.js').BitcoindError;
 
-const BITCOIND_RPC_PORT = process.env.BITCOIN_NETWORK === 'testnet' ? 18332 : 8332; // eslint-disable-line no-magic-numbers, max-len
+const BITCOIND_RPC_PORT = process.env.RPC_PORT || 8332; // eslint-disable-line no-magic-numbers, max-len
 const BITCOIND_HOST = process.env.BITCOIN_HOST || '127.0.0.1';
 const BITCOIND_RPC_USER = process.env.RPC_USER;
 const BITCOIND_RPC_PASSWORD = process.env.RPC_PASSWORD;
@@ -97,7 +97,7 @@ function getNetworkInfo() {
 }
 
 function getMiningInfo() {
-    return promiseify(rpcClient, rpcClient.getMiningInfo, 'mining info');
+  return promiseify(rpcClient, rpcClient.getMiningInfo, 'mining info');
 }
 function help() {
   // TODO: missing from the library, but can add it not sure how to package.

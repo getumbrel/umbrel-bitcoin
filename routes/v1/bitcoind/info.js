@@ -51,14 +51,14 @@ router.get('/stats', auth.jwt, safeHandler((req, res) =>
 ));
 
 router.get('/block', auth.jwt, safeHandler((req, res) => {
-    if (req.query.hash !== undefined && req.query.hash !== null) {
-      bitcoind.getBlock(req.query.hash)
-        .then(blockhash => res.json(blockhash))
-    } else if (req.query.height !== undefined && req.query.height !== null) {
-      bitcoind.getBlockHash(req.query.height)
-        .then(blockhash => res.json(blockhash))
-    }
+  if (req.query.hash !== undefined && req.query.hash !== null) {
+    bitcoind.getBlock(req.query.hash)
+      .then(blockhash => res.json(blockhash))
+  } else if (req.query.height !== undefined && req.query.height !== null) {
+    bitcoind.getBlockHash(req.query.height)
+      .then(blockhash => res.json(blockhash))
   }
+}
 ));
 
 // /v1/bitcoind/info/block/<hash>
@@ -67,7 +67,7 @@ router.get('/block/:id', auth.jwt, safeHandler((req, res) =>
     .then(blockhash => res.json(blockhash))
 ));
 
-router.get('/txid/:id', auth.jwt, safeHandler((req,res) =>
+router.get('/txid/:id', auth.jwt, safeHandler((req, res) =>
   bitcoind.getTransaction(req.params.id)
     .then(txhash => res.json(txhash))
 ));
