@@ -12,6 +12,8 @@ jobs:
                 runs-on: ubuntu-18.04
                 name: Build umbrel middleware
                 steps:
+                        - name: Show github ref
+                          run: echo $GITHUB_REF
                         - name: setup environment
                           run: |
                                   if ! echo "$GITHUB_REF" | grep -qE "$TAG_FMT"; then
