@@ -17,7 +17,7 @@ jobs:
                         - name: setup environment
                           run: |
                                   if ! echo "$GITHUB_REF" | grep -qE "$TAG_FMT"; then
-                                        echo "ERR: TAG must be in format: vX.Y.Z[.P][-VARIANT]+build<N>"
+                                        echo "ERR: TAG must be in format: vX.Y.Z or X.Y.Z or vW.X.Y.Z or W.X.Y.Z"
                                         exit 1
                                   fi
                                   VERSION="$(echo "$GITHUB_REF" | sed -E "s|$TAG_FMT|\2|")"
@@ -44,7 +44,7 @@ jobs:
                           run: |
                                   docker buildx build \
                                   --platform linux/amd64,linux/arm/v7,linux/arm64 \
-                                  -t nolim1t/umbrel-middleware:$TAG \
+                                  -t getumbrel/middleware:$TAG \
                                   --output "type=registry" \
                                   .
                         - name: List all images
