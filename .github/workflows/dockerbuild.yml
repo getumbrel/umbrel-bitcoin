@@ -24,4 +24,6 @@ jobs:
                                   docker buildx build \
                                   --platform linux/amd64,linux/arm/v7,linux/arm64 \
                                   .
+                        - name: List all images
+                          run: docker images
 
