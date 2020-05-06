@@ -44,7 +44,7 @@ jobs:
                           run: |
                                   docker buildx build \
                                   --platform linux/amd64,linux/arm/v7,linux/arm64 \
-                                  --target "nolim1t/umbrel-middleware:${TAG}" \
+                                  -t nolim1t/umbrel-middleware:$TAG \
                                   --output "type=registry" \
                                   .
                         - name: List all images
