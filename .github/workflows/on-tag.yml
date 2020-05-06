@@ -1,13 +1,7 @@
 name: Run Docker buildx
 env:
         DOCKER_CLI_EXPERIMENTAL: enabled
-        # Capture groups in $TAG_FMT:
-        #   \1 => TAG       vX.Y.Z[.P][-VARIANT]+build<N>
-        #   \2 => VERSION   vX.Y.Z[.P]
-        #   \3 => ignore    (captures dot, and last number-group in version)
-        #   \4 => VARIANT   VARIANT
-        #   \5 => BUILD     N
-        TAG_FMT: '^refs/tags/((v(.?[0-9]+){3,4})-?([^+]+)?\+build([0-9]+))$'
+        TAG_FMT: '^refs/tags/((v(.?[0-9]+){3,4}))$'
 
 on:
         push:
