@@ -6,7 +6,11 @@ jobs:
                 runs-on: ubuntu-18.04
                 name: Build umbrel middleware
                 steps:
+                        - name: Create docker config folder
+                          run: mkdir -p ~/.docker
+                        - name: Update config.json with experimental tag, and potentially other stuff
+                          run: echo "{\"experimental\": \"enabled\"}" > ~/.docker/config.json
                         - name: Run docker buildx
-                          run: docker build buildx --platform=linux/amd64,linux/arm64,linux/arm/v7 .
+                          run: docker buildx build --platform=linux/amd64,linux/arm64,linux/arm/v7 .
 
 
