@@ -38,12 +38,17 @@ jobs:
                                   qemu-version: latest
                         - name: Available platforms
                           run: echo ${{ steps.buildx.outputs.platforms }}
-                        - name: Run Docker build X
+                        - name: Run Docker build X (against tag)
                           run: |
                                   docker buildx build \
                                   --platform linux/amd64,linux/386,linux/arm/v7,linux/arm64 \
                                   -t getumbrel/middleware:$TAG \
                                   --output "type=registry" \
                                   .
-                        - name: Tag recently updated build as latest
-                          run: docker tag getumbrel/middleware:$TAG getumbrel/middleware:latest
+                        - name: Run Docker build X (against latest)
+                          run: |
+                                  docker buildx build \
+                                  --platform linux/amd64,linux/386,linux/arm/v7,linux/arm64 \
+                                  -t getumbrel/middleware:latest \
+                                  --output "type=registry" \
+                                  .
