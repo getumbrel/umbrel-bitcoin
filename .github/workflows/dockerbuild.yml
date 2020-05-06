@@ -9,6 +9,8 @@ jobs:
                 runs-on: ubuntu-18.04
                 name: Build umbrel middleware
                 steps:
+                        - name: Login to Docker for building
+                          run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "nolim1t" --password-stdin
                         - name: Checkout project
                           uses: actions/checkout@v2
                         - name: setup buildx
@@ -23,7 +25,7 @@ jobs:
                           run: |
                                   docker buildx build \
                                   --platform linux/amd64,linux/arm/v7,linux/arm64 \
-                                  .
+                                  . nolim1t/umbrel-middleware:v0.0.6-beta
                         - name: List all images
                           run: docker images
 
