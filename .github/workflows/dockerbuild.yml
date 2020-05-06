@@ -9,6 +9,10 @@ jobs:
                 runs-on: ubuntu-18.04
                 name: Build umbrel middleware
                 steps:
+                        - name: Update libraries
+                          run: apt-get update
+                        - name: Remove docker
+                          run: apt-get uninstall docker ; apt-get install docker
                         - name: Get docker version
                           run: docker --version
                         - name: Run docker buildx test
