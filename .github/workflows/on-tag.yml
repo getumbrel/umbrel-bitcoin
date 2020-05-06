@@ -1,6 +1,13 @@
 name: Run Docker buildx
 env:
         DOCKER_CLI_EXPERIMENTAL: enabled
+        # Capture groups in $TAG_FMT:
+        #   \1 => TAG       vX.Y.Z[.P][-VARIANT]+build<N>
+        #   \2 => VERSION   vX.Y.Z[.P]
+        #   \3 => ignore    (captures dot, and last number-group in version)
+        #   \4 => VARIANT   VARIANT
+        #   \5 => BUILD     N
+        TAG_FMT: '^refs/tags/((v(.?[0-9]+){3,4})-?([^+]+)?\+build([0-9]+))$'
 
 on:
         push:
@@ -11,6 +18,20 @@ jobs:
                 runs-on: ubuntu-18.04
                 name: Build umbrel middleware
                 steps:
+                        - name: setup environment
+                          run: |
+                                  if ! echo "$GITHUB_REF" | grep -qE "$TAG_FMT"; then
+                                        echo "ERR: TAG must be in format: vX.Y.Z[.P][-VARIANT]+build<N>"
+                                        exit 1
+                                  fi
+                                  VERSION="$(echo "$GITHUB_REF" | sed -E "s|$TAG_FMT|\2|")"
+                                  
+                                  TAG="$(echo "$GITHUB_REF" | sed -E "s|$TAG_FMT|\1|")"
+                                  echo ::set-env name=TAG::"$TAG"
+                                  
+                        - name: Debug
+                          run: |
+                                  printf "    TAG: %s\n"  "$TAG"                                  
                         - name: Login to Docker for building
                           run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "nolim1t" --password-stdin
                         - name: Checkout project
@@ -27,7 +48,7 @@ jobs:
                           run: |
                                   docker buildx build \
                                   --platform linux/amd64,linux/arm/v7,linux/arm64 \
-                                  --target nolim1t/umbrel-middleware:{{.Tag}} \
+                                  --target nolim1t/umbrel-middleware:$TAG \
                                   --output "type=registry" \
                                   .
                         - name: List all images
