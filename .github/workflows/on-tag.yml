@@ -29,7 +29,7 @@ jobs:
                           run: |
                                   printf "    TAG: %s\n"  "$TAG"                                  
                         - name: Login to Docker for building
-                          run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "nolim1t" --password-stdin
+                          run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
                         - name: Checkout project
                           uses: actions/checkout@v2
                         - name: setup buildx
