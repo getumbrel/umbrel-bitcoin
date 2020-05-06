@@ -12,8 +12,6 @@ jobs:
                 runs-on: ubuntu-18.04
                 name: Build umbrel middleware
                 steps:
-                        - name: Show github ref
-                          run: echo $GITHUB_REF
                         - name: setup environment
                           run: |
                                   if ! echo "$GITHUB_REF" | grep -qE "$TAG_FMT"; then
@@ -25,7 +23,7 @@ jobs:
                                   TAG="$(echo "$GITHUB_REF" | sed -E "s|$TAG_FMT|\1|")"
                                   echo ::set-env name=TAG::"$TAG"
                                   
-                        - name: Debug
+                        - name: Show set environment variables
                           run: |
                                   printf "    TAG: %s\n"  "$TAG"                                  
                         - name: Login to Docker for building
@@ -47,6 +45,3 @@ jobs:
                                   -t getumbrel/middleware:$TAG \
                                   --output "type=registry" \
                                   .
-                        - name: List all images
-                          run: docker images
-
