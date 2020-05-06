@@ -5,7 +5,7 @@
 1. To `/home/umbrel/docker-compose.yml`, add the following service:
 ```
         middleware:
-                image: getumbrel/middleware:latest
+                image: getumbrel/middleware:v0.0.6
                 depends_on: [ bitcoin, lnd ]
                 logging: *default-logging
                 restart: on-failure
