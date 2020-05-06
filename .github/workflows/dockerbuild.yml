@@ -1,0 +1,12 @@
+name: Run Docker buildx
+on: push
+
+jobs:
+        build:
+                runs-on: ubuntu-18.04
+                name: Build umbrel middleware
+                steps:
+                        - name: Run docker buildx
+                          run: docker build buildx --platform=linux/amd64,linux/arm64,linux/arm/v7 .
+
+
