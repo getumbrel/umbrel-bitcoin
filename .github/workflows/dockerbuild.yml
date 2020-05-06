@@ -9,13 +9,19 @@ jobs:
                 runs-on: ubuntu-18.04
                 name: Build umbrel middleware
                 steps:
-                        - name: Update libraries
-                          run: apt-get update
-                        - name: Remove docker
-                          run: apt-get uninstall docker ; apt-get install docker
-                        - name: Get docker version
-                          run: docker --version
-                        - name: Run docker buildx test
-                          run: docker buildx build --platform=linux/amd64,linux/arm/v7 .
-
+                        - name: Checkout project
+                          uses: actions/checkout@v2
+                        - name: setup buildx
+                          uses: crazy-max/ghaction-docker-buildx@v1
+                          id: buildx
+                          with:
+                                  buildx-version: latest
+                                  qemu-version: latest
+                        - name: Available platforms
+                          run: echo ${{ steps.buildx.outputs.platforms }}
+                        - name: Run buildx
+                          run: |
+                                  docker buildx build \
+                                  --platform linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64 \
+                                  .
 
