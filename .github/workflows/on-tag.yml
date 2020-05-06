@@ -1,4 +1,4 @@
-name: Run Docker buildx
+name: Automatically Build image on tag
 env:
         DOCKER_CLI_EXPERIMENTAL: enabled
         TAG_FMT: '^refs/tags/(((.?[0-9]+){3,4}))$'
@@ -10,9 +10,9 @@ on:
 jobs:
         build:
                 runs-on: ubuntu-18.04
-                name: Build umbrel middleware
+                name: Build / Push umbrel middleware on version tag
                 steps:
-                        - name: setup environment
+                        - name: Setup Environment
                           run: |
                                   if ! echo "$GITHUB_REF" | grep -qE "$TAG_FMT"; then
                                         echo "ERR: TAG must be in format: vX.Y.Z or X.Y.Z or vW.X.Y.Z or W.X.Y.Z"
@@ -30,7 +30,7 @@ jobs:
                           run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
                         - name: Checkout project
                           uses: actions/checkout@v2
-                        - name: setup buildx
+                        - name: Setup Docker buildx Action
                           uses: crazy-max/ghaction-docker-buildx@v1
                           id: buildx
                           with:
@@ -38,10 +38,12 @@ jobs:
                                   qemu-version: latest
                         - name: Available platforms
                           run: echo ${{ steps.buildx.outputs.platforms }}
-                        - name: Run buildx
+                        - name: Run Docker build X
                           run: |
                                   docker buildx build \
-                                  --platform linux/amd64,linux/arm/v7,linux/arm64 \
+                                  --platform linux/amd64,linux/386,linux/arm/v7,linux/arm/v6,linux/arm64 \
                                   -t getumbrel/middleware:$TAG \
                                   --output "type=registry" \
                                   .
+                        - name: Tag recently updated build as latest
+                          run: docker tag getumbrel/middleware:$TAG getumbrel/middleware:latest
