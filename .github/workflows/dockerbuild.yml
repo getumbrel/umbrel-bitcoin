@@ -2,7 +2,9 @@ name: Run Docker buildx
 env:
         DOCKER_CLI_EXPERIMENTAL: enabled
 
-on: push
+on:
+        push:
+                tags: [ '*' ]
 
 jobs:
         build:
@@ -25,7 +27,8 @@ jobs:
                           run: |
                                   docker buildx build \
                                   --platform linux/amd64,linux/arm/v7,linux/arm64 \
-                                  -t nolim1t/umbrel-middleware:v0.0.6-beta -o type=registry \
+                                  --target nolim1t/umbrel-middleware:{{.Tag}} \
+                                  --output "type=registry" \
                                   .
                         - name: List all images
                           run: docker images
