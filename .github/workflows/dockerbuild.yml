@@ -25,7 +25,8 @@ jobs:
                           run: |
                                   docker buildx build \
                                   --platform linux/amd64,linux/arm/v7,linux/arm64 \
-                                  . nolim1t/umbrel-middleware:v0.0.6-beta
+                                  --output "type=image,dest=nolim1t/umbrel-middleware:v0.0.6-beta" \
+                                  .
                         - name: List all images
                           run: docker images
 
