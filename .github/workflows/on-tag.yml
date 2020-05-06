@@ -1,7 +1,7 @@
 name: Run Docker buildx
 env:
         DOCKER_CLI_EXPERIMENTAL: enabled
-        TAG_FMT: '^refs/tags/((v(.?[0-9]+){3,4}))$'
+        TAG_FMT: '^refs/tags/(((.?[0-9]+){3,4}))$'
 
 on:
         push:
