@@ -103,20 +103,6 @@ async function getVersion() {
   return { version: version }; // eslint-disable-line object-shorthand
 }
 
-async function getBlock(hash) {
-  const blockObj = await bitcoindService.getBlock(hash);
-  return {
-    block: hash,
-    confirmations: blockObj.result.confirmations,
-    size: blockObj.result.size,
-    height: blockObj.result.height,
-    blocktime: blockObj.result.time,
-    prevblock: blockObj.result.previousblockhash,
-    nextblock: blockObj.result.nextblockhash,
-    transactions: blockObj.result.tx
-  }
-}
-
 async function getTransaction(txid) {
   const transactionObj = await bitcoindService.getTransaction(txid);
   return {
@@ -135,6 +121,53 @@ async function getNetworkInfo() {
   const networkInfo = await bitcoindService.getNetworkInfo();
 
   return networkInfo.result; // eslint-disable-line object-shorthand
+}
+
+async function getBlock(hash) {
+  const blockObj = await bitcoindService.getBlock(hash);
+  return {
+    block: hash,
+    confirmations: blockObj.result.confirmations,
+    size: blockObj.result.size,
+    height: blockObj.result.height,
+    blocktime: blockObj.result.time,
+    prevblock: blockObj.result.previousblockhash,
+    nextblock: blockObj.result.nextblockhash,
+    transactions: blockObj.result.tx
+  }
+}
+
+async function getBlocks(fromHeight, toHeight) {
+
+  const startingBlockHashObj = await bitcoindService.getBlockHash(toHeight);
+
+  let currentHeight = toHeight;
+  let currentHash = startingBlockHashObj.result;
+
+  const blocks = [];
+  //loop until we reach "toHeight"
+
+  for (let currentHeight = toHeight; currentHeight >= fromHeight; currentHeight--) {
+    console.log(currentHeight);
+    const blockObj = await bitcoindService.getBlock(currentHash);
+    const block = blockObj.result;
+    currentHash = block.previousblockhash;
+    const formattedBlock = {
+      hash: block.hash,
+      height: block.height,
+      numTransactions: block.tx.length,
+      confirmations: block.confirmations,
+      time: block.time,
+      size: block.size
+    };
+    blocks.push(formattedBlock);
+    //terminate loop if we reach the genesis block
+    if (!currentHash) {
+      break;
+    }
+  }
+
+  return { blocks: blocks }; // eslint-disable-line object-shorthand
 }
 
 async function getBlockHash(height) {
@@ -179,6 +212,7 @@ module.exports = {
   getTransaction,
   getBlock,
   getBlockCount,
+  getBlocks,
   getConnectionsCount,
   getNetworkInfo,
   getMempoolInfo,
