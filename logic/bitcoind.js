@@ -139,19 +139,28 @@ async function getBlock(hash) {
 
 async function getBlocks(fromHeight, toHeight) {
 
-  const startingBlockHashObj = await bitcoindService.getBlockHash(toHeight);
 
-  let currentHeight = toHeight;
-  let currentHash = startingBlockHashObj.result;
+  let startingBlockHashRaw;
+
+  try {
+    startingBlockHashRaw = await bitcoindService.getBlockHash(toHeight);
+  } catch (error) {
+    if (error instanceof BitcoindError) {
+      return error;
+    }
+    throw error;
+  }
+
+  let currentHash = startingBlockHashRaw.result;
 
   const blocks = [];
-  //loop until we reach "toHeight"
 
+  //loop from 'to height' till 'from Height'
   for (let currentHeight = toHeight; currentHeight >= fromHeight; currentHeight--) {
-    console.log(currentHeight);
-    const blockObj = await bitcoindService.getBlock(currentHash);
-    const block = blockObj.result;
-    currentHash = block.previousblockhash;
+
+    const blockRaw = await bitcoindService.getBlock(currentHash);
+    const block = blockRaw.result;
+
     const formattedBlock = {
       hash: block.hash,
       height: block.height,
@@ -160,14 +169,17 @@ async function getBlocks(fromHeight, toHeight) {
       time: block.time,
       size: block.size
     };
+
     blocks.push(formattedBlock);
+
+    currentHash = block.previousblockhash;
     //terminate loop if we reach the genesis block
     if (!currentHash) {
       break;
     }
   }
 
-  return { blocks: blocks }; // eslint-disable-line object-shorthand
+  return { blocks: blocks };
 }
 
 async function getBlockHash(height) {
