@@ -64,6 +64,10 @@ function promiseifyParamTwo(rpcObj, rpcFn, param1, param2, what) {
   });
 }
 
+function getBestBlockHash() {
+  return promiseify(rpcClient, rpcClient.getBestBlockHash, 'best block hash');
+}
+
 function getBlockHash(height) {
   return promiseifyParam(rpcClient, rpcClient.getBlockHash, height, 'block height');
 }
@@ -113,6 +117,7 @@ function help() {
 
 module.exports = {
   getMiningInfo,
+  getBestBlockHash,
   getBlockHash,
   getBlock,
   getTransaction,

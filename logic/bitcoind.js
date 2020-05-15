@@ -103,20 +103,6 @@ async function getVersion() {
   return { version: version }; // eslint-disable-line object-shorthand
 }
 
-async function getBlock(hash) {
-  const blockObj = await bitcoindService.getBlock(hash);
-  return {
-    block: hash,
-    confirmations: blockObj.result.confirmations,
-    size: blockObj.result.size,
-    height: blockObj.result.height,
-    blocktime: blockObj.result.time,
-    prevblock: blockObj.result.previousblockhash,
-    nextblock: blockObj.result.nextblockhash,
-    transactions: blockObj.result.tx
-  }
-}
-
 async function getTransaction(txid) {
   const transactionObj = await bitcoindService.getTransaction(txid);
   return {
@@ -135,6 +121,65 @@ async function getNetworkInfo() {
   const networkInfo = await bitcoindService.getNetworkInfo();
 
   return networkInfo.result; // eslint-disable-line object-shorthand
+}
+
+async function getBlock(hash) {
+  const blockObj = await bitcoindService.getBlock(hash);
+  return {
+    block: hash,
+    confirmations: blockObj.result.confirmations,
+    size: blockObj.result.size,
+    height: blockObj.result.height,
+    blocktime: blockObj.result.time,
+    prevblock: blockObj.result.previousblockhash,
+    nextblock: blockObj.result.nextblockhash,
+    transactions: blockObj.result.tx
+  }
+}
+
+async function getBlocks(fromHeight, toHeight) {
+
+
+  let startingBlockHashRaw;
+
+  try {
+    startingBlockHashRaw = await bitcoindService.getBlockHash(toHeight);
+  } catch (error) {
+    if (error instanceof BitcoindError) {
+      return error;
+    }
+    throw error;
+  }
+
+  let currentHash = startingBlockHashRaw.result;
+
+  const blocks = [];
+
+  //loop from 'to height' till 'from Height'
+  for (let currentHeight = toHeight; currentHeight >= fromHeight; currentHeight--) {
+
+    const blockRaw = await bitcoindService.getBlock(currentHash);
+    const block = blockRaw.result;
+
+    const formattedBlock = {
+      hash: block.hash,
+      height: block.height,
+      numTransactions: block.tx.length,
+      confirmations: block.confirmations,
+      time: block.time,
+      size: block.size
+    };
+
+    blocks.push(formattedBlock);
+
+    currentHash = block.previousblockhash;
+    //terminate loop if we reach the genesis block
+    if (!currentHash) {
+      break;
+    }
+  }
+
+  return { blocks: blocks };
 }
 
 async function getBlockHash(height) {
@@ -179,6 +224,7 @@ module.exports = {
   getTransaction,
   getBlock,
   getBlockCount,
+  getBlocks,
   getConnectionsCount,
   getNetworkInfo,
   getMempoolInfo,

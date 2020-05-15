@@ -67,6 +67,14 @@ router.get('/block/:id', auth.jwt, safeHandler((req, res) =>
     .then(blockhash => res.json(blockhash))
 ));
 
+router.get('/blocks', auth.jwt, safeHandler((req, res) => {
+  const fromHeight = parseInt(req.query.from);
+  const toHeight = parseInt(req.query.to);
+  bitcoind.getBlocks(fromHeight, toHeight)
+    .then(blocks => res.json(blocks))
+}
+));
+
 router.get('/txid/:id', auth.jwt, safeHandler((req, res) =>
   bitcoind.getTransaction(req.params.id)
     .then(txhash => res.json(txhash))
