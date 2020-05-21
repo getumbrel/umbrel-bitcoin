@@ -24,5 +24,5 @@ COPY . .
 
 RUN mkdir -p /root/.lnd
 
-EXPOSE 3005
+EXPOSE 3006
 CMD [ "npm", "start" ]

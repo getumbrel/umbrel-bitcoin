@@ -25,7 +25,9 @@ router.get('/connections', auth.jwt, safeHandler((req, res) =>
     .then(connections => res.json(connections))
 ));
 
-router.get('/status', auth.jwt, safeHandler((req, res) =>
+//requires no authentication as it is used to fetch loading status
+//which could be fetched at login/signup page
+router.get('/status', safeHandler((req, res) =>
   bitcoind.getStatus()
     .then(status => res.json(status))
 ));
