@@ -1,10 +1,11 @@
 # specify the node base image with your desired version node:<version>
-FROM node:12.16.3-alpine
+FROM node:8-slim
 
 # install tools
-RUN apk --no-cache add --virtual native-deps \
-  g++ gcc libgcc libstdc++ linux-headers autoconf automake make nasm python git && \
-  npm install --quiet node-gyp -g
+RUN apt-get update --no-install-recommends \
+  && apt-get install -y --no-install-recommends vim \
+  && apt-get install -y --no-install-recommends rsync \
+  && rm -rf /var/lib/apt/lists/*
 
 # Create app directory
 WORKDIR /usr/src/app
