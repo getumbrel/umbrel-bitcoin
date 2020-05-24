@@ -20,7 +20,7 @@ shift
 cmd="$@"
 
 found=1
-
+iterations=1
 until [ $found = 2 ]; do
   if node -e "const axios = require('axios').default; axios.get('http://$host:3006/ping').then((resp) => {console.log(resp.data); process.exit(0); }).catch((error) => {process.exit(1) } );" ; then
     echo "Can connect, lets proceed with server starting"
@@ -28,6 +28,11 @@ until [ $found = 2 ]; do
   else
     echo "Can't connect, keep trying"
   fi
+  if [ $iterations -gt 14 ]; then
+    echo "Cannot connect after 15 tries, giving up"
+    exit 1
+  fi
+  ((iterations=iterations+1))
   sleep 2
 done
 
