@@ -11,6 +11,7 @@
     "postcoverage": "codecov"
   },
   "dependencies": {
+    "axios": "^0.19.2",
     "big.js": "^5.2.2",
     "bitcoind-rpc": "^0.7.2",
     "body-parser": "^1.18.2",
