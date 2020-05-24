@@ -8,6 +8,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+# Usage
+# ./wait-for-node-manager.sh <hostname> <command>
+# Other documentation: https://docs.docker.com/compose/startup-order/
+
 set -e
 
 
