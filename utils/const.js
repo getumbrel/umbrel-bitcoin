@@ -5,9 +5,9 @@ module.exports = {
     UNAVAILABLE: 14,
     UNKNOWN: 2,
   },
-  JWT_PUBLIC_KEY: process.env.JWT_PUBLIC_KEY || 'UNKNOWN',
+  JWT_PUBLIC_KEY_FILE: process.env.JWT_PUBLIC_KEY_FILE || 'UNKNOWN',
   MANAGED_CHANNELS_FILE: '/channel-data/managedChannels.json',
-  REQUEST_CORRELATION_NAMESPACE_KEY: 'lnapi-request',
+  REQUEST_CORRELATION_NAMESPACE_KEY: 'umbrel-middleware-request',
   REQUEST_CORRELATION_ID_KEY: 'reqId',
   STATUS_CODES: {
     BAD_GATEWAY: 502,

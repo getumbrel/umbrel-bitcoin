@@ -4,8 +4,8 @@ const constants = require('utils/const.js');
 const fs = require('fs');
 const path = require('path');
 const winston = require('winston');
-const {format} = require('winston');
-const {combine, timestamp, printf} = format;
+const { format } = require('winston');
+const { combine, timestamp, printf } = format;
 const getNamespace = require('continuation-local-storage').getNamespace;
 
 const LOCAL = 'local';
@@ -43,7 +43,7 @@ const apiFileTransport = new winston.transports.DailyRotateFile({
 const localLogFormat = printf(info => {
   var data = '';
   if (info.data) {
-    data = JSON.stringify({data: info.data});
+    data = JSON.stringify({ data: info.data });
   }
 
   return `${info.timestamp} ${info.level.toUpperCase()}: ${info.internalCorrelationId} [${info._module}] ${info.message} ${data}`;
@@ -70,8 +70,8 @@ winston.loggers.add(LOCAL, {
 
 const morganConfiguration = {
   stream: {
-    write: function(message) {
-      info(message, 'lnapi');
+    write: function (message) {
+      info(message, 'umbrel-middleware');
     }
   }
 };
