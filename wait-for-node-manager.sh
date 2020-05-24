@@ -28,7 +28,7 @@ until [ $found = 2 ]; do
   else
     echo "Can't connect, keep trying"
   fi
-  sleep 30
+  sleep 2
 done
 
 >&2 echo "Pre-condition found, Running service"
