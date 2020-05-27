@@ -11,7 +11,9 @@ router.get('/uris', auth.jwt, safeHandler((req, res) =>
     .then(uris => res.json(uris))
 ));
 
-router.get('/status', auth.jwt, safeHandler((req, res) =>
+//requires no authentication as it is used to fetch loading status
+//which could be fetched at login/signup page
+router.get('/status', safeHandler((req, res) =>
   lightning.getStatus()
     .then(status => res.json(status))
 ));
