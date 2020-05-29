@@ -1,4 +1,4 @@
-[![Umbrel Middleware](https://i.imgur.com/i4BLnwl.png)](https://github.com/getumbrel/umbrel-middleware)
+[![Umbrel Middleware](https://static.getumbrel.com/github/github-banner-umbrel-middleware.svg)](https://github.com/getumbrel/umbrel-middleware)
 
 [![Version](https://img.shields.io/github/v/release/getumbrel/umbrel-middleware?color=%235351FB&label=version)](https://github.com/getumbrel/umbrel-middleware/releases)
 [![Docker Build](https://img.shields.io/github/workflow/status/getumbrel/umbrel-middleware/Automatically%20Build%20image%20on%20tag?color=%235351FB)](https://github.com/getumbrel/umbrel-middleware/actions?query=workflow%3A"Automatically+Build+image+on+tag")
