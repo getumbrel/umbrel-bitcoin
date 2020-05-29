@@ -508,7 +508,12 @@ const getChannels = async () => {
 
         channel.remainingConfirmations = constants.LN_REQUIRED_CONFIRMATIONS - numConfirmations;
       }
+
     }
+
+    // Fetch remote node alias and set it
+    const { alias } = await getNodeAlias(channel.remotePubkey);
+    channel.remoteAlias = alias || "";
 
     // If a managed channel exists, set the name and purpose
     // if (Object.prototype.hasOwnProperty.call(managedChannels, channel.channelPoint)) {
