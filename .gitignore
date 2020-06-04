@@ -5,7 +5,6 @@ npm-debug.log
 *.log
 *.env
 logs/
-package-lock.json
 *.bak
 lb_settings.json
 .nyc_output
