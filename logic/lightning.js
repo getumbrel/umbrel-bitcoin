@@ -103,9 +103,9 @@ function decodePaymentRequest(paymentRequest) {
 // Estimate the cost of opening a channel. We do this by repurposing the existing estimateFee grpc route from lnd. We
 // generate our own unused address and then feed that into the existing call. Then we add an extra 10 sats per
 // feerateSatPerByte. This is because the actual cost is slightly more than the default one output estimate.
-async function estimateChannelOpenFee(amt, confTarget) {
+async function estimateChannelOpenFee(amt, confTarget, sweep) {
   const address = (await generateAddress()).address;
-  const baseFeeEstimate = await estimateFee(address, amt, confTarget, false);
+  const baseFeeEstimate = await estimateFee(address, amt, confTarget, sweep);
 
   if (confTarget === 0) {
     const keys = Object.keys(baseFeeEstimate);
