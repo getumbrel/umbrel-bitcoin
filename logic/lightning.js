@@ -595,13 +595,12 @@ async function getSyncStatus() {
     percentSynced = ((info.bestHeaderTimestamp - genesisTimestamp) / (currentTime - genesisTimestamp))
       .toFixed(4); // eslint-disable-line no-magic-numbers
 
-    // let's not return a value over the 100% or processedBlocks > blockHeight
-    // space-fleet can determine how to handle this error state if it detects -1
+    // let's not return a value over the 100% or when processedBlocks > blockHeight
     if (percentSynced < 1.0) {
       processedBlocks = Math.floor(percentSynced * info.blockHeight);
     } else {
-      processedBlocks = -1;
-      percentSynced = -1;
+      processedBlocks = info.blockHeight;
+      percentSynced = (1).toFixed(4);
     }
 
   } else {
