@@ -10,7 +10,7 @@ router.post('/backup', auth.jwt, safeHandler((req, res) =>
     .then(response => res.json(response))
 ));
 
-router.get('/channel-backup', safeHandler((req, res) =>
+router.get('/channel-backup', auth.jwt, safeHandler((req, res) =>
   applicationLogic.lndChannnelBackup()
     .then(backupFile => res.download(backupFile, 'channel.backup'))
 ));
