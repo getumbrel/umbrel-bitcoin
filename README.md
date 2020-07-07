@@ -66,6 +66,10 @@ If you're a developer looking to help but not sure where to begin, check out [th
 
 If you're looking for a bigger challenge, before opening a pull request please [create an issue](https://github.com/getumbrel/umbrel-middleware/issues/new/choose) or [join our community chat](https://t.me/getumbrel) to get feedback, discuss the best way to tackle the challenge, and to ensure that there's no duplication of work.
 
+## 🙏 Acknowledgements
+
+Umbrel Middleware is built-upon the great work done by [Casa](https://github.com/casa) who graciously open-sourced its [API](https://github.com/Casa/Casa-Node-API).
+
 ---
 
 [![License](https://img.shields.io/github/license/getumbrel/umbrel-middleware?color=%235351FB)](https://github.com/getumbrel/umbrel-middleware/blob/master/LICENSE)
