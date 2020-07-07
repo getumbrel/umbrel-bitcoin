@@ -68,7 +68,7 @@ If you're looking for a bigger challenge, before opening a pull request please [
 
 ## 🙏 Acknowledgements
 
-Umbrel Middleware is built-upon the great work done by [Casa](https://github.com/casa) who graciously open-sourced its [API](https://github.com/Casa/Casa-Node-API).
+Umbrel Middleware is built upon the work done by [Casa](https://github.com/casa) on its open-source [API](https://github.com/Casa/Casa-Node-API).
 
 ---
 
