@@ -8,11 +8,11 @@ function onionOrigin(req, res, next) {
 
   // Get just the onion address.
   let hiddenService;
-  if (process.env.CASA_NODE_HIDDEN_SERVICE
-    && process.env.CASA_NODE_HIDDEN_SERVICE.startsWith('http://')) {
+  if (process.env.UMBREL_HIDDEN_SERVICE
+    && process.env.UMBREL_HIDDEN_SERVICE.startsWith('http://')) {
 
-    hiddenService = process.env.CASA_NODE_HIDDEN_SERVICE.substring(7, // eslint-disable-line no-magic-numbers
-      process.env.CASA_NODE_HIDDEN_SERVICE.length);
+    hiddenService = process.env.UMBREL_HIDDEN_SERVICE.substring(7, // eslint-disable-line no-magic-numbers
+      process.env.UMBREL_HIDDEN_SERVICE.length);
   }
 
   // If a hidden service is known and the request has the Tor Browser 9.0.0 bug.
@@ -21,7 +21,7 @@ function onionOrigin(req, res, next) {
     && !req.headers.origin) {
 
     // Manually add hidden service (with http://) to the response header.
-    res.setHeader('Access-Control-Allow-Origin', process.env.CASA_NODE_HIDDEN_SERVICE);
+    res.setHeader('Access-Control-Allow-Origin', process.env.UMBREL_HIDDEN_SERVICE);
   }
 
   next();
