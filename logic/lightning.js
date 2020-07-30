@@ -815,7 +815,12 @@ async function getVersion() {
 
 async function getNodeAlias(pubkey) {
   const includeChannels = false;
-  const nodeInfo = await lndService.getNodeInfo(pubkey, includeChannels);
+  let nodeInfo;
+  try {
+    nodeInfo = await lndService.getNodeInfo(pubkey, includeChannels);
+  } catch (error) {
+    return { alias: "" };
+  }
   return { alias: nodeInfo.node.alias }; // eslint-disable-line object-shorthand
 }
 
