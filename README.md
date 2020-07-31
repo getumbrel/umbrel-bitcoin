@@ -25,7 +25,7 @@ Make sure a [`bitcoind`](https://github.com/bitcoin/bitcoin) and [`lnd`](https:/
 
 ### Step 1. Install dependencies
 ```sh
-npm install
+yarn
 ```
 
 ### Step 2. Set environment variables
@@ -47,7 +47,7 @@ Set the following environment variables directly or by placing them in `.env` fi
 
 ### Step 3. Run middleware
 ```sh
-npm start
+yarn start
 ```
 
 You can browse through the available API endpoints [here](https://github.com/getumbrel/umbrel-middleware/tree/master/routes/v1).
