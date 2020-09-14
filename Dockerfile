@@ -1,5 +1,5 @@
 # Build Stage
-FROM node:12.16.3-buster-slim AS umbrel-middleware-builder
+FROM node:12-buster-slim AS umbrel-middleware-builder
 
 # Install tools
 # RUN apt-get update \
@@ -19,7 +19,7 @@ RUN yarn install --production
 COPY . .
 
 # Final image
-FROM node:12.16.3-buster-slim AS umbrel-middleware
+FROM node:12-buster-slim AS umbrel-middleware
 
 # Copy built code from build stage to '/app' directory
 COPY --from=umbrel-middleware-builder /app /app
