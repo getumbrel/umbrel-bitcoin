@@ -167,7 +167,9 @@ async function estimateFeeSweep(address, fullAmtToEstimate, mempoolMinFee, confT
     if (l === amtToEstimate) {
       successfulEstimate.sweepAmount = amtToEstimate;
 
-      if (successfulEstimate.feeSat < convert(mempoolMinFee, 'btc', 'sat', 'Number')) {
+      const estimatedFeeSatPerKiloByte = successfulEstimate.feerateSatPerByte * 1000;
+
+      if (estimatedFeeSatPerKiloByte < convert(mempoolMinFee, 'btc', 'sat', 'Number')) {
         throw new NodeError('FEE_RATE_TOO_LOW');
       }
 
@@ -208,7 +210,9 @@ async function estimateFeeGroupSweep(address, amt, mempoolMinFee) {
 async function estimateFeeWrapper(address, amt, mempoolMinFee, confTarget) {
   const estimate = await lndService.estimateFee(address, amt, confTarget);
 
-  if (estimate.feeSat < convert(mempoolMinFee, 'btc', 'sat', 'Number')) {
+  const estimatedFeeSatPerKiloByte = estimate.feerateSatPerByte * 1000;
+
+  if (estimatedFeeSatPerKiloByte < convert(mempoolMinFee, 'btc', 'sat', 'Number')) {
     throw new NodeError('FEE_RATE_TOO_LOW');
   }
 
