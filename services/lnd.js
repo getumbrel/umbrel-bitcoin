@@ -187,7 +187,7 @@ async function estimateFee(address, amt, confTarget) {
 
 async function generateAddress() {
   const rpcPayload = {
-    type: 1
+    type: 0
   };
 
   const conn = await initializeRPCClient();
