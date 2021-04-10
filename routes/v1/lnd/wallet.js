@@ -13,7 +13,7 @@ router.get('/btc', auth.jwt, safeHandler((req, res) =>
     .then(balance => res.json(balance))
 ));
 
-// API endpoint to change your lnd password. Wallet must exist and be unlocked.
+// API endpoint to change your lnd password.
 router.post('/changePassword', auth.jwt, safeHandler(async(req, res, next) => {
 
   const currentPassword = req.body.currentPassword;
@@ -81,11 +81,6 @@ router.get('/lightning', auth.jwt, safeHandler((req, res) =>
 router.get('/seed', safeHandler((req, res) =>
   lightningLogic.generateSeed()
     .then(seed => res.json(seed))
-));
-
-router.post('/unlock', auth.jwt, safeHandler((req, res) =>
-  lightningLogic.unlockWallet(req.body.password)
-    .then(response => res.json(response))
 ));
 
 module.exports = router;

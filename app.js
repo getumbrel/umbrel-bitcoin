@@ -9,6 +9,8 @@ const bodyParser = require('body-parser');
 const passport = require('passport');
 const cors = require('cors');
 
+const constants = require('utils/const.js');
+
 // Keep requestCorrelationId middleware as the first middleware. Otherwise we risk losing logs.
 const requestCorrelationMiddleware = require('middlewares/requestCorrelationId.js'); // eslint-disable-line id-length
 const camelCaseReqMiddleware = require('middlewares/camelCaseRequest.js').camelCaseRequest;
@@ -60,3 +62,10 @@ app.use((req, res) => {
 });
 
 module.exports = app;
+
+// LND Unlocker
+if (constants.LND_WALLET_PASSWORD) {
+  const LndUnlocker = require('logic/lnd-unlocker');
+  lndUnlocker = new LndUnlocker(constants.LND_WALLET_PASSWORD);
+  lndUnlocker.start();
+}

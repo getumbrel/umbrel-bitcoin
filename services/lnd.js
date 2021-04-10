@@ -99,7 +99,7 @@ async function addInvoice(amount, memo) {
   }
 }
 
-// Change your lnd password. Wallet must exist and be unlocked.
+// Change your lnd password.
 async function changePassword(currentPassword, newPassword) {
 
   const currentPasswordBuff = Buffer.from(currentPassword, 'utf8');

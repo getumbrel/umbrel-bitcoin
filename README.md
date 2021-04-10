@@ -43,6 +43,7 @@ Set the following environment variables directly or by placing them in `.env` fi
 | `TLS_FILE` | Path to `lnd`'s TLS certificate | `/lnd/tls.cert` |
 | `LND_PORT` | Port where `lnd` RPC is listening | `10009` |
 | `LND_NETWORK` | The chain `bitcoind` is running on (mainnet, testnet, regtest, simnet) | `mainnet` |
+| `LND_WALLET_PASSWORD` | The password for the LND wallet which will be automatically unlocked on boot | ` ` |
 | `MACAROON_DIR` | Path to `lnd`'s macaroon directory | `/lnd/data/chain/bitcoin/mainnet/` |
 | `JWT_PUBLIC_KEY_FILE` | Path to the JWT public key created by [`umbrel-manager`](https://github.com/getumbrel/umbrel-manager) | `/jwt-public-key/jwt.pem` |
 
