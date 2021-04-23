@@ -1,6 +1,6 @@
 {
   "name": "umbrel-middleware",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "Middleware for Umbrel Node",
   "author": "Umbrel",
   "scripts": {
