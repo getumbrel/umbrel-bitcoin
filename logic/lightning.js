@@ -750,14 +750,10 @@ async function getStatus() {
   } catch (error) {
 
     // lnd might be active, but not possible to contact
-    // using RPC if the wallet is encrypted. If we get
-    // error code Unimplemented, it means that lnd is
-    // running, but the RPC server is not active yet (only
-    // WalletUnlocker server active) and most likely this
-    // is because of an encrypted wallet.
+    // using RPC if the wallet is encrypted.
     if (error instanceof LndError) {
 
-      if (error.error && error.error.code === UNIMPLEMENTED_CODE) {
+      if (error.error && error.error.details === "wallet locked, unlock it to enable full RPC access") {
 
         return {
           operational: true,
