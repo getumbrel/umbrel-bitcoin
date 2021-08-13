@@ -750,11 +750,14 @@ async function getStatus() {
   } catch (error) {
 
     // lnd might be active, but not possible to contact
-    // using RPC if the wallet is encrypted.
+    // using RPC if the wallet is encrypted or not yet created.
     if (error instanceof LndError) {
+      const operationalErrors = [
+        'wallet locked, unlock it to enable full RPC access',
+        'wallet not created, create one to enable full RPC access',
+      ];
 
-      if (error.error && error.error.details === "wallet locked, unlock it to enable full RPC access") {
-
+      if (error.error && operationalErrors.includes(error.error.details)) {
         return {
           operational: true,
           unlocked: false
