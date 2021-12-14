@@ -9,10 +9,10 @@ services:
                 restart: on-failure
                 stop_grace_period: 15m30s
                 ports:
-                    - "8333:8333"
+                    - "8333:8333" # "$BITCOIN_P2P_PORT:$BITCOIN_P2P_PORT"
                 networks:
                     default:
-                        ipv4_address: "10.21.21.8"
+                        ipv4_address: "10.21.21.8" # $BITCOIN_IP
         server:
                 container_name: server
                 image: bitcoin_server
@@ -20,21 +20,21 @@ services:
                 command: ["npm", "start"]
                 restart: on-failure
                 ports:
-                    - '3005:3005'
+                    - "3005:3005" 
                 environment:
                     PORT: "3005"
-                    BITCOIN_HOST: "10.21.21.8"
-                    RPC_PORT: "8332"
-                    RPC_USER: "umbrel"
-                    RPC_PASSWORD: "unknown"
+                    BITCOIN_HOST: "10.21.21.8" # $BITCOIN_IP
+                    RPC_PORT: "8332" # $BITCOIN_RPC_PORT
+                    RPC_USER: "umbrel" # $BITCOIN_RPC_USER
+                    RPC_PASSWORD: "unknown" # $BITCOIN_RPC_PASS
                     DEVICE_HOSTS: ${DEVICE_HOSTS:-"http://umbrel.local"}
                 networks:
                     default:
-                        ipv4_address: "10.21.21.5"
+                        ipv4_address: "10.21.21.5" # $MIDDLEWARE_IP
 networks:
     default:
       name: umbrel_main_network
       ipam:
           driver: default
           config:
-              - subnet: "$NETWORK_IP/24"
+              - subnet: "10.21.21.0/24" # NETWORK_IP
