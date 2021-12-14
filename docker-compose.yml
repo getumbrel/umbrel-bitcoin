@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
         bitcoin:
-                container_name: bitcoin
+                container_name: core
                 image: lncm/bitcoind:v22.0@sha256:37a1adb29b3abc9f972f0d981f45e41e5fca2e22816a023faa9fdc0084aa4507
                 volumes:
                         - ${PWD}/bitcoin:/data/.bitcoin
