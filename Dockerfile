@@ -18,6 +18,9 @@ RUN yarn install --production
 # Copy project files and folders to the current working directory (i.e. '/app')
 COPY . .
 
+RUN yarn install:ui --production
+RUN yarn build:ui
+
 # Final image
 FROM node:12-buster-slim AS umbrel-middleware
 

@@ -6,6 +6,8 @@
   "scripts": {
     "lint": "eslint",
     "start": "node ./bin/www",
+    "install:ui": "cd ui && yarn build",
+    "build:ui": "cd ui && yarn build",
     "test": "mocha --file test.setup 'test/**/*.js'",
     "coverage": "nyc --all mocha --file test.setup 'test/**/*.js'",
     "postcoverage": "codecov"

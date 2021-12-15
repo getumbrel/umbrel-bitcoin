@@ -31,6 +31,8 @@ app.use(requestCorrelationMiddleware);
 app.use(camelCaseReqMiddleware);
 app.use(morgan(logger.morganConfiguration));
 
+app.use('/', express.static('./ui/dist'));
+
 app.use('/v1/bitcoind/info', bitcoind);
 app.use('/ping', ping);
 
