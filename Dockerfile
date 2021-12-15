@@ -18,7 +18,7 @@ RUN yarn install --production
 # Copy project files and folders to the current working directory (i.e. '/app')
 COPY . .
 
-RUN yarn install:ui --production
+RUN yarn install:ui
 RUN yarn build:ui
 
 # Final image
