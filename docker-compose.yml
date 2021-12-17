@@ -25,7 +25,6 @@ services:
       RPC_PORT: "8332" # $BITCOIN_RPC_PORT
       RPC_USER: "umbrel" # $BITCOIN_RPC_USER
       RPC_PASSWORD: "unknown" # $BITCOIN_RPC_PASS
-      DEVICE_HOSTS: ${DEVICE_HOSTS:-"http://umbrel.local"}
     networks:
       default:
         ipv4_address: "10.21.21.5" # $MIDDLEWARE_IP
