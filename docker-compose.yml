@@ -1,0 +1,37 @@
+version: "3.7"
+
+services:
+  core:
+    image: lncm/bitcoind:v22.0@sha256:37a1adb29b3abc9f972f0d981f45e41e5fca2e22816a023faa9fdc0084aa4507
+    volumes:
+      - ${PWD}/bitcoin:/data/.bitcoin
+    restart: on-failure
+    stop_grace_period: 15m30s
+    ports:
+      - "8333:8333" # "$BITCOIN_P2P_PORT:$BITCOIN_P2P_PORT"
+    networks:
+      default:
+        ipv4_address: "10.21.21.8" # $BITCOIN_IP
+  server:
+    build: .
+    depends_on: [bitcoin]
+    command: ["npm", "start"]
+    restart: on-failure
+    ports:
+      - "3005:3005"
+    environment:
+      PORT: "3005"
+      BITCOIN_HOST: "10.21.21.8" # $BITCOIN_IP
+      RPC_PORT: "8332" # $BITCOIN_RPC_PORT
+      RPC_USER: "umbrel" # $BITCOIN_RPC_USER
+      RPC_PASSWORD: "unknown" # $BITCOIN_RPC_PASS
+    networks:
+      default:
+        ipv4_address: "10.21.21.5" # $MIDDLEWARE_IP
+networks:
+  default:
+    name: umbrel_main_network
+    ipam:
+      driver: default
+      config:
+        - subnet: "10.21.21.0/24" # NETWORK_IP
