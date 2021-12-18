@@ -14,7 +14,7 @@ services:
         ipv4_address: "10.21.21.8" # $BITCOIN_IP
   server:
     build: .
-    depends_on: [bitcoin]
+    depends_on: [core]
     command: ["npm", "start"]
     restart: on-failure
     ports:
