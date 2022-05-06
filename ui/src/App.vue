@@ -1,16 +1,20 @@
 <template>
-  <div id="app">
+  <div id="app" class="container-xxl">
     <transition name="loading" mode>
       <div v-if="isIframe">
-        <div class="d-flex flex-column align-items-center justify-content-center min-vh100 p-2">
+        <div
+          class="d-flex flex-column align-items-center justify-content-center min-vh100 p-2"
+        >
           <img alt="Umbrel" src="@/assets/logo.svg" class="mb-5 logo" />
           <span class="text-muted w-75 text-center">
-            <small>For security reasons Umbrel cannot be embedded in an iframe.</small>
+            <small
+              >For security reasons Umbrel cannot be embedded in an
+              iframe.</small
+            >
           </span>
         </div>
       </div>
-      <loading v-else-if="loading" :progress="loadingProgress">
-      </loading>
+      <loading v-else-if="loading" :progress="loadingProgress"> </loading>
       <!-- component matched by the route will render here -->
       <router-view v-else></router-view>
     </transition>
@@ -37,10 +41,8 @@ export default {
   },
   computed: {
     ...mapState({
-      isManagerApiOperational: state => state.system.managerApi.operational,
-      isApiOperational: (state) => {
-        console.log('isApiOperational state: ', state)
-        return state.system.api.operational
+      isApiOperational: state => {
+        return state.system.api.operational;
       }
     })
   },
@@ -83,6 +85,7 @@ export default {
     //for 100vh consistency
     this.updateViewPortHeightCSS();
     window.addEventListener("resize", this.updateViewPortHeightCSS);
+    document.title = "Bitcoin - Umbrel";
   },
   watch: {
     loading: {
@@ -103,7 +106,7 @@ export default {
         }
       },
       immediate: true
-    },
+    }
   },
   beforeDestroy() {
     window.removeEventListener("resize", this.updateViewPortHeightCSS);
@@ -137,12 +140,5 @@ export default {
 .loading-leave-to {
   opacity: 0;
   // filter: blur(70px);
-}
-
-.system-alert {
-  position: absolute;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
 }
 </style>

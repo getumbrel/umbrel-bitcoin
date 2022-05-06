@@ -25,11 +25,22 @@
             }}</span>
           </div>
         </div>
+        <div class="d-flex justify-content-start align-items-center">
+          <b-button
+            type="button"
+            variant="primary"
+            class="btn btn-primary capitalize py-2 pl-2 pr-3"
+            v-b-modal.connect-modal
+          >
+            <b-icon icon="plus" aria-hidden="true"></b-icon>
+            Connect
+          </b-button>
+        </div>
       </div>
     </div>
 
     <b-row class="row-eq-height">
-      <b-col col cols="12" md="6" xl="6">
+      <b-col col cols="12" md="4" xl="4">
         <card-widget
           header="Blockchain"
           :loading="syncPercent !== 100 || blocks.length === 0"
@@ -70,37 +81,18 @@
                 {{ blockHeight.toLocaleString() }} blocks
               </small>
             </div>
-            <!-- low storage mode  -->
-            <!-- <div class="d-flex w-100 justify-content-between px-3 px-lg-4 mb-4">
-              <div>
-                <span class="d-block">Low Storage Mode</span>
-                <small class="text-muted d-block">Discard old blocks</small>
-              </div>
-              <toggle-switch class="align-self-center"></toggle-switch>
-            </div>-->
             <p class="px-3 px-lg-4 mb-3">Latest Blocks</p>
-            <blockchain :numBlocks="3"></blockchain>
+            <blockchain :numBlocks="5"></blockchain>
             <div class="px-3 px-lg-4 py-2"></div>
           </div>
         </card-widget>
       </b-col>
-      <b-col col cols="12" xl="6">
+      <b-col col cols="12" md="8" xl="8">
         <card-widget header="Network">
           <div class>
-            <div class="px-3 px-lg-4 pb-2">
+            <div class="px-3 px-lg-4 pb-4">
               <b-row>
-                <!-- <b-col col cols="6" md="3" xl="6" v-for="stat in stats" :key="stat.title">
-                  <stat
-                    :title="stat.title"
-                    :value="stat.value"
-                    :suffix="stat.suffix"
-                    :change="{
-                      value: stat.change.value,
-                      suffix: stat.change.suffix
-                    }"
-                  ></stat>
-                </b-col>-->
-                <b-col col cols="6" md="3" xl="6">
+                <b-col col cols="6" md="3">
                   <stat
                     title="Connections"
                     :value="stats.peers"
@@ -108,7 +100,7 @@
                     showNumericChange
                   ></stat>
                 </b-col>
-                <b-col col cols="6" md="3" xl="6">
+                <b-col col cols="6" md="3">
                   <stat
                     title="Mempool"
                     :value="abbreviateSize(stats.mempool)[0]"
@@ -116,7 +108,7 @@
                     showPercentChange
                   ></stat>
                 </b-col>
-                <b-col col cols="6" md="3" xl="6">
+                <b-col col cols="6" md="3">
                   <stat
                     title="Hashrate"
                     :value="abbreviateHashRate(stats.hashrate)[0]"
@@ -124,7 +116,7 @@
                     showPercentChange
                   ></stat>
                 </b-col>
-                <b-col col cols="6" md="3" xl="6">
+                <b-col col cols="6" md="3">
                   <stat
                     title="Blockchain Size"
                     :value="abbreviateSize(stats.blockchainSize)[0]"
@@ -134,10 +126,14 @@
                 </b-col>
               </b-row>
             </div>
+            <chart-wrapper></chart-wrapper>
           </div>
         </card-widget>
       </b-col>
     </b-row>
+    <b-modal id="connect-modal" size="lg" centered hide-footer>
+      <connection-modal></connection-modal>
+    </b-modal>
   </div>
 </template>
 
@@ -148,6 +144,8 @@ import { mapState } from "vuex";
 import CardWidget from "@/components/CardWidget";
 import Blockchain from "@/components/Blockchain";
 import Stat from "@/components/Utility/Stat";
+import ConnectionModal from "@/components/ConnectionModal";
+import ChartWrapper from "@/components/ChartWrapper.vue";
 
 export default {
   data() {
@@ -161,9 +159,8 @@ export default {
       currentBlock: state => state.bitcoin.currentBlock,
       blockHeight: state => state.bitcoin.blockHeight,
       stats: state => state.bitcoin.stats,
-      onionAddress: state => state.bitcoin.onionAddress,
-      electrumAddress: state => state.bitcoin.electrumAddress,
-      rpc: state => state.bitcoin.rpc
+      rpc: state => state.bitcoin.rpc,
+      p2p: state => state.bitcoin.p2p
     })
   },
   methods: {
@@ -194,7 +191,6 @@ export default {
     fetchConnectionDetails() {
       return Promise.all([
         this.$store.dispatch("bitcoin/getP2PInfo"),
-        this.$store.dispatch("bitcoin/getElectrumInfo"),
         this.$store.dispatch("bitcoin/getRpcInfo")
       ]);
     }
@@ -212,8 +208,8 @@ export default {
     CardWidget,
     Blockchain,
     Stat,
+    ChartWrapper,
+    ConnectionModal
   }
 };
 </script>
-
-<style lang="scss" scoped></style>

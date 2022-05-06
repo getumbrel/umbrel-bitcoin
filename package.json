@@ -27,7 +27,6 @@
     "morgan": "^1.9.0",
     "request-promise": "^4.2.2",
     "uuid": "^3.3.2",
-    "validator": "^9.2.0",
     "winston": "^3.0.0-rc5",
     "winston-daily-rotate-file": "^3.1.3"
   },

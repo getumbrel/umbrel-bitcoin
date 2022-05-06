@@ -3,7 +3,12 @@
     <div class="blockchain-container">
       <div v-if="blocks.length">
         <!-- transitions for blocks -->
-        <transition-group name="blockchain" mode="out-in" tag="ul" :duration="5000">
+        <transition-group
+          name="blockchain"
+          mode="out-in"
+          tag="ul"
+          :duration="5000"
+        >
           <li
             href="#"
             class="flex-column align-items-start px-3 px-lg-4 blockchain-block"
@@ -38,12 +43,12 @@
                   <div class="blockchain-block-icon-bg"></div>
                 </div>
                 <div class="align-self-center">
-                  <h6 class="mb-1 font-weight-normal">Block {{ block.height.toLocaleString() }}</h6>
+                  <h6 class="mb-1 font-weight-normal">
+                    Block {{ block.height.toLocaleString() }}
+                  </h6>
                   <small class="text-muted" v-if="block.numTransactions">
-                    {{
-                    block.numTransactions.toLocaleString()
-                    }}
-                    transaction{{ block.numTransactions !== 1 ? 's' : '' }}
+                    {{ block.numTransactions.toLocaleString() }}
+                    transaction{{ block.numTransactions !== 1 ? "s" : "" }}
                   </small>
                   <!-- <small class="text-muted" v-if="block.size">
                     <span>&bull; {{ Math.round(block.size / 1000) }} KB</span>
@@ -54,7 +59,8 @@
                 class="text-muted align-self-center text-right blockchain-block-timestamp"
                 v-if="block.time"
                 :title="blockReadableTime(block.time)"
-              >{{ blockTime(block.time) }}</small>
+                >{{ blockTime(block.time) }}</small
+              >
             </div>
           </li>
         </transition-group>
@@ -64,12 +70,14 @@
           <li
             href="#"
             class="flex-column align-items-start px-3 px-lg-4 blockchain-block"
-            v-for="(fake, index) in [1, 2, 3]"
+            v-for="(fake, index) in [1, 2, 3, 4, 5]"
             :key="index"
           >
             <div class="d-flex w-100 justify-content-between">
               <div class="d-flex">
-                <div class="blockchain-block-icon blockchain-block-icon-loading">
+                <div
+                  class="blockchain-block-icon blockchain-block-icon-loading"
+                >
                   <svg
                     width="28"
                     height="30"
@@ -95,7 +103,10 @@
                   <div class="blockchain-block-icon-bg"></div>
                 </div>
                 <div class="align-self-center">
-                  <span class="d-block loading-placeholder mb-1" style="width: 140px;"></span>
+                  <span
+                    class="d-block loading-placeholder mb-1"
+                    style="width: 140px;"
+                  ></span>
                   <span
                     class="d-block loading-placeholder loading-placeholder-sm"
                     style="width: 80px"
@@ -122,7 +133,9 @@ export default {
   data() {
     return {
       polling: null,
-      pollInProgress: false
+      pollInProgress: false,
+      aggregatePolling: null,
+      aggregatePollInProgress: false
     };
   },
   computed: {
@@ -133,19 +146,22 @@ export default {
   },
   methods: {
     async fetchBlocks() {
-      console.log('fetchBlocks()');
-      console.log('this.pollInProgress: ', this.pollInProgress);
-      console.log('this: ', this);
       //prevent multiple polls if previous poll already in progress
       if (this.pollInProgress) {
         return;
       }
       this.pollInProgress = true;
-      //TODO: remove this timeout added so bitcoin can get fetch status first
-      setTimeout(async () => {
-        await this.$store.dispatch("bitcoin/getBlocks");
-        this.pollInProgress = false;
-      }, 1000);
+      await this.$store.dispatch("bitcoin/getBlocks");
+      this.pollInProgress = false;
+    },
+    async fetchBlockRangeTransactionChunks() {
+      //prevent multiple polls if previous poll already in progress
+      if (this.aggregatePollInProgress) {
+        return;
+      }
+      this.aggregatePollInProgress = true;
+      await this.$store.dispatch("bitcoin/getBlockRangeTransactionChunks");
+      this.aggregatePollInProgress = false;
     },
     poller(syncPercent) {
       window.clearInterval(this.polling);
@@ -155,6 +171,16 @@ export default {
       } else {
         //else, slow down and fetch blocks every minute
         this.polling = window.setInterval(this.fetchBlocks, 60 * 1000);
+      }
+    },
+    aggregatePoller(syncPercent) {
+      window.clearInterval(this.aggregatePolling);
+      //if syncing, fetch blocks every minute
+      if (Number(syncPercent) > 98) {
+        this.aggregatePolling = window.setInterval(
+          this.fetchBlockRangeTransactionChunks,
+          60 * 1000
+        );
       }
     },
     blockTime(timestamp) {
@@ -173,23 +199,27 @@ export default {
   created() {
     //immediately fetch blocks on first load
     this.fetchBlocks();
+    this.fetchBlockRangeTransactionChunks();
 
     //then start polling
     this.poller(this.syncPercent);
+    this.aggregatePoller(this.syncPercent);
   },
   watch: {
     syncPercent(newPercent) {
       // reset polling time depending upon sync %
       this.poller(newPercent);
+      this.aggregatePoller(newPercent);
     }
   },
   beforeDestroy() {
     window.clearInterval(this.polling);
+    window.clearInterval(this.aggregatePolling);
   },
   props: {
     numBlocks: {
       type: Number,
-      default: 3
+      default: 5
     }
   },
 
@@ -205,7 +235,7 @@ export default {
     padding: 1rem 0;
     margin: 0;
     // max-height: 18rem;
-    height: 19rem;
+    height: 31rem;
     overflow: hidden;
     // overflow-y: scroll;
     // -webkit-overflow-scrolling: touch; //momentum scroll on iOS

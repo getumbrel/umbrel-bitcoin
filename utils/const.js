@@ -1,18 +1,12 @@
 /* eslint-disable id-length */
 module.exports = {
-  LN_REQUIRED_CONFIRMATIONS: 3,
-  LND_STATUS_CODES: {
-    UNAVAILABLE: 14,
-    UNKNOWN: 2,
-  },
-  JWT_PUBLIC_KEY_FILE: process.env.JWT_PUBLIC_KEY_FILE || 'UNKNOWN',
-  MANAGED_CHANNELS_FILE: '/channel-data/managedChannels.json',
-  LND_WALLET_PASSWORD: process.env.LND_WALLET_PASSWORD || 'moneyprintergobrrr',
-  REQUEST_CORRELATION_NAMESPACE_KEY: 'umbrel-middleware-request',
+  REQUEST_CORRELATION_NAMESPACE_KEY: 'umbrel-manager-request',
   REQUEST_CORRELATION_ID_KEY: 'reqId',
-  STATUS_CODES: {
-    BAD_GATEWAY: 502,
-    FORBIDDEN: 403,
-    OK: 200,
-  },
+  DEVICE_HOSTNAME: process.env.DEVICE_HOSTNAME || 'umbrel.local',
+  BITCOIN_P2P_HIDDEN_SERVICE: process.env.BITCOIN_P2P_HIDDEN_SERVICE,
+  BITCOIN_P2P_PORT: process.env.BITCOIN_P2P_PORT || 8333,
+  BITCOIN_RPC_HIDDEN_SERVICE: process.env.BITCOIN_RPC_HIDDEN_SERVICE,
+  BITCOIN_RPC_PORT: process.env.BITCOIN_RPC_PORT || 8332,
+  BITCOIN_RPC_USER: process.env.BITCOIN_RPC_USER || 'umbrel',
+  BITCOIN_RPC_PASSWORD: process.env.BITCOIN_RPC_PASSWORD || 'moneyprintergobrrr',
 };
