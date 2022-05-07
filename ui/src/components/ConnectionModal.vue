@@ -171,13 +171,3 @@ export default {
   }
 };
 </script>
-
-<style lang="scss" scoped>
-.tx-chart-filter-button {
-  text-transform: none;
-  background: transparent;
-  padding: 0.55em 0.8em;
-  border-radius: 100%;
-  margin: 0 0.25em;
-}
-</style>

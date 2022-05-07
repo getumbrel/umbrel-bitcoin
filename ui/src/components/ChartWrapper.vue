@@ -62,5 +62,10 @@ export default {
   height: 3.5em;
   border-radius: 9999px;
   margin: 0 0.25em;
+  white-space: nowrap;
+  @media (max-width: 800px) {
+    font-size: 12px;
+    margin-top: 14px;
+  }
 }
 </style>

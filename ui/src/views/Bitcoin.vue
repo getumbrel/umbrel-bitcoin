@@ -1,11 +1,11 @@
 <template>
-  <div class="p-sm-2">
+  <div class="py-4 px-2">
     <div class="my-3 pb-2">
-      <div class="d-flex justify-content-between align-items-center">
-        <div class="d-flex justify-content-start align-items-center">
+      <div class="d-flex flex-wrap justify-content-between align-items-center mb-2">
+        <div class="d-flex flex-grow-1 justify-content-start align-items-center mb-4">
           <img
-            style="height: auto; width: 12vw; max-width: 100px"
             class="mr-2 mr-sm-3"
+            style="height: 6rem; width: 6rem"
             src="@/assets/icon-app-bitcoin.svg"
           />
           <div>
@@ -25,11 +25,11 @@
             }}</span>
           </div>
         </div>
-        <div class="d-flex justify-content-start align-items-center">
+        <div class="d-flex col-12 col-md-auto justify-content-start align-items-center">
           <b-button
             type="button"
             variant="primary"
-            class="btn btn-primary capitalize py-2 pl-2 pr-3"
+            class="btn btn-primary capitalize py-2 pl-2 pr-3 w-100"
             v-b-modal.connect-modal
           >
             <b-icon icon="plus" aria-hidden="true"></b-icon>
