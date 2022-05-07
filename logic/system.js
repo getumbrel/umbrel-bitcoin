@@ -20,7 +20,7 @@ function getBitcoinRPCConnectionDetails() {
   const rpcpassword = constants.BITCOIN_RPC_PASSWORD;
   const address = hiddenService;
   const port = constants.BITCOIN_RPC_PORT;
-  const connectionString = encodeURIComponent(`btcrpc://${rpcuser}:${rpcpassword}@${address}:${port}?label=${label}`);
+  const connectionString = `btcrpc://${rpcuser}:${rpcpassword}@${address}:${port}?label=${encodeURIComponent(label)}`;
 
   return {
     rpcuser,
