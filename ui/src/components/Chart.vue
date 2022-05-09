@@ -25,9 +25,7 @@ export default {
           spacingRight: 0,
           plotLeft: true,
           plotTop: true,
-          animation: {
-            duration: 1000
-          }
+          animation: false
         },
         credits: {
           enabled: false
