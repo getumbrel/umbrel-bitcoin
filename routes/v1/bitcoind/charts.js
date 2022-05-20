@@ -13,46 +13,39 @@ const aggregates = {
   '7d': [],
 };
 
-let isPolling = false;
-
 const setAggregatesValues = async() => {
-  if(isPolling) {
-    return;
-  } else {
-    isPolling = true;
-    const {result: blockchainInfo} = await bitcoindService.getBlockChainInfo();
-    const syncPercent = blockchainInfo.verificationprogress;
+  const {result: blockchainInfo} = await bitcoindService.getBlockChainInfo();
+  const syncPercent = blockchainInfo.verificationprogress;
+  
+  // only start caching once sync is getting close to complete
+  if (syncPercent > 0.98) { 
+    const currentBlock = blockchainInfo.blocks;
     
-    // only start caching once sync is getting close to complete
-    if (syncPercent > 0.98) { 
-      const currentBlock = blockchainInfo.blocks;
-      
-      const ONE_HOUR_AS_BLOCKS = 6;
-      const SIX_HOURS_AS_BLOCKS = 36;
-      const TWELVE_HOURS_AS_BLOCKS = 72;
-      const ONE_DAY_AS_BLOCKS = 144;
-      const THREE_DAY_AS_BLOCKS = 432;
-      const SEVEN_DAY_AS_BLOCKS = 1008;
-  
-      const ranges = await Promise.all([
-        bitcoind.getBlockRangeTransactionChunks(currentBlock - ONE_HOUR_AS_BLOCKS, currentBlock, 1), // 1hr
-        bitcoind.getBlockRangeTransactionChunks(currentBlock - SIX_HOURS_AS_BLOCKS, currentBlock, 6), // 6hr
-        bitcoind.getBlockRangeTransactionChunks(currentBlock - TWELVE_HOURS_AS_BLOCKS, currentBlock, 36), // 12hr
-        bitcoind.getBlockRangeTransactionChunks(currentBlock - ONE_DAY_AS_BLOCKS, currentBlock, 72), // 1d
-        bitcoind.getBlockRangeTransactionChunks(currentBlock - THREE_DAY_AS_BLOCKS, currentBlock, 144), // 3d
-        bitcoind.getBlockRangeTransactionChunks(currentBlock - SEVEN_DAY_AS_BLOCKS, currentBlock, 432) // 7d
-      ]);
-  
-      aggregates['1hr'] = ranges[0];
-      aggregates['6hr'] = ranges[1];
-      aggregates['12hr'] = ranges[2];
-      aggregates['1d'] = ranges[3];
-      aggregates['3d'] = ranges[4];
-      aggregates['7d'] = ranges[5];
-      
-      isPolling = false;
-      return aggregates;
-    }
+    const ONE_HOUR_AS_BLOCKS = 6;
+    const SIX_HOURS_AS_BLOCKS = 36;
+    const TWELVE_HOURS_AS_BLOCKS = 72;
+    const ONE_DAY_AS_BLOCKS = 144;
+    const THREE_DAY_AS_BLOCKS = 432;
+    const SEVEN_DAY_AS_BLOCKS = 1008;
+
+    const ranges = await Promise.all([
+      bitcoind.getBlockRangeTransactionChunks(currentBlock - ONE_HOUR_AS_BLOCKS, currentBlock, 1), // 1hr
+      bitcoind.getBlockRangeTransactionChunks(currentBlock - SIX_HOURS_AS_BLOCKS, currentBlock, 6), // 6hr
+      bitcoind.getBlockRangeTransactionChunks(currentBlock - TWELVE_HOURS_AS_BLOCKS, currentBlock, 36), // 12hr
+      bitcoind.getBlockRangeTransactionChunks(currentBlock - ONE_DAY_AS_BLOCKS, currentBlock, 72), // 1d
+      bitcoind.getBlockRangeTransactionChunks(currentBlock - THREE_DAY_AS_BLOCKS, currentBlock, 144), // 3d
+      bitcoind.getBlockRangeTransactionChunks(currentBlock - SEVEN_DAY_AS_BLOCKS, currentBlock, 432) // 7d
+    ]);
+
+    aggregates['1hr'] = ranges[0];
+    aggregates['6hr'] = ranges[1];
+    aggregates['12hr'] = ranges[2];
+    aggregates['1d'] = ranges[3];
+    aggregates['3d'] = ranges[4];
+    aggregates['7d'] = ranges[5];
+    
+    
+    return aggregates;
   }
 };
 
