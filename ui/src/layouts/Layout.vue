@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="content-container px-2">
     <transition name="change-page" mode="out-in">
       <router-view></router-view>
     </transition>
@@ -8,13 +8,18 @@
 
 <script>
 export default {
-  name: "SimpleLayout"
+  name: "Layout"
 };
 </script>
 
 <style lang="scss" scoped>
+.content-container {
+  display: block;
+  width: 100%;
+  max-width: 1374px;
+  margin: auto;
+}
 // Page changing transitions
-
 .change-page-enter-active,
 .change-page-leave-active {
   transition: transform 0.4s, opacity 0.4s ease;

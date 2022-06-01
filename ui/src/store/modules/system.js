@@ -21,18 +21,6 @@ const mutations = {
 
 // Functions to get data from the API
 const actions = {
-  async getVersion({ commit }) {
-    const data = await API.get(
-      `${process.env.VUE_APP_MANAGER_VUE_APP_API_BASE_URL}/v1/system/info`
-    );
-    if (data && data.version) {
-      let { version } = data;
-      if (data.build) {
-        version += `-build-${data.build}`;
-      }
-      commit("setVersion", version);
-    }
-  },
   async getApi({ commit }) {
     console.log(`${process.env.VUE_APP_API_BASE_URL}`);
     const api = await API.get(`${process.env.VUE_APP_API_BASE_URL}/ping`);
