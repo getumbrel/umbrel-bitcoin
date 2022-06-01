@@ -115,7 +115,7 @@ const mutations = {
 const actions = {
   async getStatus({ commit }) {
     const status = await API.get(
-      '/v1/bitcoind/info/status'
+      `${process.env.VUE_APP_API_BASE_URL}/v1/bitcoind/info/status`
     );
 
     if (status) {
@@ -129,7 +129,7 @@ const actions = {
 
   async getP2PInfo({ commit }) {
     const p2pInfo = await API.get(
-      '/v1/bitcoind/system/bitcoin-p2p-connection-details'
+      `${process.env.VUE_APP_API_BASE_URL}/v1/bitcoind/system/bitcoin-p2p-connection-details`
     );
 
     if (p2pInfo) {
@@ -139,7 +139,7 @@ const actions = {
 
   async getRpcInfo({ commit }) {
     const rpcInfo = await API.get(
-      '/v1/bitcoind/system/bitcoin-rpc-connection-details'
+      `${process.env.VUE_APP_API_BASE_URL}/v1/bitcoind/system/bitcoin-rpc-connection-details`
     );
 
     if (rpcInfo) {
@@ -149,7 +149,7 @@ const actions = {
 
   async getSync({ commit }) {
     const sync = await API.get(
-      '/v1/bitcoind/info/sync'
+      `${process.env.VUE_APP_API_BASE_URL}/v1/bitcoind/info/sync`
     );
 
     if (sync) {
@@ -176,7 +176,7 @@ const actions = {
 
     //TODO: Fetch only new blocks
     const latestFiveBlocks = await API.get(
-      `/v1/bitcoind/info/blocks?from=${currentBlock - 4}&to=${currentBlock}`
+      `${process.env.VUE_APP_API_BASE_URL}/v1/bitcoind/info/blocks?from=${currentBlock - 4}&to=${currentBlock}`
     );
 
     if (!latestFiveBlocks.blocks) {
@@ -189,7 +189,7 @@ const actions = {
 
   async getBlockRangeTransactionChunks({ commit }) {
     const blockRangeTransactionChunks = await API.get(
-      '/v1/bitcoind/info/charts'
+      `${process.env.VUE_APP_API_BASE_URL}/v1/bitcoind/info/charts`
     );
 
     // Update chunks
@@ -198,7 +198,7 @@ const actions = {
 
   async getVersion({ commit }) {
     const version = await API.get(
-      '/v1/bitcoind/info/version'
+      `${process.env.VUE_APP_API_BASE_URL}/v1/bitcoind/info/version`
     );
 
     if (version) {
@@ -208,7 +208,7 @@ const actions = {
 
   async getPeers({ commit }) {
     const peers = await API.get(
-      '/v1/bitcoind/info/connections'
+      `${process.env.VUE_APP_API_BASE_URL}/v1/bitcoind/info/connections`
     );
 
     if (peers) {
@@ -218,7 +218,7 @@ const actions = {
 
   async getStats({ commit }) {
     const stats = await API.get(
-      '/v1/bitcoind/info/stats'
+      `${process.env.VUE_APP_API_BASE_URL}/v1/bitcoind/info/stats`
     );
 
     if (stats) {
