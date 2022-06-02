@@ -1,12 +1,11 @@
 <template>
-  <div class="py-4 px-2">
+  <div class="pt-2 pt-md-4 pb-4 px-2">
     <div class="my-3 pb-2">
       <div class="d-flex flex-wrap justify-content-between align-items-center mb-2">
-        <div class="d-flex flex-grow-1 justify-content-start align-items-center mb-4">
+        <div class="d-flex flex-grow-1 justify-content-start align-items-center mb-3">
           <img
-            class="mr-2 mr-sm-3"
-            style="height: 6rem; width: 6rem"
-            src="@/assets/icon-app-bitcoin.svg"
+            class="app-icon mr-2 mr-sm-3"
+            src="@/assets/icon.svg"
           />
           <div>
             <svg
@@ -19,17 +18,17 @@
               <circle cx="4" cy="4" r="4" fill="#00CD98" />
             </svg>
             <small class="ml-1 text-success">Running</small>
-            <h3 class="d-block font-weight-bold mb-1">Bitcoin Core</h3>
+            <h3 class="d-block font-weight-bold mb-1">Bitcoin Node</h3>
             <span class="d-block text-muted">{{
-              version ? `v${version}` : "..."
+              version ? `Bitcoin Core ${version}` : "..."
             }}</span>
           </div>
         </div>
-        <div class="d-flex col-12 col-md-auto justify-content-start align-items-center">
+        <div class="d-flex col-12 col-md-auto justify-content-start align-items-center p-0">
           <b-button
             type="button"
             variant="primary"
-            class="btn btn-primary capitalize py-2 pl-2 pr-3 w-100"
+            class="btn btn-primary capitalize py-1 pl-2 pr-3 w-100"
             v-b-modal.connect-modal
           >
             <b-icon icon="plus" aria-hidden="true"></b-icon>
@@ -40,7 +39,7 @@
     </div>
 
     <b-row class="row-eq-height">
-      <b-col col cols="12" md="4" xl="4">
+      <b-col col cols="12" md="5" lg="4">
         <card-widget
           header="Blockchain"
           :loading="syncPercent !== 100 || blocks.length === 0"
@@ -49,7 +48,7 @@
             <b-dropdown-item variant="danger" href="#" disabled>Resync Blockchain</b-dropdown-item>
           </template>-->
           <div class>
-            <div class="px-3 px-lg-4 mb-3">
+            <div class="px-3 px-lg-4 mb-4">
               <div class="w-100 d-flex justify-content-between mb-2">
                 <span class="align-self-end">Synchronized</span>
                 <h3 class="font-weight-normal mb-0">
@@ -70,8 +69,6 @@
                 class="mb-1"
                 variant="success"
                 :style="{ height: '4px' }"
-                animated
-                striped
               ></b-progress>
               <small
                 class="text-muted d-block text-right"
@@ -83,14 +80,13 @@
             </div>
             <p class="px-3 px-lg-4 mb-3">Latest Blocks</p>
             <blockchain :numBlocks="5"></blockchain>
-            <div class="px-3 px-lg-4 py-2"></div>
           </div>
         </card-widget>
       </b-col>
-      <b-col col cols="12" md="8" xl="8">
+      <b-col col cols="12" md="7" lg="8">
         <card-widget header="Network">
           <div class>
-            <div class="px-3 px-lg-4 pb-4">
+            <div class="px-3 px-lg-4 pb-2">
               <b-row>
                 <b-col col cols="6" md="3">
                   <stat
@@ -126,7 +122,6 @@
                 </b-col>
               </b-row>
             </div>
-            <chart-wrapper></chart-wrapper>
           </div>
         </card-widget>
       </b-col>
@@ -145,7 +140,6 @@ import CardWidget from "@/components/CardWidget";
 import Blockchain from "@/components/Blockchain";
 import Stat from "@/components/Utility/Stat";
 import ConnectionModal from "@/components/ConnectionModal";
-import ChartWrapper from "@/components/ChartWrapper.vue";
 
 export default {
   data() {
@@ -208,8 +202,15 @@ export default {
     CardWidget,
     Blockchain,
     Stat,
-    ChartWrapper,
     ConnectionModal
   }
 };
 </script>
+
+<style lang="scss" scoped>
+.app-icon {
+  height: 120px;
+  width: 120px;
+  border-radius: 22%;
+}
+</style>
