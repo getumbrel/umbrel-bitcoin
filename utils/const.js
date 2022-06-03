@@ -9,4 +9,5 @@ module.exports = {
   BITCOIN_RPC_PORT: process.env.BITCOIN_RPC_PORT || 8332,
   BITCOIN_RPC_USER: process.env.BITCOIN_RPC_USER || 'umbrel',
   BITCOIN_RPC_PASSWORD: process.env.BITCOIN_RPC_PASSWORD || 'moneyprintergobrrr',
+  DEVICE_DOMAIN_NAME: process.env.DEVICE_DOMAIN_NAME
 };

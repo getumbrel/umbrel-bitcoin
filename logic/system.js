@@ -2,14 +2,18 @@ const constants = require('utils/const.js');
 const NodeError = require('models/errors.js').NodeError;
 
 function getBitcoinP2PConnectionDetails() {
-    const address = constants.BITCOIN_P2P_HIDDEN_SERVICE;
+    const torAddress = constants.BITCOIN_P2P_HIDDEN_SERVICE;
     const port = constants.BITCOIN_P2P_PORT;
-    const connectionString = `${address}:${port}`;
+    const torConnectionString = `${torAddress}:${port}`;
+    const localAddress = constants.DEVICE_DOMAIN_NAME;
+    const localConnectionString = `${localAddress}:${port}`;
 
     return {
-      address,
+      torAddress,
       port,
-      connectionString
+      torConnectionString,
+      localAddress,
+      localConnectionString
     };
 }
 
@@ -18,16 +22,20 @@ function getBitcoinRPCConnectionDetails() {
   const label = 'My Umbrel';
   const rpcuser = constants.BITCOIN_RPC_USER;
   const rpcpassword = constants.BITCOIN_RPC_PASSWORD;
-  const address = hiddenService;
+  const torAddress = hiddenService;
   const port = constants.BITCOIN_RPC_PORT;
-  const connectionString = `btcrpc://${rpcuser}:${rpcpassword}@${address}:${port}?label=${encodeURIComponent(label)}`;
+  const torConnectionString = `btcrpc://${rpcuser}:${rpcpassword}@${torAddress}:${port}?label=${encodeURIComponent(label)}`;
+  const localAddress = constants.DEVICE_DOMAIN_NAME;
+  const localConnectionString = `btcrpc://${rpcuser}:${rpcpassword}@${localAddress}:${port}?label=${encodeURIComponent(label)}`;
 
   return {
     rpcuser,
     rpcpassword,
-    address,
+    torAddress,
     port,
-    connectionString
+    torConnectionString,
+    localAddress,
+    localConnectionString
   };
 }
 

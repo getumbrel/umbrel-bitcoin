@@ -25,3 +25,4 @@ services:
       RPC_PASSWORD: "moneyprintergobrrr"
       BITCOIN_RPC_HIDDEN_SERVICE: "somehiddenservice.onion"
       BITCOIN_P2P_HIDDEN_SERVICE: "anotherhiddenservice.onion"
+      DEVICE_DOMAIN_NAME: "test.local"
