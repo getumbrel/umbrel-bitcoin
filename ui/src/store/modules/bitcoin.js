@@ -7,16 +7,20 @@ const state = () => ({
   calibrating: false,
   version: "",
   p2p: {
-    address: "",
     port: "",
-    connectionString: ""
+    localAddress: "",
+    localConnectionString: "",
+    torAddress: "",
+    torConnectionString: "",
   },
   rpc: {
     rpcuser: "",
     rpcpassword: "",
-    address: "",
     port: "",
-    connectionString: ""
+    localAddress: "",
+    localConnectionString: "",
+    torAddress: "",
+    torConnectionString: "",
   },
   currentBlock: 0,
   chain: "",
@@ -91,17 +95,21 @@ const mutations = {
   },
 
   setP2PInfo(state, p2pInfo) {
-    state.p2p.address = p2pInfo.address;
     state.p2p.port = p2pInfo.port;
-    state.p2p.connectionString = p2pInfo.connectionString;
+    state.p2p.localAddress = p2pInfo.localAddress;
+    state.p2p.localConnectionString = p2pInfo.localConnectionString;
+    state.p2p.torAddress = p2pInfo.torAddress;
+    state.p2p.torConnectionString = p2pInfo.torConnectionString;
   },
 
   setRpcInfo(state, rpcInfo) {
     state.rpc.rpcuser = rpcInfo.rpcuser;
     state.rpc.rpcpassword = rpcInfo.rpcpassword;
-    state.rpc.address = rpcInfo.address;
     state.rpc.port = rpcInfo.port;
-    state.rpc.connectionString = rpcInfo.connectionString;
+    state.rpc.localAddress = rpcInfo.localAddress;
+    state.rpc.localConnectionString = rpcInfo.localConnectionString;
+    state.rpc.torAddress = rpcInfo.torAddress;
+    state.rpc.torConnectionString = rpcInfo.torConnectionString;
   },
 
   peers(state, peers) {

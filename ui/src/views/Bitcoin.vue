@@ -2,7 +2,7 @@
   <div class="pt-2 pt-md-4 pb-4 px-2">
     <div class="my-3 pb-2">
       <div class="d-flex flex-wrap justify-content-between align-items-center mb-2">
-        <div class="d-flex flex-grow-1 justify-content-start align-items-center mb-3">
+        <div class="d-flex flex-grow-1 justify-content-start align-items-start mb-3">
           <img
             class="app-icon mr-2 mr-sm-3"
             src="@/assets/icon.svg"
