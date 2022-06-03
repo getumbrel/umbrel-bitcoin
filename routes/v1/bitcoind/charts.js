@@ -49,20 +49,22 @@ const setAggregatesValues = async() => {
   }
 };
 
-const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
-const MINUTE_AS_MILLISECONDS = 60000;
+// Disable indexing as we don't show charts for now
 
-(async () => {
-  while (true) {
-    console.log('Building transaction cache...');
-    try {
-      await setAggregatesValues();
-    } catch (error) {
-      console.log(`Failed to build transaction index: "${error.message}"`);
-    }
-    await delay(MINUTE_AS_MILLISECONDS);
-  }
-})();
+// const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+// const MINUTE_AS_MILLISECONDS = 60000;
+
+// (async () => {
+//   while (true) {
+//     console.log('Building transaction cache...');
+//     try {
+//       await setAggregatesValues();
+//     } catch (error) {
+//       console.log(`Failed to build transaction index: "${error.message}"`);
+//     }
+//     await delay(MINUTE_AS_MILLISECONDS);
+//   }
+// })();
 
 
 router.get('/charts', safeHandler((req, res) => {
