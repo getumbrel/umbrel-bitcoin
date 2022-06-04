@@ -69,6 +69,12 @@ router.get('/block/:id', safeHandler((req, res) =>
 router.get('/blocks', safeHandler((req, res) => {
   const fromHeight = parseInt(req.query.from);
   const toHeight = parseInt(req.query.to);
+
+  if (toHeight - fromHeight > 500) {
+    res.status(500).json('Range query must be less than 500');
+    return;
+  }
+
   bitcoind.getBlocks(fromHeight, toHeight)
     .then(blocks => res.json(blocks))
 }
