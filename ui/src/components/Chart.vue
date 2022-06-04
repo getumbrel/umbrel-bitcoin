@@ -1,22 +1,19 @@
 <template>
   <highcharts
-    class="hc"
-    v-if="chartData.length"
-    :options="computedChartOptions"
-    ref="chart"
+    :options="chartOptions"
   ></highcharts>
-  <chart-empty-state v-else />
 </template>
 
 <script>
 import moment from "moment";
-import ChartEmptyState from "@/components/ChartEmptyState";
 
 export default {
-  props: ["chartData", "selectedFilter"],
-  data() {
-    return {
-      chartOptions: {
+  props: {
+    chartData: Array,
+  },
+  computed: {
+    chartOptions() {
+      return {
         chart: {
           type: "areaspline",
           marginLeft: 0,
@@ -35,7 +32,7 @@ export default {
         },
         tooltip: {
           formatter: function() {
-            return "" + this.y + "";
+            return `<span>${moment(this.x * 1000).format("MMM DD, h:mma")}<br/><br/>${this.y.toLocaleString()} transactions</span>`;
           },
           backgroundColor: null,
           borderWidth: 0,
@@ -51,11 +48,11 @@ export default {
           useHTML: true,
           style: {
             padding: 0,
-            color: "#6060ee"
+            color: "#1d1d1f"
           }
         },
         yAxis: {
-          // visible: false
+          visible: false,
           minorGridLineWidth: 1,
           gridLineColor: "#e2e8f0"
         },
@@ -64,6 +61,7 @@ export default {
             text: undefined,
             reserveSpace: false
           },
+          visible: false,
           minPadding: 0,
           maxPadding: 0,
           type: "datetime",
@@ -72,7 +70,7 @@ export default {
           minorTickLength: 0,
           tickLength: 0,
           crosshair: true,
-          labels: {}
+          labels: {},
         },
         title: null,
         plotOptions: {
@@ -99,6 +97,7 @@ export default {
             marker: {
               enabled: false,
               fillColor: "#6060EE",
+              lineColor: "transparent",
               symbol: "circle",
               radius: 5,
               states: {
@@ -111,15 +110,13 @@ export default {
         },
         series: [
           {
-            data: [],
+            data: this.chartData,
             type: "areaspline",
-            animation: false
+            animation: true
           }
         ]
-      }
-    };
-  },
-  computed: {
+      };
+    },
     computedChartOptions() {
       const selectedFilter = this.selectedFilter;
       let localOptions = Object.assign({}, this.chartOptions);
@@ -138,9 +135,6 @@ export default {
       return localOptions;
     }
   },
-  components: {
-    ChartEmptyState
-  }
 };
 </script>
 
@@ -148,7 +142,14 @@ export default {
 .highcharts-tooltip > span {
   border-radius: 0.5em;
   box-shadow: 0 0.5rem 1rem rgba(20, 24, 33, 0.15);
-  padding: 0.5em 1.5em;
+  padding: 0.75em 1.5em;
   background: white;
+  text-align: center;
+}
+.highcharts-container, .highcharts-root, div[data-highcharts-chart] { 
+  overflow: visible !important; 
+}
+.highcharts-containe > svg {
+  overflow: visible;
 }
 </style>

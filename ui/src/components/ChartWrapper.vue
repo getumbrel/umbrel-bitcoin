@@ -1,55 +1,66 @@
 <template>
-  <div class="pb-4">
+  <div class="pb-2">
     <div
-      class="px-3 px-lg-4 pb-4 d-flex flex-wrap w-100 justify-content-between align-items-center"
+      class="px-3 px-lg-4 pb-2 d-flex flex-wrap w-100 justify-content-between align-items-center"
     >
-      <h6 class="mb-0 font-weight-normal text-muted">
-        Number of transactions
+      <h6 
+        class="mb-0 font-weight-normal text-muted"
+        :class="{invisible: !isSynced}"
+      >
+        Transactions on the network
       </h6>
-      <div>
-        <button
-          v-for="filter in filters"
-          :key="filter"
-          class="tx-chart-filter-button text-muted"
-          :class="{ shadow: selectedFilter === filter }"
-          @click="selectedFilter = filter"
-        >
-          {{ filter }}
-        </button>
-      </div>
     </div>
     <chart
-      :chartData="blockAggregates"
-      v-bind:selectedFilter="selectedFilter"
+      v-if="isSynced && chartData.length"
+      :chartData="chartData"
     ></chart>
+    <chart-empty-state v-else />
   </div>
 </template>
 
 <script>
-// import Vue from "vue";
 import { mapState } from "vuex";
 
 import Chart from "@/components/Chart";
+import ChartEmptyState from "@/components/ChartEmptyState";
 
 export default {
   data() {
     return {
       selectedFilter: "1hr",
-      filters: ["1hr", "6hr", "12hr", "1d", "3d", "7d"]
     };
   },
   computed: {
     ...mapState({
-      blockAggregates(state) {
-        return state.bitcoin.blockRangeTransactionChunks[
-          this.selectedFilter
-        ].map(item => [item.time * 1000, item.numTransactions]);
-      }
+      blocks: state => state.bitcoin.blocks,
+      chartData: state => state.bitcoin.chartData,
+      isSynced: state => state.bitcoin.percent >= 99.99,
     })
   },
-  methods: {},
+  methods: {
+    getChartData() {
+      if (this.isSynced) {
+        this.$store.dispatch("bitcoin/getChartData");
+      }
+    },
+  },
+  watch: {
+    blocks: {
+      handler() {
+        this.getChartData();
+      },
+      immediate: true,
+      deep: true
+    },
+    isSynced: {
+      handler() {
+        this.getChartData();
+      },
+    },
+  },
   components: {
-    Chart
+    Chart,
+    ChartEmptyState,
   }
 };
 </script>

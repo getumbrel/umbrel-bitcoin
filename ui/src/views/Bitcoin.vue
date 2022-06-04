@@ -48,7 +48,7 @@
             <b-dropdown-item variant="danger" href="#" disabled>Resync Blockchain</b-dropdown-item>
           </template>-->
           <div class>
-            <div class="px-3 px-lg-4 mb-4">
+            <div class="px-3 px-lg-4 mb-5">
               <div class="w-100 d-flex justify-content-between mb-2">
                 <span class="align-self-end">Synchronized</span>
                 <h3 class="font-weight-normal mb-0">
@@ -78,15 +78,15 @@
                 {{ blockHeight.toLocaleString() }} blocks
               </small>
             </div>
-            <p class="px-3 px-lg-4 mb-3">Latest Blocks</p>
+            <p class="px-3 px-lg-4 mb-3 text-muted">Latest Blocks</p>
             <blockchain :numBlocks="5"></blockchain>
           </div>
         </card-widget>
       </b-col>
       <b-col col cols="12" md="7" lg="8">
-        <card-widget header="Network">
+        <card-widget class="overflow-x" header="Network">
           <div class>
-            <div class="px-3 px-lg-4 pb-2">
+            <div class="px-3 px-lg-4">
               <b-row>
                 <b-col col cols="6" md="3">
                   <stat
@@ -122,10 +122,12 @@
                 </b-col>
               </b-row>
             </div>
+            <chart-wrapper></chart-wrapper>
           </div>
         </card-widget>
       </b-col>
     </b-row>
+    
     <b-modal id="connect-modal" size="lg" centered hide-footer>
       <connection-modal></connection-modal>
     </b-modal>
@@ -140,6 +142,7 @@ import CardWidget from "@/components/CardWidget";
 import Blockchain from "@/components/Blockchain";
 import Stat from "@/components/Utility/Stat";
 import ConnectionModal from "@/components/ConnectionModal";
+import ChartWrapper from "@/components/ChartWrapper.vue";
 
 export default {
   data() {
@@ -202,7 +205,8 @@ export default {
     CardWidget,
     Blockchain,
     Stat,
-    ConnectionModal
+    ConnectionModal,
+    ChartWrapper,
   }
 };
 </script>
@@ -212,5 +216,8 @@ export default {
   height: 120px;
   width: 120px;
   border-radius: 22%;
+}
+.overflow-x {
+  overflow-x: visible;
 }
 </style>

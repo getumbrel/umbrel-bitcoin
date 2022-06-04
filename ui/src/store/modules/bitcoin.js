@@ -26,15 +26,6 @@ const state = () => ({
   chain: "",
   blockHeight: 0,
   blocks: [],
-  blockAggregates: [],
-  blockRangeTransactionChunks: {
-    "1d": [],
-    "1hr": [],
-    "3d": [],
-    "6hr": [],
-    "7d": [],
-    "12hr": []
-  },
   percent: -1, //for loading state
   depositAddress: "",
   stats: {
@@ -47,7 +38,8 @@ const state = () => ({
     total: 0,
     inbound: 0,
     outbound: 0
-  }
+  },
+  chartData: []
 });
 
 // Functions to update the state directly
@@ -77,10 +69,6 @@ const mutations = {
     );
     // limit to latest 6 blocks
     state.blocks = [...uniqueBlocks.slice(0, 6)];
-  },
-
-  setBlockRangeTransactionChunks(state, blockRangeTransactionChunks) {
-    state.blockRangeTransactionChunks = blockRangeTransactionChunks;
   },
 
   setVersion(state, version) {
@@ -116,6 +104,10 @@ const mutations = {
     state.peers.total = peers.total || 0;
     state.peers.inbound = peers.inbound || 0;
     state.peers.outbound = peers.outbound || 0;
+  },
+
+  setChartData(state, chartData) {
+    state.chartData = chartData;
   }
 };
 
@@ -184,7 +176,7 @@ const actions = {
 
     //TODO: Fetch only new blocks
     const latestFiveBlocks = await API.get(
-      `${process.env.VUE_APP_API_BASE_URL}/v1/bitcoind/info/blocks?from=${currentBlock - 4}&to=${currentBlock}`
+      `${process.env.VUE_APP_API_BASE_URL}/v1/bitcoind/info/blocks?from=${currentBlock - 3}&to=${currentBlock}`
     );
 
     if (!latestFiveBlocks.blocks) {
@@ -195,13 +187,52 @@ const actions = {
     commit("setBlocks", latestFiveBlocks.blocks);
   },
 
-  async getBlockRangeTransactionChunks({ commit }) {
-    const blockRangeTransactionChunks = await API.get(
-      `${process.env.VUE_APP_API_BASE_URL}/v1/bitcoind/info/charts`
-    );
+  async getChartData({dispatch, state, commit}) {
 
-    // Update chunks
-    commit("setBlockRangeTransactionChunks", blockRangeTransactionChunks);
+    // get the latest block height
+    await dispatch("getSync");
+
+    const currentBlock = state.currentBlock;
+
+    // check if atleast 144 blocks exist
+    if (!currentBlock || currentBlock < 144) {
+      return;
+    }
+    
+    // get last 144 blocks (~24 hours)
+    const lastDaysBlocks = await API.get(
+      `${process.env.VUE_APP_API_BASE_URL}/v1/bitcoind/info/blocks?from=${currentBlock - 143}&to=${currentBlock}`
+    );
+    
+    // exit if we don't get the blocks for some reason
+    if (!lastDaysBlocks || !lastDaysBlocks.blocks || !lastDaysBlocks.blocks.length) {
+      return;
+    }
+
+    // add up transactions in 6 blocks and use last block's timestamp
+    // to create an array like this
+    // [[timestamp, transactions], ...]
+
+    const chartData = [];
+
+    const CHUNK_SIZE = 6;
+    let transactionsInCurrentChunk = 0;
+    let currentChunkSize = 0;
+
+    for (let block of lastDaysBlocks.blocks) {
+      transactionsInCurrentChunk += Number(block.numTransactions);
+      currentChunkSize++;
+      if (currentChunkSize === CHUNK_SIZE) {
+        chartData.push([Number(block.time), transactionsInCurrentChunk]);
+        currentChunkSize = 0;
+        transactionsInCurrentChunk = 0;
+      }
+    }
+    
+    // sort by ascending timestamps and update state
+    chartData.sort((a, b) => a[0] - b[0]);
+
+    commit("setChartData", chartData);
   },
 
   async getVersion({ commit }) {

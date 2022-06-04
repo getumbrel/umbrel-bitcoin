@@ -70,7 +70,7 @@
           <li
             href="#"
             class="flex-column align-items-start px-3 px-lg-4 blockchain-block"
-            v-for="(fake, index) in [1, 2, 3, 4, 5]"
+            v-for="(fake, index) in [1, 2, 3, 4]"
             :key="index"
           >
             <div class="d-flex w-100 justify-content-between">
@@ -134,8 +134,6 @@ export default {
     return {
       polling: null,
       pollInProgress: false,
-      aggregatePolling: null,
-      aggregatePollInProgress: false
     };
   },
   computed: {
@@ -154,15 +152,6 @@ export default {
       await this.$store.dispatch("bitcoin/getBlocks");
       this.pollInProgress = false;
     },
-    async fetchBlockRangeTransactionChunks() {
-      //prevent multiple polls if previous poll already in progress
-      if (this.aggregatePollInProgress) {
-        return;
-      }
-      this.aggregatePollInProgress = true;
-      await this.$store.dispatch("bitcoin/getBlockRangeTransactionChunks");
-      this.aggregatePollInProgress = false;
-    },
     poller(syncPercent) {
       window.clearInterval(this.polling);
       //if syncing, fetch blocks every second
@@ -171,16 +160,6 @@ export default {
       } else {
         //else, slow down and fetch blocks every minute
         this.polling = window.setInterval(this.fetchBlocks, 60 * 1000);
-      }
-    },
-    aggregatePoller(syncPercent) {
-      window.clearInterval(this.aggregatePolling);
-      //if syncing, fetch blocks every minute
-      if (Number(syncPercent) > 98) {
-        this.aggregatePolling = window.setInterval(
-          this.fetchBlockRangeTransactionChunks,
-          60 * 1000
-        );
       }
     },
     blockTime(timestamp) {
@@ -199,22 +178,18 @@ export default {
   created() {
     //immediately fetch blocks on first load
     this.fetchBlocks();
-    this.fetchBlockRangeTransactionChunks();
 
     //then start polling
     this.poller(this.syncPercent);
-    this.aggregatePoller(this.syncPercent);
   },
   watch: {
     syncPercent(newPercent) {
       // reset polling time depending upon sync %
       this.poller(newPercent);
-      this.aggregatePoller(newPercent);
     }
   },
   beforeDestroy() {
     window.clearInterval(this.polling);
-    window.clearInterval(this.aggregatePolling);
   },
   props: {
     numBlocks: {
@@ -235,7 +210,7 @@ export default {
     padding: 1rem 0;
     margin: 0;
     // max-height: 18rem;
-    height: 31rem;
+    height: 25rem;
     overflow: hidden;
     // overflow-y: scroll;
     // -webkit-overflow-scrolling: touch; //momentum scroll on iOS
