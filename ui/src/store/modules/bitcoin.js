@@ -215,7 +215,7 @@ const actions = {
 
     const chartData = [];
 
-    const CHUNK_SIZE = 6;
+    const CHUNK_SIZE = 12;
     let transactionsInCurrentChunk = 0;
     let currentChunkSize = 0;
 
