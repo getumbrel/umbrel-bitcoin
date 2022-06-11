@@ -1,11 +1,14 @@
 {
   "name": "umbrel-middleware",
-  "version": "0.1.15",
+  "version": "0.2.1",
   "description": "Middleware for Umbrel Node",
   "author": "Umbrel",
   "scripts": {
     "lint": "eslint",
     "start": "node ./bin/www",
+    "install:ui": "cd ui && yarn",
+    "build:ui": "cd ui && yarn build",
+    "serve:ui": "cd ui && yarn serve",
     "test": "mocha --file test.setup 'test/**/*.js'",
     "coverage": "nyc --all mocha --file test.setup 'test/**/*.js'",
     "postcoverage": "codecov"
@@ -21,14 +24,10 @@
     "debug": "^2.6.1",
     "dotenv": "^8.2.0",
     "express": "^4.16.3",
-    "grpc": "^1.8.0",
     "module-alias": "^2.1.0",
     "morgan": "^1.9.0",
-    "passport": "^0.4.0",
-    "passport-jwt": "^4.0.0",
     "request-promise": "^4.2.2",
     "uuid": "^3.3.2",
-    "validator": "^9.2.0",
     "winston": "^3.0.0-rc5",
     "winston-daily-rotate-file": "^3.1.3"
   },

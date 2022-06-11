@@ -20,3 +20,4 @@ coverage
 Makefile
 *.env
 .github/
+bitcoin

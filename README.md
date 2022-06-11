@@ -10,19 +10,18 @@
 [![Reddit](https://img.shields.io/reddit/subreddit-subscribers/getumbrel?label=Subscribe%20%2Fr%2Fgetumbrel&style=social)](https://reddit.com/r/getumbrel)
 
 
-# ☂️ middleware
+# ☂️ bitcoin
 
-Middleware runs by-default on [Umbrel OS](https://github.com/getumbrel/umbrel-os) as a containerized service. It wraps [Bitcoin Core](https://github.com/bitcoin/bitcoin)'s RPC and [LND](https://github.com/lightningnetwork/lnd)'s gRPC, and exposes them via a RESTful API.
+The official bitcoin application for [Umbrel OS](https://github.com/getumbrel/umbrel-os). It wraps [Bitcoin Core](https://github.com/bitcoin/bitcoin)'s RPC exposes it via a RESTful API.
 
-Umbrel OS's [web dashboard](https://github.com/getumbrel/umbrel-dashboard) uses middleware to interact with both Bitcoin and Lightning Network.
+A variety of applications that run on Umbrel use bitcoin to interact with the bitcoin network.
 
 ## 🚀 Getting started
 
-If you are looking to run Umbrel on your hardware, you do not need to run this service on it's own. Just download [Umbrel OS](https://github.com/getumbrel/umbrel-os/releases) and you're good to go.
+This application can be installed with one click via Umbrel's app store.
 
-## 🛠 Running middleware
-
-Make sure a [`bitcoind`](https://github.com/bitcoin/bitcoin) and [`lnd`](https://github.com/lightningnetwork/lnd) instance is running and available on the same machine.
+Make sure a [`bitcoind`](https://github.com/bitcoin/bitcoin) instance is running and available on the same machine.
+## 🛠 Running bitcoin
 
 ### Step 1. Install dependencies
 ```sh
@@ -39,20 +38,19 @@ Set the following environment variables directly or by placing them in `.env` fi
 | `BITCOIN_HOST` | IP or domain where `bitcoind` RPC is listening | `127.0.0.1` |
 | `RPC_USER` | `bitcoind` RPC username  |  |
 | `RPC_PASSWORD` | `bitcoind` RPC password |  |
-| `LND_HOST` | IP or domain where `lnd` RPC is listening | `127.0.0.1` |
-| `TLS_FILE` | Path to `lnd`'s TLS certificate | `/lnd/tls.cert` |
-| `LND_PORT` | Port where `lnd` RPC is listening | `10009` |
-| `LND_NETWORK` | The chain `bitcoind` is running on (mainnet, testnet, regtest, simnet) | `mainnet` |
-| `LND_WALLET_PASSWORD` | The password for the LND wallet which will be automatically unlocked on boot | ` ` |
-| `MACAROON_DIR` | Path to `lnd`'s macaroon directory | `/lnd/data/chain/bitcoin/mainnet/` |
-| `JWT_PUBLIC_KEY_FILE` | Path to the JWT public key created by [`umbrel-manager`](https://github.com/getumbrel/umbrel-manager) | `/jwt-public-key/jwt.pem` |
 
-### Step 3. Run middleware
+### Step 3. build the web interface
+```sh
+yarn install:ui
+yarn build:ui
+```
+
+### Step 4. Run bitcoin
 ```sh
 yarn start
 ```
 
-You can browse through the available API endpoints [here](https://github.com/getumbrel/umbrel-middleware/tree/master/routes/v1).
+You can access the web interface by visiting `http://localhost:8080/`
 
 ---
 
@@ -70,7 +68,7 @@ If you're looking for a bigger challenge, before opening a pull request please [
 
 ## 🙏 Acknowledgements
 
-Umbrel Middleware is built upon the work done by [Casa](https://github.com/casa) on its open-source [API](https://github.com/Casa/Casa-Node-API).
+Umbrel's bitcoin app is built upon the work done by [Casa](https://github.com/casa) on its open-source [API](https://github.com/Casa/Casa-Node-API).
 
 ---
 

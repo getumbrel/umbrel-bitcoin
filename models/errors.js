@@ -16,15 +16,6 @@ function BitcoindError(message, error, statusCode) {
 }
 require('util').inherits(BitcoindError, Error);
 
-function LndError(message, error, statusCode) {
-  Error.captureStackTrace(this, this.constructor);
-  this.name = this.constructor.name;
-  this.message = message;
-  this.error = error;
-  this.statusCode = statusCode;
-}
-require('util').inherits(LndError, Error);
-
 function ValidationError(message, statusCode) {
   Error.captureStackTrace(this, this.constructor);
   this.name = this.constructor.name;
@@ -36,7 +27,6 @@ require('util').inherits(ValidationError, Error);
 module.exports = {
   NodeError,
   BitcoindError,
-  LndError,
   ValidationError
 };
 

@@ -4,7 +4,7 @@ const BitcoindError = require('models/errors.js').BitcoindError;
 async function getBlockCount() {
   const blockCount = await bitcoindService.getBlockCount();
 
-  return { blockCount: blockCount.result };
+  return {blockCount: blockCount.result};
 }
 
 async function getConnectionsCount() {
@@ -13,7 +13,7 @@ async function getConnectionsCount() {
   var outBoundConnections = 0;
   var inBoundConnections = 0;
 
-  peerInfo.result.forEach(function (peer) {
+  peerInfo.result.forEach(function(peer) {
     if (peer.inbound === false) {
       outBoundConnections++;
 
@@ -35,10 +35,10 @@ async function getStatus() {
   try {
     await bitcoindService.help();
 
-    return { operational: true };
+    return {operational: true};
   } catch (error) {
     if (error instanceof BitcoindError) {
-      return { operational: false };
+      return {operational: false};
     }
 
     throw error;
@@ -53,7 +53,7 @@ async function getMaxSyncHeader() {
     return -1;
   }
 
-  const maxPeer = peerInfo.reduce(function (prev, current) {
+  const maxPeer = peerInfo.reduce(function(prev, current) {
     return prev.syncedHeaders > current.syncedHeaders ? prev : current;
   });
 
@@ -70,7 +70,7 @@ async function getLocalSyncInfo() {
   var blockChainInfo = info.result;
   var chain = blockChainInfo.chain;
   var blockCount = blockChainInfo.blocks;
-  var headerCount = blockChainInfo.headers; 
+  var headerCount = blockChainInfo.headers;
   var percent = blockChainInfo.verificationprogress;
 
   return {
@@ -99,13 +99,14 @@ async function getVersion() {
   // Remove all non-digits or decimals.
   const version = unformattedVersion.replace(/[^\d.]/g, '');
 
-  return { version: version }; // eslint-disable-line object-shorthand
+  return {version: version}; // eslint-disable-line object-shorthand
 }
 
 async function getTransaction(txid) {
   const transactionObj = await bitcoindService.getTransaction(txid);
+
   return {
-    txid: txid,
+    txid,
     timestamp: transactionObj.result.time,
     confirmations: transactionObj.result.confirmations,
     blockhash: transactionObj.result.blockhash,
@@ -113,7 +114,7 @@ async function getTransaction(txid) {
     input: transactionObj.result.vin.txid,
     utxo: transactionObj.result.vout,
     rawtx: transactionObj.result.hex
-  }
+  };
 }
 
 async function getNetworkInfo() {
@@ -124,6 +125,7 @@ async function getNetworkInfo() {
 
 async function getBlock(hash) {
   const blockObj = await bitcoindService.getBlock(hash);
+
   return {
     block: hash,
     confirmations: blockObj.result.confirmations,
@@ -133,52 +135,91 @@ async function getBlock(hash) {
     prevblock: blockObj.result.previousblockhash,
     nextblock: blockObj.result.nextblockhash,
     transactions: blockObj.result.tx
-  }
+  };
+}
+
+const memoizedGetFormattedBlock = () => {
+  const cache = {};
+
+  return async blockHeight => {
+    // cache cleanup
+    // 6 blocks/hr * 24 hrs/day * 7 days = 1008 blocks over 7 days
+    // plus some wiggle room in case weird difficulty adjustment or period of faster blocks
+    const CACHE_LIMIT = 1100;
+    while(Object.keys(cache).length > CACHE_LIMIT) {
+      const cacheItemToDelete = Object.keys(cache)[0];
+      delete cache[cacheItemToDelete];
+    }
+    
+    if (blockHeight in cache) {
+      return cache[blockHeight];
+    } else {
+      let blockHash;
+      try {
+        ({result: blockHash} = await bitcoindService.getBlockHash(blockHeight));
+      } catch (error) {
+        if (error instanceof BitcoindError) {
+          return error;
+        }
+        throw error;
+      }
+
+      const {result: block} = await bitcoindService.getBlock(blockHash);
+
+      cache[blockHeight] = {
+        hash: block.hash,
+        height: block.height,
+        numTransactions: block.tx.length,
+        confirmations: block.confirmations,
+        time: block.time,
+        size: block.size,
+        previousblockhash: block.previousblockhash
+      };
+
+      return cache[blockHeight];
+    }
+  };
+};
+
+const initializedMemoizedGetFormattedBlock = memoizedGetFormattedBlock();
+
+
+async function getBlockRangeTransactionChunks(fromHeight, toHeight, blocksPerChunk) {
+  const {blocks} = await getBlocks(fromHeight, toHeight);
+  const chunks = [];
+  blocks.forEach((block, index) => {
+    const chunkIndex = Math.floor(index / blocksPerChunk);
+    if (!chunks[chunkIndex]) {
+      chunks[chunkIndex] = {
+        time: block.time,
+        numTransactions: 0,
+      };
+    }
+    chunks[chunkIndex].numTransactions += block.numTransactions;
+  });
+
+  return chunks;
 }
 
 async function getBlocks(fromHeight, toHeight) {
-
-
-  let startingBlockHashRaw;
-
-  try {
-    startingBlockHashRaw = await bitcoindService.getBlockHash(toHeight);
-  } catch (error) {
-    if (error instanceof BitcoindError) {
-      return error;
-    }
-    throw error;
-  }
-
-  let currentHash = startingBlockHashRaw.result;
-
   const blocks = [];
 
-  //loop from 'to height' till 'from Height'
+  // loop from 'to height' till 'from Height'
   for (let currentHeight = toHeight; currentHeight >= fromHeight; currentHeight--) {
-
-    const blockRaw = await bitcoindService.getBlock(currentHash);
-    const block = blockRaw.result;
-
-    const formattedBlock = {
-      hash: block.hash,
-      height: block.height,
-      numTransactions: block.tx.length,
-      confirmations: block.confirmations,
-      time: block.time,
-      size: block.size
-    };
-
-    blocks.push(formattedBlock);
-
-    currentHash = block.previousblockhash;
-    //terminate loop if we reach the genesis block
-    if (!currentHash) {
+    // terminate loop if we reach the genesis block
+    if (currentHeight === 0) {
       break;
+    }
+
+    try {
+      const formattedBlock = await initializedMemoizedGetFormattedBlock(currentHeight);
+      blocks.push(formattedBlock);
+    } catch(e) {
+      console.error('Error memoizing formatted blocks')
     }
   }
 
-  return { blocks: blocks };
+  return {blocks};
 }
 
 async function getBlockHash(height) {
@@ -186,7 +227,7 @@ async function getBlockHash(height) {
 
   return {
     hash: getBlockHashObj.result
-  }
+  };
 }
 
 async function nodeStatusDump() {
@@ -200,7 +241,7 @@ async function nodeStatusDump() {
     network_info: networkInfo.result,
     mempool: mempoolInfo.result,
     mining_info: miningInfo.result
-  }
+  };
 }
 
 async function nodeStatusSummary() {
@@ -215,7 +256,7 @@ async function nodeStatusSummary() {
     mempool: mempoolInfo.result.bytes,
     connections: networkInfo.result.connections,
     networkhashps: miningInfo.result.networkhashps
-  }
+  };
 }
 
 module.exports = {
@@ -224,6 +265,7 @@ module.exports = {
   getBlock,
   getBlockCount,
   getBlocks,
+  getBlockRangeTransactionChunks,
   getConnectionsCount,
   getNetworkInfo,
   getMempoolInfo,
