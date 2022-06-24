@@ -77,6 +77,6 @@ This app is built upon the work done by [Casa](https://github.com/casa) on its o
 
 ---
 
-[![License](https://img.shields.io/github/license/getumbrel/umbrel-bitcoin?color=%235351FB)](https://github.com/getumbrel/umbrel-bitcoin/blob/master/LICENSE)
+[![License](https://img.shields.io/github/license/getumbrel/umbrel-bitcoin?color=%235351FB)](https://github.com/getumbrel/umbrel-bitcoin/blob/master/LICENSE.md)
 
 [umbrel.com](https://umbrel.com)
