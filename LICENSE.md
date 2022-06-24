@@ -1,4 +1,4 @@
-> Umbrel is licensed under the PolyForm Noncommercial License 1.0.0. Please refer to our [License FAQ](https://github.com/getumbrel/umbrel/wiki/License-FAQ) if you have any questions or reach out to us directly at help@getumbrel.com.
+> This repository is licensed under the PolyForm Noncommercial License 1.0.0. Please refer to our [License FAQ](https://github.com/getumbrel/umbrel/wiki/License-FAQ) if you have any questions or reach out to us directly at help@umbrel.com.
 
 # PolyForm Noncommercial License 1.0.0
 
