@@ -28,39 +28,6 @@
 
 This app can be installed in one click via the Umbrel App Store.
 
-## Running locally for development
-
-Make sure a [`bitcoind`](https://github.com/bitcoin/bitcoin) instance is running and available on the same machine.
-
-### Step 1. Install dependencies
-```sh
-yarn
-```
-
-### Step 2. Set environment variables
-Set the following environment variables directly or by placing them in `.env` file of project's root.
-
-| Variable | Description | Default |
-| ------------- | ------------- | ------------- |
-| `PORT` | Port where the API should listen for requests | `3005` |
-| `DEVICE_HOSTS` | Comma separated list of IPs or domain names to whitelist for CORS | `http://umbrel.local` |
-| `BITCOIN_HOST` | IP or domain where `bitcoind` RPC is listening | `127.0.0.1` |
-| `RPC_USER` | `bitcoind` RPC username  |  |
-| `RPC_PASSWORD` | `bitcoind` RPC password |  |
-
-### Step 3. Build the web interface
-```sh
-yarn install:ui
-yarn build:ui
-```
-
-### Step 4. Run
-```sh
-yarn start
-```
-
-You can access the app interface by visiting `http://localhost:8080/`
-
 ---
 
 ## Contributing
