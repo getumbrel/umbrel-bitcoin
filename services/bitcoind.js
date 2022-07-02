@@ -3,17 +3,16 @@ const camelizeKeys = require('camelize-keys');
 
 const BitcoindError = require('models/errors.js').BitcoindError;
 
-const BITCOIND_RPC_PORT = process.env.RPC_PORT || 8332; // eslint-disable-line no-magic-numbers, max-len
-const BITCOIND_HOST = process.env.BITCOIN_HOST || '127.0.0.1';
-const BITCOIND_RPC_USER = process.env.RPC_USER;
-const BITCOIND_RPC_PASSWORD = process.env.RPC_PASSWORD;
+const RPC_PORT = process.env.HSD_PORT || 12037; // eslint-disable-line no-magic-numbers, max-len
+const HOST = process.env.HSD_HOST || '127.0.0.1';
+const HSD_API_KEY = process.env.HSD_API_KEY;
 
 const rpcClient = new RpcClient({
-  protocol: 'http',
-  user: BITCOIND_RPC_USER, // eslint-disable-line object-shorthand
-  pass: BITCOIND_RPC_PASSWORD, // eslint-disable-line object-shorthand
-  host: BITCOIND_HOST,
-  port: BITCOIND_RPC_PORT,
+  protocol: 'https',
+  user: 'x', // eslint-disable-line object-shorthand
+  pass: HSD_API_KEY, // eslint-disable-line object-shorthand
+  host: HOST,
+  port: RPC_PORT,
 });
 
 function promiseify(rpcObj, rpcFn, what) {

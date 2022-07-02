@@ -252,7 +252,9 @@ async function nodeStatusSummary() {
 
   return {
     difficulty: blockchainInfo.result.difficulty,
-    size: blockchainInfo.result.sizeOnDisk,
+
+    // hsd don't support size yet: https://github.com/handshake-org/hsd/issues/757
+    // size: blockchainInfo.result.sizeOnDisk,
     mempool: mempoolInfo.result.bytes,
     connections: networkInfo.result.connections,
     networkhashps: miningInfo.result.networkhashps

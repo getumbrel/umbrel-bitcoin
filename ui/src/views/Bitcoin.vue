@@ -88,7 +88,7 @@
           <div class>
             <div class="px-3 px-lg-4">
               <b-row>
-                <b-col col cols="6" md="3">
+                <b-col col cols="6" md="4">
                   <stat
                     title="Connections"
                     :value="stats.peers"
@@ -96,7 +96,7 @@
                     showNumericChange
                   ></stat>
                 </b-col>
-                <b-col col cols="6" md="3">
+                <b-col col cols="6" md="4">
                   <stat
                     title="Mempool"
                     :value="abbreviateSize(stats.mempool)[0]"
@@ -104,7 +104,7 @@
                     showPercentChange
                   ></stat>
                 </b-col>
-                <b-col col cols="6" md="3">
+                <b-col col cols="6" md="4">
                   <stat
                     title="Hashrate"
                     :value="abbreviateHashRate(stats.hashrate)[0]"
@@ -112,14 +112,14 @@
                     showPercentChange
                   ></stat>
                 </b-col>
-                <b-col col cols="6" md="3">
+                <!-- <b-col col cols="6" md="3">
                   <stat
                     title="Blockchain Size"
                     :value="abbreviateSize(stats.blockchainSize)[0]"
                     :suffix="abbreviateSize(stats.blockchainSize)[1]"
                     showPercentChange
                   ></stat>
-                </b-col>
+                </b-col> -->
               </b-row>
             </div>
             <chart-wrapper></chart-wrapper>
