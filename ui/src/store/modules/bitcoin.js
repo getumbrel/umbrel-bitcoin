@@ -1,33 +1,23 @@
-import API from "@/helpers/api";
-import { toPrecision } from "@/helpers/units";
+import API from '@/helpers/api';
+import { toPrecision } from '@/helpers/units';
 
 // Initial state
 const state = () => ({
   operational: false,
   calibrating: false,
-  version: "",
-  p2p: {
-    port: "",
-    localAddress: "",
-    localConnectionString: "",
-    torAddress: "",
-    torConnectionString: "",
-  },
+  version: '',
   rpc: {
-    rpcuser: "",
-    rpcpassword: "",
-    port: "",
-    localAddress: "",
-    localConnectionString: "",
-    torAddress: "",
-    torConnectionString: "",
+    apiKey: '',
+    port: '',
+    localAddress: '',
+    localConnectionString: ''
   },
   currentBlock: 0,
-  chain: "",
+  chain: '',
   blockHeight: 0,
   blocks: [],
   percent: -1, //for loading state
-  depositAddress: "",
+  depositAddress: '',
   stats: {
     peers: -1,
     mempool: -1,
@@ -54,7 +44,7 @@ const mutations = {
     state.blockHeight = sync.headerCount;
     state.chain = sync.chain;
 
-    if (sync.status === "calibrating") {
+    if (sync.status === 'calibrating') {
       state.calibrating = true;
     } else {
       state.calibrating = false;
@@ -82,22 +72,11 @@ const mutations = {
     state.stats.hashrate = stats.hashrate;
   },
 
-  setP2PInfo(state, p2pInfo) {
-    state.p2p.port = p2pInfo.port;
-    state.p2p.localAddress = p2pInfo.localAddress;
-    state.p2p.localConnectionString = p2pInfo.localConnectionString;
-    state.p2p.torAddress = p2pInfo.torAddress;
-    state.p2p.torConnectionString = p2pInfo.torConnectionString;
-  },
-
   setRpcInfo(state, rpcInfo) {
-    state.rpc.rpcuser = rpcInfo.rpcuser;
-    state.rpc.rpcpassword = rpcInfo.rpcpassword;
+    state.rpc.apiKey = rpcInfo.apiKey;
     state.rpc.port = rpcInfo.port;
     state.rpc.localAddress = rpcInfo.localAddress;
     state.rpc.localConnectionString = rpcInfo.localConnectionString;
-    state.rpc.torAddress = rpcInfo.torAddress;
-    state.rpc.torConnectionString = rpcInfo.torConnectionString;
   },
 
   peers(state, peers) {
@@ -119,7 +98,7 @@ const actions = {
     );
 
     if (status) {
-      commit("isOperational", status.operational);
+      commit('isOperational', status.operational);
 
       // if (status.operational) {
       //   dispatch("getSync");
@@ -127,23 +106,13 @@ const actions = {
     }
   },
 
-  async getP2PInfo({ commit }) {
-    const p2pInfo = await API.get(
-      `${process.env.VUE_APP_API_BASE_URL}/v1/bitcoind/system/bitcoin-p2p-connection-details`
-    );
-
-    if (p2pInfo) {
-      commit("setP2PInfo", p2pInfo);
-    }
-  },
-
   async getRpcInfo({ commit }) {
     const rpcInfo = await API.get(
-      `${process.env.VUE_APP_API_BASE_URL}/v1/bitcoind/system/bitcoin-rpc-connection-details`
+      `${process.env.VUE_APP_API_BASE_URL}/v1/bitcoind/system/rpc-connection-details`
     );
 
     if (rpcInfo) {
-      commit("setRpcInfo", rpcInfo);
+      commit('setRpcInfo', rpcInfo);
     }
   },
 
@@ -153,18 +122,18 @@ const actions = {
     );
 
     if (sync) {
-      commit("syncStatus", sync);
+      commit('syncStatus', sync);
     }
   },
 
   async getBlocks({ commit, state, dispatch }) {
-    await dispatch("getSync");
+    await dispatch('getSync');
 
     // Cache block height array of latest 3 blocks for loading view
     const currentBlock = state.currentBlock;
 
     // Don't fetch blocks if no new block has been found
-    if (state.blocks.length && currentBlock === state.blocks[0]["height"]) {
+    if (state.blocks.length && currentBlock === state.blocks[0]['height']) {
       return;
     }
 
@@ -176,7 +145,9 @@ const actions = {
 
     //TODO: Fetch only new blocks
     const latestFiveBlocks = await API.get(
-      `${process.env.VUE_APP_API_BASE_URL}/v1/bitcoind/info/blocks?from=${currentBlock - 3}&to=${currentBlock}`
+      `${
+        process.env.VUE_APP_API_BASE_URL
+      }/v1/bitcoind/info/blocks?from=${currentBlock - 3}&to=${currentBlock}`
     );
 
     if (!latestFiveBlocks.blocks) {
@@ -184,13 +155,12 @@ const actions = {
     }
 
     // Update blocks
-    commit("setBlocks", latestFiveBlocks.blocks);
+    commit('setBlocks', latestFiveBlocks.blocks);
   },
 
-  async getChartData({dispatch, state, commit}) {
-
+  async getChartData({ dispatch, state, commit }) {
     // get the latest block height
-    await dispatch("getSync");
+    await dispatch('getSync');
 
     const currentBlock = state.currentBlock;
 
@@ -198,14 +168,20 @@ const actions = {
     if (!currentBlock || currentBlock < 144) {
       return;
     }
-    
+
     // get last 144 blocks (~24 hours)
     const lastDaysBlocks = await API.get(
-      `${process.env.VUE_APP_API_BASE_URL}/v1/bitcoind/info/blocks?from=${currentBlock - 143}&to=${currentBlock}`
+      `${
+        process.env.VUE_APP_API_BASE_URL
+      }/v1/bitcoind/info/blocks?from=${currentBlock - 143}&to=${currentBlock}`
     );
-    
+
     // exit if we don't get the blocks for some reason
-    if (!lastDaysBlocks || !lastDaysBlocks.blocks || !lastDaysBlocks.blocks.length) {
+    if (
+      !lastDaysBlocks ||
+      !lastDaysBlocks.blocks ||
+      !lastDaysBlocks.blocks.length
+    ) {
       return;
     }
 
@@ -228,11 +204,11 @@ const actions = {
         transactionsInCurrentChunk = 0;
       }
     }
-    
+
     // sort by ascending timestamps and update state
     chartData.sort((a, b) => a[0] - b[0]);
 
-    commit("setChartData", chartData);
+    commit('setChartData', chartData);
   },
 
   async getVersion({ commit }) {
@@ -241,7 +217,7 @@ const actions = {
     );
 
     if (version) {
-      commit("setVersion", version);
+      commit('setVersion', version);
     }
   },
 
@@ -251,7 +227,7 @@ const actions = {
     );
 
     if (peers) {
-      commit("peers", peers);
+      commit('peers', peers);
     }
   },
 
@@ -266,7 +242,7 @@ const actions = {
       const hashrate = stats.networkhashps;
       const blockchainSize = stats.size;
 
-      commit("setStats", {
+      commit('setStats', {
         peers,
         mempool,
         hashrate,
@@ -279,13 +255,13 @@ const actions = {
 const getters = {
   status(state) {
     const data = {
-      class: "loading",
-      text: "Loading..."
+      class: 'loading',
+      text: 'Loading...'
     };
 
     if (state.operational) {
-      data.class = "active";
-      data.text = "Operational";
+      data.class = 'active';
+      data.text = 'Operational';
     }
 
     return data;

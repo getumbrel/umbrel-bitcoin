@@ -1,28 +1,29 @@
-version: "3.7"
+version: '3.7'
 
 services:
-  bitcoind:
-    image: lncm/bitcoind:v22.0@sha256:37a1adb29b3abc9f972f0d981f45e41e5fca2e22816a023faa9fdc0084aa4507
-    command: -regtest -rpcbind=0.0.0.0 -rpcallowip=0.0.0.0/0 -rpcauth=umbrel:5071d8b3ba93e53e414446ff9f1b7d7b$$375e9731abd2cd2c2c44d2327ec19f4f2644256fdeaf4fc5229bf98b778aafec
+  hsd:
+    image: sinpapeles/hsd:4.0.0
     volumes:
-      - ${PWD}/data/bitcoin:/data/.bitcoin
+      - ${PWD}/data/hsd:/root/.hsd
     restart: on-failure
     stop_grace_period: 15m30s
     ports:
-      - "18443:18443" # regtest
+      - '14037:14037' # regtest
+    environment:
+      HSD_NETWORK: regtest
+      HSD_HTTP_HOST: 0.0.0.0
+      HDS_APY_KEY: moneyprintergobrrr
+      HSD_NO_WALLET: true
+
   server:
     build: .
-    depends_on: [bitcoind]
-    command: ["npm", "start"]
+    depends_on: [hsd]
+    command: ['npm', 'start']
     restart: on-failure
     ports:
-      - "3005:3005"
+      - '3005:3005'
     environment:
-      PORT: "3005"
-      BITCOIN_HOST: "bitcoind"
-      RPC_PORT: "18443" # - regtest
-      RPC_USER: "umbrel"
-      RPC_PASSWORD: "moneyprintergobrrr"
-      BITCOIN_RPC_HIDDEN_SERVICE: "somehiddenservice.onion"
-      BITCOIN_P2P_HIDDEN_SERVICE: "anotherhiddenservice.onion"
-      DEVICE_DOMAIN_NAME: "test.local"
+      PORT: '3005'
+      HSD_PORT: 14037
+      HSD_HOST: hsd
+      HSD_API_KEY: moneyprintergobrrr

@@ -1,12 +1,13 @@
 <template>
   <div class="pt-2 pt-md-4 pb-4 px-2">
     <div class="my-3 pb-2">
-      <div class="d-flex flex-wrap justify-content-between align-items-center mb-2">
-        <div class="d-flex flex-grow-1 justify-content-start align-items-start mb-3">
-          <img
-            class="app-icon mr-2 mr-sm-3"
-            src="@/assets/icon.svg"
-          />
+      <div
+        class="d-flex flex-wrap justify-content-between align-items-center mb-2"
+      >
+        <div
+          class="d-flex flex-grow-1 justify-content-start align-items-start mb-3"
+        >
+          <img class="app-icon mr-2 mr-sm-3" src="@/assets/icon.svg" />
           <div>
             <svg
               width="8"
@@ -18,13 +19,15 @@
               <circle cx="4" cy="4" r="4" fill="#00CD98" />
             </svg>
             <small class="ml-1 text-success">Running</small>
-            <h3 class="d-block font-weight-bold mb-1">Bitcoin Node</h3>
+            <h3 class="d-block font-weight-bold mb-1">Handshake</h3>
             <span class="d-block text-muted">{{
-              version ? `Bitcoin Core ${version}` : "..."
+              version ? `Handshake hsd ${version}` : '...'
             }}</span>
           </div>
         </div>
-        <div class="d-flex col-12 col-md-auto justify-content-start align-items-center p-0">
+        <div
+          class="d-flex col-12 col-md-auto justify-content-start align-items-center p-0"
+        >
           <b-button
             type="button"
             variant="primary"
@@ -127,7 +130,7 @@
         </card-widget>
       </b-col>
     </b-row>
-    
+
     <b-modal id="connect-modal" size="lg" centered hide-footer>
       <connection-modal></connection-modal>
     </b-modal>
@@ -136,13 +139,13 @@
 
 <script>
 // import Vue from "vue";
-import { mapState } from "vuex";
+import { mapState } from 'vuex';
 
-import CardWidget from "@/components/CardWidget";
-import Blockchain from "@/components/Blockchain";
-import Stat from "@/components/Utility/Stat";
-import ConnectionModal from "@/components/ConnectionModal";
-import ChartWrapper from "@/components/ChartWrapper.vue";
+import CardWidget from '@/components/CardWidget';
+import Blockchain from '@/components/Blockchain';
+import Stat from '@/components/Utility/Stat';
+import ConnectionModal from '@/components/ConnectionModal';
+import ChartWrapper from '@/components/ChartWrapper.vue';
 
 export default {
   data() {
@@ -165,35 +168,32 @@ export default {
       return Math.floor(Math.random() * (max - min + 1)) + min;
     },
     abbreviateHashRate(n) {
-      if (n < 1e3) return [Number(n.toFixed(1)), "H/s"];
-      if (n >= 1e3 && n < 1e6) return [Number((n / 1e3).toFixed(1)), "kH/s"];
-      if (n >= 1e6 && n < 1e9) return [Number((n / 1e6).toFixed(1)), "MH/s"];
-      if (n >= 1e9 && n < 1e12) return [Number((n / 1e9).toFixed(1)), "GH/s"];
-      if (n >= 1e12 && n < 1e15) return [Number((n / 1e12).toFixed(1)), "TH/s"];
-      if (n >= 1e15 && n < 1e18) return [Number((n / 1e15).toFixed(1)), "PH/s"];
-      if (n >= 1e18 && n < 1e21) return [Number((n / 1e18).toFixed(1)), "EH/s"];
-      if (n >= 1e21) return [Number(+(n / 1e21).toFixed(1)), "ZH/s"];
+      if (n < 1e3) return [Number(n.toFixed(1)), 'H/s'];
+      if (n >= 1e3 && n < 1e6) return [Number((n / 1e3).toFixed(1)), 'kH/s'];
+      if (n >= 1e6 && n < 1e9) return [Number((n / 1e6).toFixed(1)), 'MH/s'];
+      if (n >= 1e9 && n < 1e12) return [Number((n / 1e9).toFixed(1)), 'GH/s'];
+      if (n >= 1e12 && n < 1e15) return [Number((n / 1e12).toFixed(1)), 'TH/s'];
+      if (n >= 1e15 && n < 1e18) return [Number((n / 1e15).toFixed(1)), 'PH/s'];
+      if (n >= 1e18 && n < 1e21) return [Number((n / 1e18).toFixed(1)), 'EH/s'];
+      if (n >= 1e21) return [Number(+(n / 1e21).toFixed(1)), 'ZH/s'];
     },
     abbreviateSize(n) {
-      if (n < 1e3) return [Number(n.toFixed(1)), "Bytes"];
-      if (n >= 1e3 && n < 1e6) return [Number((n / 1e3).toFixed(1)), "KB"];
-      if (n >= 1e6 && n < 1e9) return [Number((n / 1e6).toFixed(1)), "MB"];
-      if (n >= 1e9 && n < 1e12) return [Number((n / 1e9).toFixed(1)), "GB"];
-      if (n >= 1e12 && n < 1e15) return [Number((n / 1e12).toFixed(1)), "TB"];
-      if (n >= 1e15) return [Number(+(n / 1e15).toFixed(1)), "PB"];
+      if (n < 1e3) return [Number(n.toFixed(1)), 'Bytes'];
+      if (n >= 1e3 && n < 1e6) return [Number((n / 1e3).toFixed(1)), 'KB'];
+      if (n >= 1e6 && n < 1e9) return [Number((n / 1e6).toFixed(1)), 'MB'];
+      if (n >= 1e9 && n < 1e12) return [Number((n / 1e9).toFixed(1)), 'GB'];
+      if (n >= 1e12 && n < 1e15) return [Number((n / 1e12).toFixed(1)), 'TB'];
+      if (n >= 1e15) return [Number(+(n / 1e15).toFixed(1)), 'PB'];
     },
     fetchStats() {
-      this.$store.dispatch("bitcoin/getStats");
+      this.$store.dispatch('bitcoin/getStats');
     },
     fetchConnectionDetails() {
-      return Promise.all([
-        this.$store.dispatch("bitcoin/getP2PInfo"),
-        this.$store.dispatch("bitcoin/getRpcInfo")
-      ]);
+      return this.$store.dispatch('bitcoin/getRpcInfo');
     }
   },
   created() {
-    this.$store.dispatch("bitcoin/getVersion");
+    this.$store.dispatch('bitcoin/getVersion');
     this.fetchStats();
     this.fetchConnectionDetails();
     this.interval = window.setInterval(this.fetchStats, 5000);
@@ -206,7 +206,7 @@ export default {
     Blockchain,
     Stat,
     ConnectionModal,
-    ChartWrapper,
+    ChartWrapper
   }
 };
 </script>
