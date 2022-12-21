@@ -16,6 +16,7 @@
     "countup.js": "^2.0.4",
     "highcharts": "^9.3.2",
     "highcharts-vue": "^1.4.0",
+    "lodash.clonedeep": "^4.5.0",
     "moment": "^2.24.0",
     "qrcode.vue": "^1.7.0",
     "vue": "^2.6.10",

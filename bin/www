@@ -8,6 +8,11 @@ var app = require('../app');
 var debug = require('debug')('nodejs-regular-webapp2:server');
 var http = require('http');
 
+const diskLogic = require('../logic/disk');
+const diskService = require('../services/disk');
+const bitcoindLogic = require('../logic/bitcoind');
+const constants = require('../utils/const');
+
 /**
  * Get port from environment and store in Express.
  */
@@ -28,6 +33,34 @@ var server = http.createServer(app);
 server.listen(port);
 server.on('error', onError);
 server.on('listening', onListening);
+
+/**
+ * Function to create default bitcoin core config files if they do not already exist.
+ */
+
+async function createConfFilesAndRestartBitcoind() {
+  console.log('umbrel-bitcoin.conf does not exist, creating config files with Umbrel default values');
+  const config = await diskLogic.getJsonStore();
+
+  // set torProxyForClearnet to false for existing installs
+  if (constants.BITCOIN_INITIALIZE_WITH_CLEARNET_OVER_TOR) config.torProxyForClearnet = true;
+
+  await diskLogic.applyCustomBitcoinConfig(config);
+
+  const MAX_TRIES = 60;
+  let tries = 0;
+
+  while (tries < MAX_TRIES) {
+    try {
+      await bitcoindLogic.stop();
+      break;
+    } catch (error) {
+      console.error(error);
+      tries++;
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+  }
+}
 
 /**
  * Normalize a port into a number, string, or false.
@@ -81,11 +114,16 @@ function onError(error) {
  * Event listener for HTTP server "listening" event.
  */
 
-function onListening() {
+async function onListening() {
   var addr = server.address();
   var bind = typeof addr === 'string'
     ? 'pipe ' + addr
     : 'port ' + addr.port;
   debug('Listening on ' + bind);
   console.log('Listening on ' + bind);
+
+  // if umbrel-bitcoin.conf does not exist, create default bitcoin core config files and restart bitcoind.
+  if (! await diskService.fileExists(constants.UMBREL_BITCOIN_CONF_FILEPATH)) {
+    createConfFilesAndRestartBitcoind();
+  }
 }

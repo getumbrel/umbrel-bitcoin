@@ -1,15 +1,48 @@
 version: "3.7"
 
 services:
+  i2pd_daemon:
+    container_name: i2pd_daemon
+    image: purplei2p/i2pd:release-2.44.0@sha256:d154a599793c393cf9c91f8549ba7ece0bb40e5728e1813aa6dd4c210aa606f6
+    user: "1000:1000"
+    command: --sam.enabled=true --sam.address=0.0.0.0 --sam.port=7656 --loglevel=error
+    restart: on-failure
+    volumes:
+      - ${PWD}/data/i2pd:/home/i2pd/data
+    networks:
+      default:
+        ipv4_address: "10.21.0.2"
+  
+  tor_server:
+    container_name: tor_server
+    image: getumbrel/tor:0.4.7.8@sha256:2ace83f22501f58857fa9b403009f595137fa2e7986c4fda79d82a8119072b6a
+    user: "1000:1000"
+    restart: on-failure
+    entrypoint: /tor-entrypoint/tor-entrypoint.sh
+    volumes:
+      - ${PWD}/data/tor:/etc/tor
+      - ${PWD}/tor-entrypoint:/tor-entrypoint
+    environment:
+      HOME: "/tmp"
+    networks:
+      default:
+        ipv4_address: "10.21.0.3"
+  
   bitcoind:
-    image: lncm/bitcoind:v22.0@sha256:37a1adb29b3abc9f972f0d981f45e41e5fca2e22816a023faa9fdc0084aa4507
-    command: -regtest -rpcbind=0.0.0.0 -rpcallowip=0.0.0.0/0 -rpcauth=umbrel:5071d8b3ba93e53e414446ff9f1b7d7b$$375e9731abd2cd2c2c44d2327ec19f4f2644256fdeaf4fc5229bf98b778aafec
+    image: lncm/bitcoind:v24.0@sha256:db19fe46f30acd3854f4f0d239278137d828ce3728f925c8d92faaab1ba8556a
+    user: "1000:1000"
+    command: -port=8333 -rpcport=8332 -rpcbind=0.0.0.0 -rpcallowip=0.0.0.0/0 -rpcauth=umbrel:5071d8b3ba93e53e414446ff9f1b7d7b$$375e9731abd2cd2c2c44d2327ec19f4f2644256fdeaf4fc5229bf98b778aafec
     volumes:
       - ${PWD}/data/bitcoin:/data/.bitcoin
-    restart: on-failure
+    restart: unless-stopped
     stop_grace_period: 15m30s
     ports:
-      - "18443:18443" # regtest
+      - "8332:8332" # rpc
+      - "8333:8333" # p2p
+    networks:
+      default:
+        ipv4_address: "10.21.0.4"
+  
   server:
     build: .
     depends_on: [bitcoind]
@@ -17,12 +50,35 @@ services:
     restart: on-failure
     ports:
       - "3005:3005"
+    volumes:
+      - ${PWD}/data/app:/data # volume to persist advanced settings json
+      - ${PWD}/data/bitcoin:/bitcoin/.bitcoin # volume to persist umbrel-bitcoin.conf and bitcoin.conf
     environment:
       PORT: "3005"
       BITCOIN_HOST: "bitcoind"
-      RPC_PORT: "18443" # - regtest
+      BITCOIN_P2P_PORT: 8333
+      BITCOIN_RPC_PORT: 8332
+      BITCOIN_DEFAULT_NETWORK: "regtest"
       RPC_USER: "umbrel"
       RPC_PASSWORD: "moneyprintergobrrr"
       BITCOIN_RPC_HIDDEN_SERVICE: "somehiddenservice.onion"
       BITCOIN_P2P_HIDDEN_SERVICE: "anotherhiddenservice.onion"
       DEVICE_DOMAIN_NAME: "test.local"
+      BITCOIND_IP: "10.21.0.4"
+      TOR_PROXY_IP: "10.21.0.3"
+      TOR_PROXY_PORT: "9050"
+      TOR_PROXY_CONTROL_PORT: "9051"
+      TOR_PROXY_CONTROL_PASSWORD: "umbrelisneat"
+      I2P_DAEMON_IP: "10.21.0.2"
+      I2P_DAEMON_PORT: "7656"
+    networks:
+      default:
+        ipv4_address: "10.21.0.5"
+
+networks:
+    default:
+      name: advanced_settings_test_network
+      ipam:
+          driver: default
+          config:
+              - subnet: "10.21.0.0/16"

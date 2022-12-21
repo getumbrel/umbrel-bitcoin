@@ -1,6 +1,8 @@
 import API from "@/helpers/api";
 import { toPrecision } from "@/helpers/units";
 
+const BYTES_PER_GB = 1000000000;
+
 // Initial state
 const state = () => ({
   operational: false,
@@ -24,6 +26,8 @@ const state = () => ({
   },
   currentBlock: 0,
   chain: "",
+  pruned: false,
+  pruneTargetSizeGB: 0,
   blockHeight: 0,
   blocks: [],
   percent: -1, //for loading state
@@ -37,7 +41,10 @@ const state = () => ({
   peers: {
     total: 0,
     inbound: 0,
-    outbound: 0
+    outbound: 0,
+    clearnet: 0,
+    tor: 0,
+    i2p: 0
   },
   chartData: []
 });
@@ -53,6 +60,8 @@ const mutations = {
     state.currentBlock = sync.currentBlock;
     state.blockHeight = sync.headerCount;
     state.chain = sync.chain;
+    state.pruned = sync.pruned;
+    state.pruneTargetSizeGB = Math.round(sync.pruneTargetSize / BYTES_PER_GB);
 
     if (sync.status === "calibrating") {
       state.calibrating = true;
@@ -104,6 +113,9 @@ const mutations = {
     state.peers.total = peers.total || 0;
     state.peers.inbound = peers.inbound || 0;
     state.peers.outbound = peers.outbound || 0;
+    state.peers.clearnet = peers.clearnet || 0;
+    state.peers.tor = peers.tor || 0;
+    state.peers.i2p = peers.i2p || 0;
   },
 
   setChartData(state, chartData) {

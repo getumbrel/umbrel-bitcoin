@@ -138,12 +138,17 @@ export default {
   },
   computed: {
     ...mapState({
+      isBitcoinCoreOperational: state => state.bitcoin.operational,
       syncPercent: state => state.bitcoin.percent,
       blocks: state => state.bitcoin.blocks
     })
   },
   methods: {
     async fetchBlocks() {
+      // don't poll if bitcoin core isn't yet running
+      if (!this.isBitcoinCoreOperational) {
+        return;
+      }
       //prevent multiple polls if previous poll already in progress
       if (this.pollInProgress) {
         return;

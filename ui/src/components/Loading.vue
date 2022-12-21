@@ -5,6 +5,7 @@
     <img alt="Umbrel" src="@/assets/icon.svg" class="mb-5 logo" />
 
     <!-- <b-spinner class="my-4" variant="primary"></b-spinner> -->
+    <small v-if="isRestarting" class="text-muted mb-3">Restarting...</small>
     <b-progress
       :value="progress"
       class="mb-2 w-75"
@@ -25,10 +26,17 @@
 <script>
 export default {
   data() {
-    return {};
+    return {
+      isRestarting: false
+    };
   },
   props: { progress: Number },
-  created() {},
+  created() {
+    if (this.$route.query.hasOwnProperty("restart")) {
+      this.isRestarting = true;
+      this.$router.replace({ query: {} });
+    }
+  },
   methods: {},
   components: {}
 };

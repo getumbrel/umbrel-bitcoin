@@ -2,19 +2,19 @@ const constants = require('utils/const.js');
 const NodeError = require('models/errors.js').NodeError;
 
 function getBitcoinP2PConnectionDetails() {
-    const torAddress = constants.BITCOIN_P2P_HIDDEN_SERVICE;
-    const port = constants.BITCOIN_P2P_PORT;
-    const torConnectionString = `${torAddress}:${port}`;
-    const localAddress = constants.DEVICE_DOMAIN_NAME;
-    const localConnectionString = `${localAddress}:${port}`;
+  const torAddress = constants.BITCOIN_P2P_HIDDEN_SERVICE;
+  const port = constants.BITCOIN_P2P_PORT;
+  const torConnectionString = `${torAddress}:${port}`;
+  const localAddress = constants.DEVICE_DOMAIN_NAME;
+  const localConnectionString = `${localAddress}:${port}`;
 
-    return {
-      torAddress,
-      port,
-      torConnectionString,
-      localAddress,
-      localConnectionString
-    };
+  return {
+    torAddress,
+    port,
+    torConnectionString,
+    localAddress,
+    localConnectionString
+  };
 }
 
 function getBitcoinRPCConnectionDetails() {

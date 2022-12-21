@@ -12,20 +12,34 @@ async function getConnectionsCount() {
 
   var outBoundConnections = 0;
   var inBoundConnections = 0;
+  var clearnetConnections = 0;
+  var torConnections = 0;
+  var i2pConnections = 0;
 
   peerInfo.result.forEach(function(peer) {
     if (peer.inbound === false) {
       outBoundConnections++;
-
-      return;
+    } else {
+      inBoundConnections++;
     }
-    inBoundConnections++;
+
+    if (peer.network === "onion") {
+      torConnections++;
+    } else if (peer.network === "i2p") {
+      i2pConnections++;
+    } else {
+      // ipv4 and ipv6 are clearnet
+      clearnetConnections++;
+    }   
   });
 
   const connections = {
     total: inBoundConnections + outBoundConnections,
     inbound: inBoundConnections,
-    outbound: outBoundConnections
+    outbound: outBoundConnections,
+    clearnet: clearnetConnections,
+    tor: torConnections,
+    i2p: i2pConnections
   };
 
   return connections;
@@ -72,12 +86,16 @@ async function getLocalSyncInfo() {
   var blockCount = blockChainInfo.blocks;
   var headerCount = blockChainInfo.headers;
   var percent = blockChainInfo.verificationprogress;
+  var pruned = blockChainInfo.pruned;
+  var pruneTargetSize = blockChainInfo.pruneTargetSize;
 
   return {
     chain,
     percent,
     currentBlock: blockCount,
-    headerCount: headerCount // eslint-disable-line object-shorthand,
+    headerCount: headerCount, // eslint-disable-line object-shorthand,
+    pruned,
+    pruneTargetSize
   };
 }
 
@@ -92,6 +110,7 @@ async function getSyncStatus() {
   return localSyncInfo;
 }
 
+// TODO - consider using getNetworkInfo for info on proxy for ipv4 and ipv6
 async function getVersion() {
   const networkInfo = await bitcoindService.getNetworkInfo();
   const unformattedVersion = networkInfo.result.subversion;
@@ -259,6 +278,11 @@ async function nodeStatusSummary() {
   };
 }
 
+async function stop() {
+  const stopResponse = await bitcoindService.stop();
+  return {stopResponse};
+}
+
 module.exports = {
   getBlockHash,
   getTransaction,
@@ -273,5 +297,6 @@ module.exports = {
   getSyncStatus,
   getVersion,
   nodeStatusDump,
-  nodeStatusSummary
+  nodeStatusSummary,
+  stop
 };

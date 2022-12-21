@@ -24,6 +24,27 @@
           <span class="text-muted" style="margin-left: 0.5rem;">{{
             suffix
           }}</span>
+
+        <div class="ml-1">
+            <b-popover
+              v-if="showPopover"
+              :target="popoverId"
+              placement="bottom"
+              triggers="hover focus"
+            >
+              <p v-for="content in popoverContent" :key="content" class="m-0">{{ content }}</p>
+            </b-popover>
+
+            <b-icon
+              v-if="showPopover"
+              :id="popoverId"
+              icon="info-circle"
+              size="lg"
+              style="cursor: pointer"
+              class="text-muted"
+            ></b-icon>
+          </div>
+
         </div>
       </div>
       <div
@@ -100,6 +121,18 @@ export default {
     showPercentChange: {
       type: Boolean,
       default: false
+    },
+    showPopover: {
+      type: Boolean,
+      default: false
+    },
+    popoverId: {
+      type: String,
+      default: ""
+    },
+    popoverContent: {
+      type: Array,
+      default: () => []
     }
   },
   computed: {

@@ -1,6 +1,5 @@
 const RpcClient = require('bitcoind-rpc');
 const camelizeKeys = require('camelize-keys');
-
 const BitcoindError = require('models/errors.js').BitcoindError;
 
 const BITCOIND_RPC_PORT = process.env.RPC_PORT || 8332; // eslint-disable-line no-magic-numbers, max-len
@@ -13,7 +12,7 @@ const rpcClient = new RpcClient({
   user: BITCOIND_RPC_USER, // eslint-disable-line object-shorthand
   pass: BITCOIND_RPC_PASSWORD, // eslint-disable-line object-shorthand
   host: BITCOIND_HOST,
-  port: BITCOIND_RPC_PORT,
+  port: BITCOIND_RPC_PORT
 });
 
 function promiseify(rpcObj, rpcFn, what) {
@@ -115,6 +114,10 @@ function help() {
   return promiseify(rpcClient, rpcClient.help, 'help data');
 }
 
+function stop() {
+  return promiseify(rpcClient, rpcClient.stop, 'stop');
+}
+
 module.exports = {
   getMiningInfo,
   getBestBlockHash,
@@ -127,4 +130,5 @@ module.exports = {
   getMempoolInfo,
   getNetworkInfo,
   help,
+  stop,
 };

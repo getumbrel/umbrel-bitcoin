@@ -62,7 +62,7 @@ export default {
 
       this.loadingPollInProgress = true;
 
-      // Then check if middleware api is up
+      // Then check if middleware api and bitcoin core are both up
       if (this.loadingProgress <= 40) {
         this.loadingProgress = 40;
         await this.$store.dispatch("system/getApi");
