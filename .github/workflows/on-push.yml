@@ -1,4 +1,4 @@
-name: Build and publish Docker image on push
+name: Build Docker image on push
 
 on: push
 
@@ -12,9 +12,6 @@ jobs:
     steps:
       - name: Set BRANCH
         run: echo "BRANCH=$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//-/g')" >> $GITHUB_ENV
-
-      - name: Login to Docker Hub
-        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
       - name: Checkout project
         uses: actions/checkout@v2
@@ -30,4 +27,4 @@ jobs:
           docker buildx build \
           --platform linux/amd64,linux/arm64 \
           --tag ${{ secrets.DOCKER_HUB_USER }}/umbrel-bitcoin:$BRANCH \
-          --push .
+          .
