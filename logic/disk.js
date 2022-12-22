@@ -114,6 +114,10 @@ function settingsToMultilineConfString(settings) {
     umbrelBitcoinConfig.push(`prune=${Math.round(settings.prune.pruneSizeGB * GB_TO_MiB)}`);
   }
   
+  // Only enable txindex if pruning is disabled
+  const txindexEnabled = settings.prune.enabled ? '0' : '1';
+  umbrelBitcoinConfig.push(`txindex=${txindexEnabled}`);
+
   // reindex
   if (settings.reindex) {
     umbrelBitcoinConfig.push('# Rebuild chain state and block index from the blk*.dat files on disk.');
