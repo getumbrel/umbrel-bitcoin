@@ -272,7 +272,7 @@ async function nodeStatusSummary() {
   return {
     difficulty: blockchainInfo.result.difficulty,
     size: blockchainInfo.result.sizeOnDisk,
-    mempool: mempoolInfo.result.bytes,
+    mempool: mempoolInfo.result.usage,
     connections: networkInfo.result.connections,
     networkhashps: miningInfo.result.networkhashps
   };
