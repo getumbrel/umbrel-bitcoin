@@ -166,6 +166,9 @@ function settingsToMultilineConfString(settings) {
   umbrelBitcoinConfig.push(`bind=0.0.0.0:8333`);
   umbrelBitcoinConfig.push(`bind=${constants.BITCOIND_IP}:8334=onion`);
 
+  umbrelBitcoinConfig.push(`# Whitelist electrs`);
+  umbrelBitcoinConfig.push(`whitelist=10.21.21.10`);
+  
   return umbrelBitcoinConfig.join('\n');
 }
 
