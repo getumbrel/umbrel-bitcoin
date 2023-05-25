@@ -15,6 +15,7 @@ const DEFAULT_ADVANCED_SETTINGS = {
   incomingConnections: false,
   cacheSizeMB: 450,
   mempoolFullRbf: false,
+  rest: false,
   prune: {
     enabled: false,
     pruneSizeGB: 300,
@@ -106,6 +107,12 @@ function settingsToMultilineConfString(settings) {
   if (settings.mempoolFullRbf) {
     umbrelBitcoinConfig.push("# Allow any transaction in the mempool of Bitcoin Node to be replaced with newer versions of the same transaction that include a higher fee."); 
     umbrelBitcoinConfig.push('mempoolfullrbf=1'); 
+  }
+
+  // rest
+  if (settings.rest) {
+    umbrelBitcoinConfig.push("# Enable public REST endpoints.");
+    umbrelBitcoinConfig.push('rest=1');
   }
 
   // prune
