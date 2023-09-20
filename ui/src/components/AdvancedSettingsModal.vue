@@ -187,6 +187,28 @@
 
           <hr class="advanced-settings-divider" />
 
+          <div>
+            <div class="d-flex justify-content-between align-items-center">
+              <div class="w-75">
+                <label class="mb-0" for="rest">
+                  <p class="font-weight-bold mb-0">Enable REST API</p>
+                </label>
+              </div>
+              <div>
+                <toggle-switch
+                  id="rest"
+                  class="align-self-center"
+                  :on="settings.rest"
+                  @toggle="status => (settings.rest = status)"
+                ></toggle-switch>
+              </div>
+            </div>
+            <small class="w-sm-75 d-block text-muted mt-1">
+              Accept public REST requests to your node. Be sure to understand the risks and limitations of an unauthenticated REST interface before enabling this feature.
+            </small>
+          </div>
+
+          <hr class="advanced-settings-divider" />
 
           <div>
             <div class="d-flex justify-content-between align-items-center">

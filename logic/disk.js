@@ -15,6 +15,7 @@ const DEFAULT_ADVANCED_SETTINGS = {
   incomingConnections: false,
   cacheSizeMB: 450,
   mempoolFullRbf: false,
+  rest: false,
   prune: {
     enabled: false,
     pruneSizeGB: 300,
@@ -165,6 +166,15 @@ function settingsToMultilineConfString(settings) {
   umbrelBitcoinConfig.push(`listenonion=${listen}`);
   umbrelBitcoinConfig.push(`i2pacceptincoming=${listen}`);
 
+  // [RPC]
+  umbrelBitcoinConfig.push("");
+  umbrelBitcoinConfig.push("# [rpc]"); 
+  if (settings.rest) {
+    umbrelBitcoinConfig.push("# Accept public REST requests.");
+    umbrelBitcoinConfig.push('rest=1');
+  }
+
+  umbrelBitcoinConfig.push("");
   umbrelBitcoinConfig.push(`# Required to configure Tor control port properly`);
   umbrelBitcoinConfig.push(`[${settings.network}]`);
   umbrelBitcoinConfig.push(`bind=0.0.0.0:8333`);
