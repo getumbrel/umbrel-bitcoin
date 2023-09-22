@@ -1,4 +1,5 @@
-const fs = require("fs");
+const merge = require('lodash.merge');
+
 const path = require("path");
 const constants = require("utils/const.js");
 const diskService = require("services/disk");
@@ -27,7 +28,7 @@ const DEFAULT_ADVANCED_SETTINGS = {
 async function getJsonStore() {
   try {
     const jsonStore = await diskService.readJsonFile(constants.JSON_STORE_FILE);
-    return { ...DEFAULT_ADVANCED_SETTINGS, ...jsonStore };
+    return merge({}, DEFAULT_ADVANCED_SETTINGS, jsonStore);
   } catch (error) {
     return DEFAULT_ADVANCED_SETTINGS;
   }
@@ -52,10 +53,7 @@ async function applyBitcoinConfig(bitcoinConfig, shouldOverwriteExistingFile) {
 // There's a race condition here if you do two updates in parallel but it's fine for our current use case
 async function updateJsonStore(newProps) {
   const jsonStore = await getJsonStore();
-  return diskService.writeJsonFile(constants.JSON_STORE_FILE, {
-    ...jsonStore,
-    ...newProps
-  });
+  return diskService.writeJsonFile(constants.JSON_STORE_FILE, merge(jsonStore, newProps));
 }
 
 // creates umbrel-bitcoin.conf

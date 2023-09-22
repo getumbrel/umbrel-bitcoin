@@ -24,6 +24,7 @@
     "debug": "^2.6.1",
     "dotenv": "^8.2.0",
     "express": "^4.16.3",
+    "lodash.merge": "^4.6.2",
     "module-alias": "^2.1.0",
     "morgan": "^1.9.0",
     "request-promise": "^4.2.2",
