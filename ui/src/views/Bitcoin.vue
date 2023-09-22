@@ -296,6 +296,7 @@ export default {
         } else {
           this.fetchBitcoinConfigSettings();
           this.showRestartError = true;
+          this.$bvModal.hide("advanced-settings-modal");
           this.isRestartPending = false;
         }  
       } catch (error) {
@@ -324,6 +325,7 @@ export default {
         } else {
           this.fetchBitcoinConfigSettings();
           this.showRestartError = true;
+          this.$bvModal.hide("advanced-settings-modal");
           this.isRestartPending = false;
         }  
       } catch (error) {
