@@ -1,5 +1,4 @@
 import API from "@/helpers/api";
-import { toPrecision } from "@/helpers/units";
 
 const BYTES_PER_GB = 1000000000;
 
@@ -56,7 +55,18 @@ const mutations = {
   },
 
   syncStatus(state, sync) {
-    state.percent = Number(toPrecision(parseFloat(sync.percent) * 100, 2));
+    // sync.percent is `verificationprogress` from the getblockchaininfo RPC, which can't reach 1 when the most recent block is in the past.
+    // To ensure accurate percentage display during sync:
+    //  - When no headers have been downloaded, we set the progress to 0% (this is because sync.percent = 1 when no headers have been downloaded).
+    //  - When current block matches header count (indicating sync completion), we set the progress to 100%.
+    //  - For other cases, we use the value of `verificationprogress` with 2 decimal places and floor it such that the value is in the range 0% to 99.99%.
+    // This allows us to show accurate percentage during initial sync by using the `verificationprogress` value, while also
+    // not relying on prematurely rounding to 100% before the sync is actually complete
+    state.percent = Math.floor(sync.percent * 10000) / 100;
+    // If we're synced to the tip, always show 100
+    if (sync.currentBlock === sync.headerCount) state.percent = 100;
+    // If no headers have been downloaded, show 0. sync.percent = 1 when no headers have been downloaded.
+    if (sync.headerCount === 0) state.percent = 0;
     state.currentBlock = sync.currentBlock;
     state.blockHeight = sync.headerCount;
     state.chain = sync.chain;

@@ -100,7 +100,7 @@
                 <span class="align-self-end">Synchronized</span>
                 <h3 class="font-weight-normal mb-0">
                   <span v-if="syncPercent !== -1">
-                    {{ syncPercent >= 99.99 ? 100 : syncPercent }}
+                    {{ syncPercent }}
                     <small class>%</small>
                   </span>
 
