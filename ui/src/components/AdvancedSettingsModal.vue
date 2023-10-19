@@ -14,286 +14,388 @@
       </b-alert>
 
       <b-overlay :show="isSettingsDisabled" rounded="sm">
-        <div
-          class="advanced-settings-container d-flex flex-column p-3 pb-sm-3 bg-light mb-2"
-        >
-          <div>
-            <div class="d-flex justify-content-between align-items-center">
-              <div class="w-75">
-                <label class="mb-0" for="clearnet">
-                  <p class="font-weight-bold mb-0">Outgoing Connections to Clearnet Peers</p>
-                </label>
-              </div>
+
+        <!-- PEER SETTINGS -->
+        <b-card no-body class="setting-group-container mb-2">
+          <b-card-header v-b-toggle.peer-settings header-tag="header" class="setting-group-header px-2 px-sm-3 d-flex justify-content-between align-items-center" role="tab">
+            <div :class="{'fade-in-out': !hasLoadedSettings}">
+              <p class="setting-group-title mb-1 font-weight-bold">Peer Settings</p>
+              <small class="d-block text-muted">
+                Configure how your node connects and interacts with peers (other nodes) on the network.
+              </small>
+            </div>
+            <b-icon class="when-closed ml-2 text-muted" icon="plus" variant="secondary"></b-icon><b-icon class="when-open ml-2 text-muted" icon="dash" variant="secondary"></b-icon>
+          </b-card-header>
+          <b-collapse v-if="hasLoadedSettings" class="setting-group-body bg-light" id="peer-settings" accordion="peer-settings" role="tabpanel">
+
+            <!-- OUTGOING CLEARNET PEERS -->
+            <b-card-body class="subsetting-body px-2 px-sm-3">
               <div>
-                <toggle-switch
-                  id="clearnet"
-                  class="align-self-center"
-                  :on="settings.clearnet"
-                  @toggle="status => (settings.clearnet = status)"
-                ></toggle-switch>
+                <div class="d-flex justify-content-between align-items-center">
+                  <div class="flex-sm-grow-1">
+                    <label class="mb-0" for="clearnet">
+                      <p class="subsetting-title font-weight-bold mb-0 mr-1">
+                        Outgoing Connections to Clearnet Peers
+                        <span class="subsetting-config-name text-monospace font-weight-normal d-block">
+                          onlynet
+                        </span>
+                      </p>
+                    </label>
+                  </div>
+                  <div>
+                    <toggle-switch
+                      id="clearnet"
+                      class="align-self-center"
+                      :on="settings.clearnet"
+                      @toggle="status => (settings.clearnet = status)"
+                    ></toggle-switch>
+                  </div>
+                </div>
+                <small class="w-lg-75 d-block text-muted mt-1">
+                  Connect to peers available on the clearnet (publicly accessible internet).
+                </small>
               </div>
-            </div>
-            <small class="w-sm-75 d-block text-muted mt-1">
-              Connect to peers available on the clearnet (publicly accessible internet).
-            </small>
-          </div>
+            </b-card-body>
 
-          <hr class="advanced-settings-divider" />
-
-          <div>
-            <div class="d-flex justify-content-between align-items-center">
-              <div class="w-75">
-                <label class="mb-0" for="tor">
-                  <p class="font-weight-bold mb-0">Outgoing Connections to Tor Peers</p>
-                </label>
-              </div>
+            <!-- OUTGOING TOR PEERS -->
+            <b-card-body class="subsetting-body px-2 px-sm-3">
               <div>
-                <toggle-switch
-                  id="tor"
-                  class="align-self-center"
-                  :on="settings.tor"
-                  @toggle="status => (settings.tor = status)"
-                ></toggle-switch>
+                <div class="d-flex justify-content-between align-items-center">
+                  <div class="flex-sm-grow-1">
+                    <label class="mb-0" for="tor">
+                      <p class="subsetting-title font-weight-bold mb-0 mr-1">
+                        Outgoing Connections to Tor Peers
+                        <span class="subsetting-config-name text-monospace font-weight-normal d-block">
+                          onlynet
+                        </span>
+                      </p>
+                    </label>
+                  </div>
+                  <div>
+                    <toggle-switch
+                      id="tor"
+                      class="align-self-center"
+                      :on="settings.tor"
+                      @toggle="status => (settings.tor = status)"
+                    ></toggle-switch>
+                  </div>
+                </div>
+                <small class="w-lg-75 d-block text-muted mt-1">
+                  Connect to peers available on the Tor network.
+                </small>
               </div>
-            </div>
-            <small class="w-sm-75 d-block text-muted mt-1">
-              Connect to peers available on the Tor network.
-            </small>
-          </div>
+            </b-card-body>
 
-          <hr class="advanced-settings-divider" />
-
-          <div>
-            <div class="d-flex justify-content-between align-items-center">
-              <div class="w-75">
-                <label class="mb-0" for="proxy">
-                  <p class="font-weight-bold mb-0">Connect to all Clearnet Peers over Tor</p>
-                </label>
-              </div>
+            <!-- CONNECT TO ALL CLEARNET PEERS OVER TOR -->
+            <b-card-body class="subsetting-body px-2 px-sm-3">
               <div>
-                <toggle-switch
-                  id="proxy"
-                  class="align-self-center"
-                  :on="settings.torProxyForClearnet"
-                  :disabled="isTorProxyDisabled"
-                  :tooltip="torProxyTooltip"
-                  @toggle="status => (settings.torProxyForClearnet = status)"
-                ></toggle-switch>
+                <div class="d-flex justify-content-between align-items-center">
+                  <div class="w-75">
+                    <label class="mb-0" for="proxy">
+                      <p class="subsetting-title font-weight-bold mb-0 mr-1">
+                        Make All Outgoing Connections to Clearnet Peers Over Tor
+                        <span class="subsetting-config-name text-monospace font-weight-normal d-block">
+                          proxy
+                        </span>
+                      </p>
+                    </label>
+                  </div>
+                  <div>
+                    <toggle-switch
+                      id="proxy"
+                      class="align-self-center"
+                      :on="settings.torProxyForClearnet"
+                      :disabled="isTorProxyDisabled"
+                      :tooltip="torProxyTooltip"
+                      @toggle="status => (settings.torProxyForClearnet = status)"
+                    ></toggle-switch>
+                  </div>
+                </div>
+                <small class="w-lg-75 d-block text-muted mt-1">
+                  Connect to peers available on the clearnet via Tor to preserve your anonymity at the cost of slightly less security.
+                </small>
               </div>
-            </div>
-            <small class="w-sm-75 d-block text-muted mt-1">
-              Connect to peers available on the clearnet via Tor to preserve your anonymity at the cost of slightly less security.
-            </small>
-          </div>
+            </b-card-body>
 
-
-          <hr class="advanced-settings-divider" />
-
-          <div>
-            <div class="d-flex justify-content-between align-items-center">
-              <div class="w-75">
-                <label class="mb-0" for="I2P">
-                  <p class="font-weight-bold mb-0">Outgoing Connections to I2P Peers</p>
-                </label>
-              </div>
+            <!-- CONNECT TO I2P PEERS -->
+            <b-card-body class="subsetting-body px-2 px-sm-3">
               <div>
-                <toggle-switch
-                  id="I2P"
-                  class="align-self-center"
-                  :on="settings.i2p"
-                  @toggle="status => (settings.i2p = status)"
-                ></toggle-switch>
+                <div class="d-flex justify-content-between align-items-center">
+                  <div class="w-75">
+                    <label class="mb-0" for="I2P">
+                      <p class="subsetting-title font-weight-bold mb-0 mr-1">
+                        Outgoing Connections to I2P Peers
+                        <span class="subsetting-config-name text-monospace font-weight-normal d-block">
+                          onlynet
+                        </span>
+                      </p>
+                    </label>
+                  </div>
+                  <div>
+                    <toggle-switch
+                      id="I2P"
+                      class="align-self-center"
+                      :on="settings.i2p"
+                      @toggle="status => (settings.i2p = status)"
+                    ></toggle-switch>
+                  </div>
+                </div>
+                <small class="w-lg-75 d-block text-muted mt-1">
+                  Connect to peers available on the I2P network.
+                </small>
               </div>
-            </div>
-            <small class="w-sm-75 d-block text-muted mt-1">
-              Connect to peers available on the I2P network.
-            </small>
-          </div>
+            </b-card-body>
 
-          <hr class="advanced-settings-divider" />
-
-          <div>
-            <div class="d-flex justify-content-between align-items-center">
-              <div class="w-75">
-                <label class="mb-0" for="allow-incoming-connections">
-                  <p class="font-weight-bold mb-0">Incoming Connections</p>
-                </label>
-              </div>
-              <div class="">
-                <toggle-switch
-                  id="allow-incoming-connections"
-                  class="align-self-center"
-                  :on="settings.incomingConnections"
-                  @toggle="status => (settings.incomingConnections = status)"
-                ></toggle-switch>
-              </div>
-            </div>
-            <small class="w-sm-75 d-block text-muted mt-1">
-              Broadcast your node to the Bitcoin network to help other nodes 
-              access the blockchain. You may need to set up port forwarding on 
-              your router to allow incoming connections from clearnet-only peers.
-            </small>
-          </div>
-
-          <hr class="advanced-settings-divider" />
-
-          <div>
-            <div class="d-flex justify-content-between align-items-center">
-              <div class="w-75">
-                <label class="mb-0" for="cache-size">
-                  <p class="font-weight-bold mb-0">Cache Size (MB)</p>
-                </label>
-              </div>
-              <div class="">
-                <b-form-input
-                  class="advanced-settings-input"
-                  id="cache-size"
-                  type="number"
-                  v-model="settings.cacheSizeMB"
-                ></b-form-input>
-              </div>
-            </div>
-            <small class="w-sm-75 d-block text-muted mt-1">
-              Choose the size of the UTXO set to store in RAM. A larger cache can 
-              speed up the initial synchronization of your Bitcoin node, but after 
-              the initial sync is complete, a larger cache value does not significantly 
-              improve performance and may use more RAM than needed.
-            </small>
-          </div>
-
-          <hr class="advanced-settings-divider" />
-
-          <div>
-            <div class="d-flex justify-content-between align-items-center">
-              <div class="w-75">
-                <label class="mb-0" for="mempool">
-                  <p class="font-weight-bold mb-0">Replace-By-Fee (RBF) for All Transactions</p>
-                </label>
-              </div>
+            <!-- INCOMING CONNECTIONS -->
+            <b-card-body class="subsetting-body px-2 px-sm-3">
               <div>
-                <toggle-switch
-                  id="mempool"
-                  class="align-self-center"
-                  :on="settings.mempoolFullRbf"
-                  @toggle="status => (settings.mempoolFullRbf = status)"
-                ></toggle-switch>
+                <div class="d-flex justify-content-between align-items-center">
+                  <div class="w-75">
+                    <label class="mb-0" for="allow-incoming-connections">
+                      <p class="subsetting-title font-weight-bold mb-0 mr-1">
+                        Incoming Connections
+                        <span class="subsetting-config-name text-monospace font-weight-normal d-block">
+                          listen | listenonion | i2pacceptincoming
+                        </span>
+                      </p>
+                    </label>
+                  </div>
+                  <div>
+                    <toggle-switch
+                      id="allow-incoming-connections"
+                      class="align-self-center"
+                      :on="settings.incomingConnections"
+                      @toggle="status => (settings.incomingConnections = status)"
+                    ></toggle-switch>
+                  </div>
+                </div>
+                <small class="w-lg-75 d-block text-muted mt-1">
+                  Broadcast your node to the Bitcoin network to help other nodes 
+                  access the blockchain. You may need to set up port forwarding on 
+                  your router to allow incoming connections from clearnet-only peers.
+                </small>
               </div>
+            </b-card-body>
+
+          </b-collapse>
+        </b-card>
+
+         <!-- OPTIMIZATION SETTINGS -->
+         <b-card no-body class="setting-group-container mb-2">
+          <b-card-header v-b-toggle.optimization-settings header-tag="header" class="setting-group-header px-2 px-sm-3 d-flex justify-content-between align-items-center" role="tab">
+            <!-- IMPLEMENT HASLOADEDSETTINGS -->
+            <div :class="{'fade-in-out': !hasLoadedSettings}">
+              <p class="setting-group-title mb-1 font-weight-bold">Optimization</p>
+              <small class="d-block text-muted">
+                Fine tune the performance and resource usage of your node.
+              </small>
             </div>
-            <small class="w-sm-75 d-block text-muted mt-1">
-              Allow any transaction in the mempool of your Bitcoin node to be replaced with
-              a newer version of the same transaction that includes a higher fee.
-            </small>
-          </div>
-
-          <hr class="advanced-settings-divider" />
-
-          <div>
-            <div class="d-flex justify-content-between align-items-center">
-              <div class="w-75">
-                <label class="mb-0" for="rest">
-                  <p class="font-weight-bold mb-0">Enable REST API</p>
-                </label>
-              </div>
+            <b-icon class="when-closed ml-2 text-muted" icon="plus" variant="secondary"></b-icon><b-icon class="when-open ml-2 text-muted" icon="dash" variant="secondary"></b-icon>
+          </b-card-header>
+          <b-collapse v-if="hasLoadedSettings" class="setting-group-body bg-light" id="optimization-settings" accordion="optimization-settings" role="tabpanel">
+          
+            <!-- DB CACHE -->
+            <b-card-body class="subsetting-body px-2 px-sm-3">
               <div>
-                <toggle-switch
-                  id="rest"
-                  class="align-self-center"
-                  :on="settings.rest"
-                  @toggle="status => (settings.rest = status)"
-                ></toggle-switch>
+                <div class="d-flex justify-content-between align-items-center">
+                  <div class="flex-sm-grow-1">
+                    <label class="mb-0" for="cache-size">
+                      <p class="subsetting-title font-weight-bold mb-0 mr-1">
+                        Cache Size
+                        <span class="subsetting-config-name text-monospace font-weight-normal d-block">
+                          dbcache
+                        </span>
+                      </p>
+                    </label>
+                  </div>
+                  <div class="input-container ml-1">
+                    <b-input-group append="MB">
+                      <b-form-input
+                        class="advanced-settings-input"
+                        id="cache-size"
+                        type="number"
+                        v-model="settings.cacheSizeMB"
+                        number
+                        autocomplete="off"
+                      ></b-form-input>
+                    </b-input-group>
+                  </div>
+                </div>
+                <small class="w-lg-75 d-block text-muted mt-1">
+                  Choose the size of the UTXO set to store in RAM. A larger cache can 
+                  speed up the initial synchronization of your Bitcoin node, but after 
+                  the initial sync is complete, a larger cache value does not significantly 
+                  improve performance and may use more RAM than needed.
+                </small>
               </div>
-            </div>
-            <small class="w-sm-75 d-block text-muted mt-1">
-              Accept public REST requests to your node. Be sure to understand the risks and limitations of an unauthenticated REST interface before enabling this feature.
-            </small>
-          </div>
+            </b-card-body>
 
-          <hr class="advanced-settings-divider" />
-
-          <div>
-            <div class="d-flex justify-content-between align-items-center">
-              <div class="w-75">
-                <label class="mb-0" for="prune-old-blocks">
-                  <p class="font-weight-bold mb-0">Prune Old Blocks</p>
-                </label>
-              </div>
+            <!-- RBF -->
+            <b-card-body class="subsetting-body px-2 px-sm-3">
               <div>
-                <toggle-switch
+                <div class="d-flex justify-content-between align-items-center">
+                  <div class="flex-sm-grow-1">
+                    <label class="mb-0" for="mempool">
+                      <p class="subsetting-title font-weight-bold mb-0 mr-1">
+                        Replace-By-Fee (RBF) for All Transactions
+                        <span class="subsetting-config-name text-monospace font-weight-normal d-block">
+                          mempoolfullrbf
+                        </span>
+                      </p>
+                    </label>
+                  </div>
+                  <div>
+                    <toggle-switch
+                      id="mempool"
+                      class="align-self-center"
+                      :on="settings.mempoolFullRbf"
+                      @toggle="status => (settings.mempoolFullRbf = status)"
+                    ></toggle-switch>
+                  </div>
+                </div>
+                <small class="w-lg-75 d-block text-muted mt-1">
+                  Allow any transaction in the mempool of your Bitcoin node to be replaced with
+                  a newer version of the same transaction that includes a higher fee.
+                </small>
+              </div>
+            </b-card-body>
+
+            <!-- PRUNE -->
+            <b-card-body class="subsetting-body px-2 px-sm-3">
+              <div>
+                <div class="d-flex justify-content-between align-items-center">
+                  <div class="flex-sm-grow-1">
+                    <label class="mb-0" for="prune-old-blocks">
+                      <p class="subsetting-title font-weight-bold mb-0 mr-1">
+                        Prune Old Blocks
+                        <span class="subsetting-config-name text-monospace font-weight-normal d-block">
+                          prune
+                        </span>
+                      </p>
+                    </label>
+                  </div>
+                  <div>
+                    <toggle-switch
+                      id="prune-old-blocks"
+                      class="align-self-center"
+                      :on="settings.prune.enabled"
+                      @toggle="status => (settings.prune.enabled = status)"
+                    ></toggle-switch>
+                  </div>
+                </div>
+                <small class="w-lg-75 d-block text-muted mt-1">
+                  Save storage space by pruning (deleting) old blocks and keeping only 
+                  a limited copy of the blockchain. Use the slider to choose the size 
+                  of the blockchain you want to store. It may take some time for your 
+                  node to be online after you turn on pruning. If you turn off pruning 
+                  after turning it on, you'll need to download the entire blockchain 
+                </small>
+                <prune-slider
                   id="prune-old-blocks"
-                  class="align-self-center"
-                  :on="settings.prune.enabled"
-                  @toggle="status => (settings.prune.enabled = status)"
-                ></toggle-switch>
+                  class="mt-3 mb-3"
+                  :minValue="1"
+                  :maxValue="maxPruneSizeGB"
+                  :startingValue="settings.prune.pruneSizeGB"
+                  :disabled="!settings.prune.enabled"
+                  @change="value => (settings.prune.pruneSizeGB = value)"
+                ></prune-slider>
               </div>
+            </b-card-body>
+
+          </b-collapse>
+        </b-card>
+
+        <!-- RPC & REST SETTINGS -->
+        <b-card no-body class="setting-group-container mb-2">
+          <b-card-header v-b-toggle.rpc-rest-settings header-tag="header" class="setting-group-header px-2 px-sm-3 d-flex justify-content-between align-items-center" role="tab">
+            <!-- IMPLEMENT HASLOADEDSETTINGS -->
+            <div :class="{'fade-in-out': !hasLoadedSettings}">
+              <p class="setting-group-title mb-1 font-weight-bold">RPC and REST</p>
+              <small class="d-block text-muted">
+                Configure RPC and REST API access to your node.
+              </small>
             </div>
-            <small class="w-sm-75 d-block text-muted mt-1">
-              Save storage space by pruning (deleting) old blocks and keeping only 
-              a limited copy of the blockchain. Use the slider to choose the size 
-              of the blockchain you want to store. It may take some time for your 
-              node to be online after you turn on pruning. If you turn off pruning 
-              after turning it on, you'll need to download the entire blockchain 
-              again.
-            </small>
-            <prune-slider
-              id="prune-old-blocks"
-              class="mt-3 mb-3"
-              :minValue="1"
-              :maxValue="maxPruneSizeGB"
-              :startingValue="settings.prune.pruneSizeGB"
-              :disabled="!settings.prune.enabled"
-              @change="value => (settings.prune.pruneSizeGB = value)"
-            ></prune-slider>
-          </div>
-
-          <hr class="advanced-settings-divider" />
-
-          <!-- <div>
-            <div class="d-flex justify-content-between align-items-center">
-              <div class="w-75">
-                <label class="mb-0" for="reindex-blockchain">
-                  <p class="font-weight-bold mb-0">Reindex Blockchain</p>
-                </label>
-              </div>
+            <b-icon class="when-closed ml-2 text-muted" icon="plus" variant="secondary"></b-icon><b-icon class="when-open ml-2 text-muted" icon="dash" variant="secondary"></b-icon>
+          </b-card-header>
+          <b-collapse v-if="hasLoadedSettings" class="setting-group-body bg-light" id="rpc-rest-settings" accordion="rpc-rest-settings" role="tabpanel">
+            
+            <!-- RBF -->
+            <!-- TODO: move to a "Transactions" accordion if we add additional transaction options -->
+            <b-card-body class="subsetting-body px-2 px-sm-3">
               <div>
-                <toggle-switch
-                  id="reindex-blockchain"
-                  class="align-self-center"
-                  :on="settings.reindex"
-                  @toggle="status => (settings.reindex = status)"
-                ></toggle-switch>
+                <div class="d-flex justify-content-between align-items-center">
+                  <div class="flex-sm-grow-1">
+                    <label class="mb-0" for="rest">
+                      <p class="subsetting-title font-weight-bold mb-0 mr-1">
+                       Public REST API
+                        <span class="subsetting-config-name text-monospace font-weight-normal d-block">
+                          rest
+                        </span>
+                      </p>
+                    </label>
+                  </div>
+                  <div>
+                    <toggle-switch
+                      id="rest"
+                      class="align-self-center"
+                      :on="settings.rest"
+                      @toggle="status => (settings.rest = status)"
+                    ></toggle-switch>
+                  </div>
+                </div>
+                <small class="w-lg-75 d-block text-muted mt-1">
+                  Public REST API can help you connect certain wallets and apps to your node. However, because the REST API access is unauthenticated, it can lead to unauthorized access, denial-of-service (DoS) attacks, and such.
+                </small>
               </div>
+            </b-card-body>
+          </b-collapse>
+        </b-card>
+
+        <!-- CHAIN SELECTION SETTINGS -->
+        <b-card no-body class="setting-group-container mb-2">
+          <b-card-header v-b-toggle.chain-selection-settings header-tag="header" class="setting-group-header px-2 px-sm-3 d-flex justify-content-between align-items-center" role="tab">
+            <!-- IMPLEMENT HASLOADEDSETTINGS -->
+            <div :class="{'fade-in-out': !hasLoadedSettings}">
+              <p class="setting-group-title mb-1 font-weight-bold">Network Selection</p>
+              <small class="d-block text-muted">
+                Switch between mainnet, testnet, regtest, and signet.
+              </small>
             </div>
-            <small class="w-sm-75 d-block text-muted mt-1">
-              Rebuild the database index used by your Bitcoin node. This can 
-              be useful if the index becomes corrupted.
-            </small>
-          </div>
-
-          <hr class="advanced-settings-divider" /> -->
-
-          <div>
-            <div class="d-flex justify-content-between align-items-center">
-              <div class="w-75">
-                <label class="mb-0" for="network">
-                  <p class="font-weight-bold mb-0">Network</p>
-                </label>
-              </div>
-
+            <b-icon class="when-closed ml-2 text-muted" icon="plus" variant="secondary"></b-icon><b-icon class="when-open ml-2 text-muted" icon="dash" variant="secondary"></b-icon>
+          </b-card-header>
+          <b-collapse v-if="hasLoadedSettings" class="setting-group-body bg-light" id="chain-selection-settings" accordion="chain-selection-settings" role="tabpanel">
+            
+            <!-- CHAIN SELECTION -->
+            <b-card-body class="subsetting-body px-2 px-sm-3">
               <div>
-                <b-form-select
-                  id="network"
-                  v-model="settings.network"
-                  :options="networks"
-                ></b-form-select>
+                <div class="d-flex justify-content-between align-items-center">
+                  <div class="flex-sm-grow-1">
+                    <label class="mb-0" for="chain">
+                      <p class="subsetting-title font-weight-bold mb-0 mr-1">
+                        Blockchain
+                        <span class="subsetting-config-name text-monospace font-weight-normal d-block">
+                          chain
+                        </span>
+                      </p>
+                    </label>
+                  </div>
+                  <div class="input-container ml-1">
+                    <b-form-select
+                      id="network"
+                      v-model="settings.network"
+                      :options="networks"
+                    ></b-form-select>
+                  </div>
+                </div>
+                <small class="w-lg-75 d-block text-muted mt-1">
+                  Choose which blockchain your node will connect to. 
+                  If you change the chain, restart your Umbrel to make sure any 
+                  apps connected to your node continue to work properly.
+                </small>
               </div>
-            </div>
-          </div>
-          <small class="w-sm-75 d-block text-muted mt-1">
-            Choose which network you want your Bitcoin node to connect to. 
-            If you change the network, restart your Umbrel to make sure any 
-            apps connected to your Bitcoin node continue to work properly.
-          </small>
-        </div>
+            </b-card-body>
+          </b-collapse>
+        </b-card>
 
         <!-- template overlay with empty div to show an overlay with no spinner -->
         <template #overlay>
@@ -352,6 +454,9 @@ export default {
       rpc: state => state.bitcoin.rpc,
       p2p: state => state.bitcoin.p2p
     }),
+    hasLoadedSettings() {
+      return Object.keys(this.settings).length > 0;
+    },
     isTorProxyDisabled() {
       return !this.settings.clearnet || !this.settings.tor;
     },
@@ -406,25 +511,79 @@ export default {
 
 <!-- removed scoped in order to place scrollbar on bootstrap-vue .modal-body. Increased verbosity on other classes-->
 <style lang="scss">
-.advanced-settings-container {
-  border-radius: 1rem;
-  .advanced-settings-divider {
-    // same styles as bootstrap <b-dropdown-divider/>
-    height: 0;
-    margin: 1.25rem 0;
-    overflow: hidden;
-    border-top: 1px solid #e9ecef;
+.setting-group-container {
+  border: 1px solid #e9ecef !important;
+  border-radius: 0.5rem;
+
+  .setting-group-header {
+    cursor: pointer;
+    background-color: transparent;
   }
-  .advanced-settings-input {
-    max-width: 75px;
+
+  .collapsed > .when-open,
+  .not-collapsed > .when-closed {
+    display: none;
   }
-  // to remove arrows on number input field
-  .advanced-settings-input::-webkit-outer-spin-button, .advanced-settings-input::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-  }
-  .advanced-settings-input[type="number"] {
-    -moz-appearance: textfield;
+
+  .setting-group-body {
+    border-radius: 0 0 0.5rem 0.5rem;
+
+    .subsetting-body {
+      border-bottom: 1px solid #e9ecef;
+  
+      .subsetting-title {
+        font-size: 0.9rem;
+      }
+
+      .subsetting-config-name {
+        font-size: 0.65rem;
+        opacity: 0.6;
+        margin-top: 0.1rem;
+      }
+
+      .input-container {
+        width: 100%;
+        max-width: 130px;
+
+        .input-group-text {
+          font-size: 0.85rem !important;
+        }
+      }
+
+      .input-time {
+        .input-group-append {
+          .custom-select {
+
+            font-size: 0.85rem !important;
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+            cursor: pointer;
+
+            &:focus {
+              box-shadow: none;
+            }
+          }
+        }
+      }
+
+      .advanced-settings-input {
+        font-size: 0.85rem !important;
+
+        &:focus {
+        box-shadow: none;
+        }
+      }
+
+      // to remove arrows on number input field
+      .advanced-settings-input::-webkit-outer-spin-button, .advanced-settings-input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+
+      .advanced-settings-input[type="number"] {
+        -moz-appearance: textfield;
+      } 
+    }
   }
 }
 
@@ -448,12 +607,5 @@ export default {
 
 .modal-body::-webkit-scrollbar-thumb:hover {
   background-color: rgba(0, 0, 0, 0.5);
-}
-
-/* sm breakpoint */
-@media (min-width: 576px) {
-  .w-sm-75 { 
-    width: 75% !important;
-  }
 }
 </style>
