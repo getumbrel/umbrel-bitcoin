@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 const systemLogic = require('logic/system.js');
-const diskLogic = require('logic/disk');
+const configLogic = require('logic/config');
 const bitcoindLogic = require('logic/bitcoind.js');
 const safeHandler = require('utils/safeHandler');
 
@@ -19,7 +19,7 @@ router.get('/bitcoin-rpc-connection-details', safeHandler(async(req, res) => {
 }));
 
 router.get('/bitcoin-config', safeHandler(async(req, res) => {
-  const bitcoinConfig = await diskLogic.getJsonStore();
+  const bitcoinConfig = await configLogic.getJsonStore();
   return res.json(bitcoinConfig);
 }));
 
@@ -27,18 +27,18 @@ router.get('/bitcoin-config', safeHandler(async(req, res) => {
 
 router.post('/update-bitcoin-config', safeHandler(async(req, res) => {
   // store old bitcoinConfig in memory to revert to in case of errors setting new config and restarting bitcoind
-  const oldBitcoinConfig = await diskLogic.getJsonStore();
+  const oldBitcoinConfig = await configLogic.getJsonStore();
   const newBitcoinConfig = req.body.bitcoinConfig;
   
   try {
-    await diskLogic.applyCustomBitcoinConfig(newBitcoinConfig);
+    await configLogic.applyCustomBitcoinConfig(newBitcoinConfig);
     await bitcoindLogic.stop();
 
     res.json({success: true});
     
   } catch (error) {
     // revert everything to old config values
-    await diskLogic.applyCustomBitcoinConfig(oldBitcoinConfig);
+    await configLogic.applyCustomBitcoinConfig(oldBitcoinConfig);
 
     res.json({success: false}); // show error to user in UI
   }
@@ -46,17 +46,17 @@ router.post('/update-bitcoin-config', safeHandler(async(req, res) => {
 
 router.post('/restore-default-bitcoin-config', safeHandler(async(req, res) => {
   // store old bitcoinConfig in memory to revert to in case of errors setting new config and restarting bitcoind
-  const oldBitcoinConfig = await diskLogic.getJsonStore();
+  const oldBitcoinConfig = await configLogic.getJsonStore();
   
   try {
-    await diskLogic.applyDefaultBitcoinConfig();
+    await configLogic.applyDefaultBitcoinConfig();
     await bitcoindLogic.stop();
 
     res.json({success: true});
     
   } catch (error) {
     // revert everything to old config values
-    await diskLogic.applyCustomBitcoinConfig(oldBitcoinConfig);
+    await configLogic.applyCustomBitcoinConfig(oldBitcoinConfig);
 
     res.json({success: false}); // show error to user in UI
   }

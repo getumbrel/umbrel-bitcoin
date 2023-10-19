@@ -4,7 +4,6 @@ const path = require("path");
 const constants = require("utils/const.js");
 const diskService = require("services/disk");
 
-// TODO - consider moving these unit conversions to utils/const.js
 const GB_TO_MiB = 953.674;
 const MB_TO_MiB = 0.953674;
 
@@ -185,8 +184,21 @@ function settingsToMultilineConfString(settings) {
   return umbrelBitcoinConfig.join('\n');
 }
 
+// checks to see if umbrel-bitcoin.conf is up to date, which we use to determine if we need to regenerate the config and restart bitcoind
+async function isUmbrelBitcoinConfUpToDate(config) {
+  const newUmbrelBitcoinConf = await settingsToMultilineConfString(config);
+
+  let existingUmbrelBitcoinConf = await diskService.fileExists(constants.UMBREL_BITCOIN_CONF_FILEPATH)
+    ? await diskService.readUtf8File(constants.UMBREL_BITCOIN_CONF_FILEPATH)
+    : '';
+
+  // compare new config to existing umbrel-bitcoin.conf
+  return newUmbrelBitcoinConf === existingUmbrelBitcoinConf;
+}
+
 module.exports = {
   getJsonStore,
   applyCustomBitcoinConfig,
   applyDefaultBitcoinConfig,
+  isUmbrelBitcoinConfUpToDate
 };

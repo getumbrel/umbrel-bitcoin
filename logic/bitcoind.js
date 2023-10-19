@@ -283,6 +283,22 @@ async function stop() {
   return {stopResponse};
 }
 
+async function restartBitcoindWithRetries(MAX_TRIES = 60) {
+  let tries = 0;
+
+  while (tries < MAX_TRIES) {
+    try {
+      await stop();
+      break;
+    } catch (error) {
+      console.error(error);
+      console.log(`Failed to stop bitcoind. Retrying in 1 second. (Try ${tries + 1} of ${MAX_TRIES})`);
+      tries++;
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+  }
+}
+
 module.exports = {
   getBlockHash,
   getTransaction,
@@ -298,5 +314,6 @@ module.exports = {
   getVersion,
   nodeStatusDump,
   nodeStatusSummary,
-  stop
+  stop,
+  restartBitcoindWithRetries
 };
