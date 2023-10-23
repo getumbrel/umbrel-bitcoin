@@ -86,7 +86,7 @@
     </div>
 
     <b-row class="row-eq-height">
-      <b-col col cols="12" md="5" lg="4">
+      <b-col col cols="12" lg="4">
         <card-widget
           header="Blockchain"
           :loading="syncPercent !== 100 || blocks.length === 0"
@@ -130,7 +130,7 @@
           </div>
         </card-widget>
       </b-col>
-      <b-col col cols="12" md="7" lg="8">
+      <b-col col cols="12" lg="8">
         <card-widget class="overflow-x" :header="networkWidgetHeader">
           <div class>
             <div class="px-3 px-lg-4">
