@@ -3,19 +3,17 @@
 /**
  * Module dependencies.
  */
-
+const fs = require('fs');
 var app = require('../app');
 var debug = require('debug')('nodejs-regular-webapp2:server');
 var http = require('http');
 
 const configLogic = require('../logic/config');
+const diskService = require('../services/disk'); // CHECK THIS
 const bitcoindLogic = require('../logic/bitcoind');
 const constants = require('../utils/const');
 
-/**
- * Update umbrel-bitcoin.conf if it is out-of-date (e.g., due to new config options introduced by an app update).
- */
-
+// IIFE to check if umbrel-bitcoin.conf is out-of-date (e.g., due to new config options introduced by an app update)
 (async () => {
   const config = await configLogic.getJsonStore();
 
@@ -28,6 +26,38 @@ const constants = require('../utils/const');
     await configLogic.applyCustomBitcoinConfig(config);
     await bitcoindLogic.restartBitcoindWithRetries();
   }
+})();
+
+// IIFE to check if settings.json is invalid
+(async () => {
+  // Check and fix invalid JSON in settings.json
+  const JSON_VALIDATION_INTERVAL_MS = 60000; // 1 minute
+
+  setInterval(async () => {
+    // Fetch the current network/chain from user's settings
+    // This can change after server initialization if the user changes the network/chain in the UI
+    const config = await configLogic.getJsonStore();
+    const network = config.network;
+
+    const SETTINGS_DIR = getSettingsDir(network);
+    const SETTINGS_PATH = `${SETTINGS_DIR}/settings.json`;
+
+    try {
+      await diskService.readJsonFile(SETTINGS_PATH);
+    } catch (error) {
+      if (error instanceof SyntaxError) {
+        console.log(`[WARNING] Invalid JSON detected in ${SETTINGS_PATH}. Overwriting with empty JSON.`);
+        // We create a backup of the settings.json file before overwriting it with empty JSON. Creating a backup is likely unecessary, because this file is primarily used for bitcoin-qt settings, which are not used by Umbrel. However, it is better to be safe than sorry.
+        await createBackup(SETTINGS_PATH);
+        await diskService.writeJsonFile(SETTINGS_PATH, {});
+        // We do not need to restart bitcoind here because:
+        // 1. At a 1 minute check-interval, we likely fix the issue before bitcoind notices if an issue occurs while bitcoind is running
+        // 2. if bitcoind errors during operation or during startup (say from a corrupted json file due to bad shutdown), the container will continually attempt restart until settings.json is fixed
+      } else {
+        console.error(error);
+      }
+    }
+  }, JSON_VALIDATION_INTERVAL_MS);
 })();
 
 /**
@@ -110,4 +140,27 @@ async function onListening() {
     : 'port ' + addr.port;
   debug('Listening on ' + bind);
   console.log('Listening on ' + bind);
+}
+
+// Determines the settings.json directory based on the network
+function getSettingsDir(network) {
+  if (network === 'main') {
+    return '/bitcoin/.bitcoin';
+  } else if (network === 'test') {
+    return '/bitcoin/.bitcoin/testnet3';
+  } else {
+    return `/bitcoin/.bitcoin/${network}`;
+  }
+}
+
+// Creates a backup of the settings.json file
+async function createBackup(settingsPath) {
+  try {
+    const timestamp = Date.now();
+    const backupPath = `${settingsPath}.backup.${timestamp}`;
+    await fs.promises.copyFile(settingsPath, backupPath);
+    console.log(`settings.json backup created at ${backupPath}`);
+  } catch (error) {
+    console.error(`Failed to create backup: ${error}`);
+  }
 }
