@@ -8,7 +8,7 @@ env:
 jobs:
   build:
     name: Build Docker image
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
     steps:
       - name: Set BRANCH
         run: echo "BRANCH=$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//-/g')" >> $GITHUB_ENV
