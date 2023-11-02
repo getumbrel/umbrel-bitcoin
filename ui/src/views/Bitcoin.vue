@@ -186,7 +186,7 @@
     </b-modal>
     
     <b-modal id="advanced-settings-modal" size="lg" centered hide-footer scrollable>
-      <advanced-settings-modal :isSettingsDisabled="isRestartPending" @submit="saveSettingsAndRestartBitcoin" @clickRestoreDefaults="restoreDefaultSettingsAndRestartBitcoin"></advanced-settings-modal>
+      <advanced-settings-modal :isSettingsDisabled="isRestartPending" :validationErrors="validationErrors" @submit="saveSettingsAndRestartBitcoin" @clickRestoreDefaults="restoreDefaultSettingsAndRestartBitcoin" @clearErrors="validationErrors = []"></advanced-settings-modal>
     </b-modal>
   </div>
 </template>
@@ -209,7 +209,8 @@ export default {
   data() {
     return {
       isRestartPending: false,
-      showRestartError: false
+      showRestartError: false,
+      validationErrors: []
     };
   },
   computed: {
@@ -281,6 +282,7 @@ export default {
     },
     async saveSettingsAndRestartBitcoin(bitcoinConfig) {
       try {
+        this.validationErrors = [];
         this.isRestartPending = true;
         this.$store.dispatch("user/updateBitcoinConfig", bitcoinConfig);
   
@@ -298,17 +300,24 @@ export default {
           this.showRestartError = true;
           this.$bvModal.hide("advanced-settings-modal");
           this.isRestartPending = false;
-        }  
+        }
       } catch (error) {
-        console.error(error);
         this.fetchBitcoinConfigSettings();
+        this.isRestartPending = false;
+
+        if (error.response.status === 400) {
+          console.log("validation error woop woop!")
+          this.validationErrors = error.response.data.validationErrors;
+          return;
+        }
+
         this.showRestartError = true;
         this.$bvModal.hide("advanced-settings-modal");
-        this.isRestartPending = false;
       }
     },
     async restoreDefaultSettingsAndRestartBitcoin() {
       try {
+        this.validationErrors = [];
         this.isRestartPending = true;
         
         const response = await API.post(
