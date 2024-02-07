@@ -35,6 +35,9 @@ const DEFAULT_ADVANCED_SETTINGS = {
   maxmempool: 300,
   mempoolexpiry: 336,
   persistmempool: true,
+  datacarrier: true,
+  datacarriersize: 83,
+  permitbaremultisig: true,
   maxorphantx: 100,
   reindex: false,
   // RPC/REST
@@ -154,6 +157,22 @@ function settingsToMultilineConfString(settings) {
   if (settings.persistmempool) {
     umbrelBitcoinConfig.push("# Save the mempool on shutdown and load on restart.");
     umbrelBitcoinConfig.push('persistmempool=1');
+  }
+
+  // datacarrier
+  if (!settings.datacarrier) {
+    umbrelBitcoinConfig.push("# Relay and mine data carrier transactions.");
+    umbrelBitcoinConfig.push('datacarrier=0');
+  }
+
+  // datacarriersize
+  umbrelBitcoinConfig.push("# Maximum size of arbitrary data to relay and mine.");
+  umbrelBitcoinConfig.push(`datacarriersize=${settings.datacarriersize}`);
+
+  // permitbaremultisig
+  if (!settings.permitbaremultisig) {
+    umbrelBitcoinConfig.push("# Relay non-P2SH multisig.");
+    umbrelBitcoinConfig.push('permitbaremultisig=0');
   }
 
   // maxorphantx

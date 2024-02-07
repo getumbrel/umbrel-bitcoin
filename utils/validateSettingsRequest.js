@@ -93,6 +93,15 @@ function validateSettingsRequest(settings) {
   // Persist Mempool
   checkBooleanSetting({ setting: settings.persistmempool, settingName: "Persist Mempool" });
 
+  // Datacarrier
+  checkBooleanSetting({ setting: settings.datacarrier, settingName: "datacarrier" });
+
+  // Datacarriersize
+  checkNumberSetting({ setting: settings.datacarriersize, settingName: "datacarriersize", min: 0 });
+
+  // Datacarriersize
+  checkBooleanSetting({ setting: settings.permitbaremultisig, settingName: "permitbaremultisig" });
+
   // Max Orphan Transactions
   // No min or max specified. 
   checkNumberSetting({ setting: settings.maxorphantx, settingName: "Max Orphan Transactions", min: 0 });
