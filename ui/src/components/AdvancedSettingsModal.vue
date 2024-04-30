@@ -655,6 +655,97 @@
               </div>
             </b-card-body>
 
+            <!-- DATACARRIER -->
+            <b-card-body class="subsetting-body px-2 px-sm-3">
+              <div>
+                <div class="d-flex justify-content-between align-items-center">
+                  <div class="flex-sm-grow-1">
+                    <label class="mb-0" for="mempool">
+                      <p class="subsetting-title font-weight-bold mb-0 mr-1">
+                        Relay transaction with embedded data
+                        <span class="subsetting-config-name text-monospace font-weight-normal d-block">
+                          datacarrier
+                        </span>
+                      </p>
+                    </label>
+                  </div>
+                  <div>
+                    <toggle-switch
+                      id="datacarrier"
+                      class="align-self-center"
+                      :on="settings.datacarrier"
+                      @toggle="status => (settings.datacarrier = status)"
+                    ></toggle-switch>
+                  </div>
+                </div>
+                <small class="w-lg-75 d-block text-muted mt-1">
+                  Relay and mine data carrier transactions.
+                </small>
+              </div>
+            </b-card-body>
+
+            <!-- DATACARRIERSIZE -->
+            <b-card-body class="subsetting-body px-2 px-sm-3">
+              <div>
+                <div class="d-flex justify-content-between align-items-center">
+                  <div class="flex-sm-grow-1">
+                    <label class="mb-0" for="mempoolexpiry">
+                      <p class="subsetting-title font-weight-bold mb-0 mr-1">
+                        Maximum size of relayed transactions with embedded data
+                        <span class="subsetting-config-name text-monospace font-weight-normal d-block">
+                          datacarriersize
+                        </span>
+                      </p>
+                    </label>
+                  </div>
+                  <div class="input-container ml-1">
+                    <b-input-group append="bytes">
+                      <b-form-input
+                        class="advanced-settings-input"
+                        id="datacarriersize"
+                        type="number"
+                        v-model="settings.datacarriersize"
+                        number
+                      ></b-form-input>
+                    </b-input-group>
+                  </div>
+                </div>
+                <small class="w-lg-75 d-block text-muted mt-1">
+                  Adjust the maximum size of relayed transactions containing arbitrary data. 
+                  Note: datacarrier takes precedence over datacarriersize.
+                </small>
+              </div>
+            </b-card-body>
+
+            <!-- PERMITBAREMULTISIG -->
+            <b-card-body class="subsetting-body px-2 px-sm-3">
+              <div>
+                <div class="d-flex justify-content-between align-items-center">
+                  <div class="flex-sm-grow-1">
+                    <label class="mb-0" for="mempool">
+                      <p class="subsetting-title font-weight-bold mb-0 mr-1">
+                        Relay old type of multisig transaction
+                        <span class="subsetting-config-name text-monospace font-weight-normal d-block">
+                          permitbaremultisig
+                        </span>
+                      </p>
+                    </label>
+                  </div>
+                  <div>
+                    <toggle-switch
+                      id="permitbaremultisig"
+                      class="align-self-center"
+                      :on="settings.permitbaremultisig"
+                      @toggle="status => (settings.permitbaremultisig = status)"
+                    ></toggle-switch>
+                  </div>
+                </div>
+                <small class="w-lg-75 d-block text-muted mt-1">
+                  Relay non-P2SH multisig.
+                </small>
+              </div>
+            </b-card-body>
+
             <!-- PRUNE -->
             <b-card-body class="subsetting-body px-2 px-sm-3">
               <div>
