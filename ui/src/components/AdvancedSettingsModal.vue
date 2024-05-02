@@ -624,37 +624,6 @@
               </div>
             </b-card-body>
 
-            <!-- RBF -->
-            <!-- consider move to a Transactions accordion group -->
-            <b-card-body class="subsetting-body px-2 px-sm-3">
-              <div>
-                <div class="d-flex justify-content-between align-items-center">
-                  <div class="flex-sm-grow-1">
-                    <label class="mb-0" for="mempool">
-                      <p class="subsetting-title font-weight-bold mb-0 mr-1">
-                        Replace-By-Fee (RBF) for All Transactions
-                        <span class="subsetting-config-name text-monospace font-weight-normal d-block">
-                          mempoolfullrbf
-                        </span>
-                      </p>
-                    </label>
-                  </div>
-                  <div>
-                    <toggle-switch
-                      id="mempool"
-                      class="align-self-center"
-                      :on="settings.mempoolFullRbf"
-                      @toggle="status => (settings.mempoolFullRbf = status)"
-                    ></toggle-switch>
-                  </div>
-                </div>
-                <small class="w-lg-75 d-block text-muted mt-1">
-                  Allow any transaction in the mempool of your Bitcoin node to be replaced with
-                  a newer version of the same transaction that includes a higher fee.
-                </small>
-              </div>
-            </b-card-body>
-
             <!-- PRUNE -->
             <b-card-body class="subsetting-body px-2 px-sm-3">
               <div>
@@ -694,6 +663,133 @@
                   :disabled="!settings.prune.enabled"
                   @change="value => (settings.prune.pruneSizeGB = value)"
                 ></prune-slider>
+              </div>
+            </b-card-body>
+
+            <!-- RBF -->
+            <!-- consider move to a Transactions accordion group -->
+            <b-card-body class="subsetting-body px-2 px-sm-3">
+              <div>
+                <div class="d-flex justify-content-between align-items-center">
+                  <div class="flex-sm-grow-1">
+                    <label class="mb-0" for="mempool">
+                      <p class="subsetting-title font-weight-bold mb-0 mr-1">
+                        Replace-By-Fee (RBF) for All Transactions
+                        <span class="subsetting-config-name text-monospace font-weight-normal d-block">
+                          mempoolfullrbf
+                        </span>
+                      </p>
+                    </label>
+                  </div>
+                  <div>
+                    <toggle-switch
+                      id="mempool"
+                      class="align-self-center"
+                      :on="settings.mempoolFullRbf"
+                      @toggle="status => (settings.mempoolFullRbf = status)"
+                    ></toggle-switch>
+                  </div>
+                </div>
+                <small class="w-lg-75 d-block text-muted mt-1">
+                  Allow any transaction in the mempool of your Bitcoin node to be replaced with
+                  a newer version of the same transaction that includes a higher fee.
+                </small>
+              </div>
+            </b-card-body>
+
+            <!-- DATACARRIER -->
+            <b-card-body class="subsetting-body px-2 px-sm-3">
+              <div>
+                <div class="d-flex justify-content-between align-items-center">
+                  <div class="flex-sm-grow-1">
+                    <label class="mb-0" for="mempool">
+                      <p class="subsetting-title font-weight-bold mb-0 mr-1">
+                        Relay Transactions Containing Arbitrary Data
+                        <span class="subsetting-config-name text-monospace font-weight-normal d-block">
+                          datacarrier
+                        </span>
+                      </p>
+                    </label>
+                  </div>
+                  <div>
+                    <toggle-switch
+                      id="datacarrier"
+                      class="align-self-center"
+                      :on="settings.datacarrier"
+                      @toggle="status => (settings.datacarrier = status)"
+                    ></toggle-switch>
+                  </div>
+                </div>
+                <small class="w-lg-75 d-block text-muted mt-1">
+                  Relay transactions with OP_RETURN outputs.
+                </small>
+              </div>
+            </b-card-body>
+
+            <!-- DATACARRIERSIZE -->
+            <b-card-body class="subsetting-body px-2 px-sm-3">
+              <div>
+                <div class="d-flex justify-content-between align-items-center">
+                  <div class="flex-sm-grow-1">
+                    <label class="mb-0" for="mempoolexpiry">
+                      <p class="subsetting-title font-weight-bold mb-0 mr-1">
+                        Max Size of Transactions Containing Arbitrary Data
+                        <span class="subsetting-config-name text-monospace font-weight-normal d-block">
+                          datacarriersize
+                        </span>
+                      </p>
+                    </label>
+                  </div>
+                  <div class="input-container ml-1">
+                    <b-input-group append="bytes">
+                      <b-form-input
+                        class="advanced-settings-input"
+                        id="datacarriersize"
+                        type="number"
+                        v-model="settings.datacarriersize"
+                        number
+                        :disabled="!settings.datacarrier"
+                      ></b-form-input>
+                    </b-input-group>
+                  </div>
+                </div>
+                <small class="w-lg-75 d-block text-muted mt-1">
+                  <p>
+                    Set the maximum size of the data in OP_RETURN outputs (in bytes) that your node will relay.
+                  </p>
+                  <p class="mb-0">
+                    Note: datacarrier must be enabled for this setting to take effect.
+                  </p>
+                </small>
+              </div>
+            </b-card-body>
+
+            <!-- PERMITBAREMULTISIG -->
+            <b-card-body class="subsetting-body px-2 px-sm-3">
+              <div>
+                <div class="d-flex justify-content-between align-items-center">
+                  <div class="flex-sm-grow-1">
+                    <label class="mb-0" for="mempool">
+                      <p class="subsetting-title font-weight-bold mb-0 mr-1">
+                        Relay Bare Multisig Transactions
+                        <span class="subsetting-config-name text-monospace font-weight-normal d-block">
+                          permitbaremultisig
+                        </span>
+                      </p>
+                    </label>
+                  </div>
+                  <div>
+                    <toggle-switch
+                      id="permitbaremultisig"
+                      class="align-self-center"
+                      :on="settings.permitbaremultisig"
+                      @toggle="status => (settings.permitbaremultisig = status)"
+                    ></toggle-switch>
+                  </div>
+                </div>
+                <small class="w-lg-75 d-block text-muted mt-1">
+                  Relay non-P2SH multisig transactions.
+                </small>
               </div>
             </b-card-body>
 

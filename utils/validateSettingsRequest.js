@@ -30,6 +30,9 @@ function validateSettingsRequest(settings) {
     errors.push("You must enable Block Filter Index if Peer Block Filters is enabled.");
   }
 
+  // Block Filter Index
+  checkBooleanSetting({ setting: settings.blockfilterindex, settingName: "Block Filter Index" });
+
   // Peer Bloom Filters
   checkBooleanSetting({ setting: settings.peerbloomfilters, settingName: "Peer Bloom Filters" });
 
@@ -71,16 +74,22 @@ function validateSettingsRequest(settings) {
   // min of 4 (no limit). No max specified.
   checkNumberSetting({ setting: settings.cacheSizeMB, settingName: "Cache Size", min: 4 });
 
-  // Replace-By-Fee (RBF)
-  checkBooleanSetting({ setting: settings.mempoolFullRbf, settingName: "Replace-By-Fee" });
-
   // Prune Old Blocks
   checkBooleanSetting({ setting: settings.prune.enabled, settingName: "Prune Old Blocks" });
   // min of 550 MiB (0.5767168 GB). No max specified.
   checkNumberSetting({ setting: settings.prune.pruneSizeGB, settingName: "Prune Target Size", min: 0.6 });
+  
+  // Replace-By-Fee (RBF)
+  checkBooleanSetting({ setting: settings.mempoolFullRbf, settingName: "Replace-By-Fee" });
 
-  // Block Filter Index
-  checkBooleanSetting({ setting: settings.blockfilterindex, settingName: "Block Filter Index" });
+  // Datacarrier
+  checkBooleanSetting({ setting: settings.datacarrier, settingName: "datacarrier" });
+
+  // Datacarriersize
+  checkNumberSetting({ setting: settings.datacarriersize, settingName: "datacarriersize", min: 0 });
+
+  // Datacarriersize
+  checkBooleanSetting({ setting: settings.permitbaremultisig, settingName: "permitbaremultisig" });
 
   // Maximum Mempool Size
   // 5 MiB when blocksonly mode is set, and 300 MiB when blocksonly mode is not set. No max specified.

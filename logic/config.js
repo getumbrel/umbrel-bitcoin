@@ -15,6 +15,7 @@ const DEFAULT_ADVANCED_SETTINGS = {
   i2p: true,
   incomingConnections: false,
   peerblockfilters: true,
+  blockfilterindex: true,
   peerbloomfilters: false,
   bantime: 86400,
   maxconnections: 125,
@@ -26,12 +27,14 @@ const DEFAULT_ADVANCED_SETTINGS = {
   maxuploadtarget: 0,
   // Optimization
   cacheSizeMB: 450,
-  mempoolFullRbf: false,
   prune: {
     enabled: false,
     pruneSizeGB: 300,
   },
-  blockfilterindex: true,
+  mempoolFullRbf: false,
+  datacarrier: true,
+  datacarriersize: 83,
+  permitbaremultisig: true,
   maxmempool: 300,
   mempoolexpiry: 336,
   persistmempool: true,
@@ -120,12 +123,6 @@ function settingsToMultilineConfString(settings) {
   umbrelBitcoinConfig.push("# Maximum database cache size in MiB"); 
   umbrelBitcoinConfig.push(`dbcache=${Math.round(settings.cacheSizeMB * MB_TO_MiB)}`); 
 
-  // mempoolfullrbf
-  if (settings.mempoolFullRbf) {
-    umbrelBitcoinConfig.push("# Allow any transaction in the mempool of Bitcoin Node to be replaced with newer versions of the same transaction that include a higher fee."); 
-    umbrelBitcoinConfig.push('mempoolfullrbf=1'); 
-  }
-
   // prune
   if (settings.prune.enabled) {
     umbrelBitcoinConfig.push("# Reduce disk space requirements to this many MiB by enabling pruning (deleting) of old blocks. This mode is incompatible with -txindex and -coinstatsindex. WARNING: Reverting this setting requires re-downloading the entire blockchain. (default: 0 = disable pruning blocks, 1 = allow manual pruning via RPC, greater than or equal to 550 = automatically prune blocks to stay under target size in MiB).");
@@ -164,6 +161,33 @@ function settingsToMultilineConfString(settings) {
   if (settings.reindex) {
     umbrelBitcoinConfig.push('# Rebuild chain state and block index from the blk*.dat files on disk.');
     umbrelBitcoinConfig.push('reindex=1');  
+  }
+
+  // [TRANSACTION RELAY]
+  umbrelBitcoinConfig.push(""); 
+  umbrelBitcoinConfig.push("# [relay]");
+
+  // mempoolfullrbf
+  if (settings.mempoolFullRbf) {
+    umbrelBitcoinConfig.push("# Allow any transaction in the mempool of Bitcoin Node to be replaced with newer versions of the same transaction that include a higher fee."); 
+    umbrelBitcoinConfig.push('mempoolfullrbf=1'); 
+  }
+
+  // datacarrier
+  if (!settings.datacarrier) {
+    umbrelBitcoinConfig.push("# Relay transactions with OP_RETURN outputs.");
+    umbrelBitcoinConfig.push('datacarrier=0');
+  } else {
+    // we only set datacarriersize if datacarrier is enabled to keep the umbrel-bitcoin.conf file clean.
+    // datacarriersize
+    umbrelBitcoinConfig.push("# Maximum size of data in OP_RETURN outputs we relay and mine.");
+    umbrelBitcoinConfig.push(`datacarriersize=${settings.datacarriersize}`);
+  }
+
+  // permitbaremultisig
+  if (!settings.permitbaremultisig) {
+    umbrelBitcoinConfig.push("# Relay non-P2SH multisig transactions.");
+    umbrelBitcoinConfig.push('permitbaremultisig=0');
   }
 
   // [NETWORK]
