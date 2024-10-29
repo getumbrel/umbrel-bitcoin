@@ -2,7 +2,7 @@ version: "3.7"
 
 services:
   bitcoind:
-    image: lncm/bitcoind:v22.0@sha256:37a1adb29b3abc9f972f0d981f45e41e5fca2e22816a023faa9fdc0084aa4507
+    image: getumbrel/bitcoind:v28.0@sha256:95c5eb9778fc0050e185b22700061fb7e7d71a0c27860067461bed2afcfbe5c4
     volumes:
       - ${PWD}/bitcoin:/data/.bitcoin
     restart: on-failure
