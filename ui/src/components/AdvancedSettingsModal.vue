@@ -1104,7 +1104,8 @@ export default {
       settings: {},
       networks: [
         { value: "main", text: "mainnet" },
-        { value: "test", text: "testnet" },
+        { value: "test", text: "testnet3" },
+        { value: "testnet4", text: "testnet4" },
         { value: "signet", text: "signet" },
         { value: "regtest", text: "regtest" }
       ],

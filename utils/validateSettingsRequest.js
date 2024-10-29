@@ -114,8 +114,8 @@ function validateSettingsRequest(settings) {
   checkNumberSetting({ setting: settings.rpcworkqueue, settingName: "RPC Work Queue Size", min: 1 });
 
   // NETWORK SELECTION
-  // custom. settings.network MUST BE one of the following strings: "mainnet", "testnet", "regtest", "signet"
-  if (settings.network !== "main" && settings.network !== "test" && settings.network !== "regtest" && settings.network !== "signet") {
+  // settings.network MUST BE one of the following strings: "mainnet", "test", "testnet4", "regtest", "signet"
+  if (settings.network !== "main" && settings.network !== "test" && settings.network !== "testnet4" && settings.network !== "regtest" && settings.network !== "signet") {
     errors.push(`Invalid value for Network chain. Please try toggling it to a different value.`);
   }
 

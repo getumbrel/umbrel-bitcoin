@@ -239,7 +239,7 @@ export default {
     },
     networkWidgetHeader() {
       if (!this.network || this.network === "main") return "Network";
-      if (this.network === "test") return "Network (testnet)";
+      if (this.network === "test") return "Network (testnet3)";
       return `Network (${this.network})`;
     }
   },
