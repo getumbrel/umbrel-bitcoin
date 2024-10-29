@@ -733,7 +733,7 @@
                   <div class="flex-sm-grow-1">
                     <label class="mb-0" for="mempoolexpiry">
                       <p class="subsetting-title font-weight-bold mb-0 mr-1">
-                        Max Size of Transactions Containing Arbitrary Data
+                        Max Allowed Size of Arbitrary Data in Transactions
                         <span class="subsetting-config-name text-monospace font-weight-normal d-block">
                           datacarriersize
                         </span>
