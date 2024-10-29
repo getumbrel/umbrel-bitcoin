@@ -31,7 +31,7 @@ const DEFAULT_ADVANCED_SETTINGS = {
     enabled: false,
     pruneSizeGB: 300,
   },
-  mempoolFullRbf: false,
+  mempoolFullRbf: true,
   datacarrier: true,
   datacarriersize: 83,
   permitbaremultisig: true,
