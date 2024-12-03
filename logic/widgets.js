@@ -61,7 +61,7 @@ async function getBitcoinSyncWidgetData() {
     refresh: '2s',
     link: '',
     title: 'Blockchain sync',
-    text: `${syncPercent}%`,
+    text: `Block Height: ${sync.currentBlock}, ${syncPercent}%`,
     progressLabel: syncPercent === 100 ? 'Synced' : 'In progress',
     progress: syncPercent / 100
   };
