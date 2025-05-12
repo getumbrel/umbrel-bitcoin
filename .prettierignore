@@ -1,0 +1,15 @@
+# dependencies
+node_modules
+package-lock.json
+data
+
+# build & coverage output
+dist
+build
+coverage
+
+# generated type declarations
+*.d.ts
+
+# other files
+*.md
