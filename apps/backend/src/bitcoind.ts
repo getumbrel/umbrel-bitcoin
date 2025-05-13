@@ -1,0 +1,82 @@
+import {spawn, ChildProcessWithoutNullStreams} from 'child_process'
+import {Readable} from 'node:stream'
+import readline from 'node:readline'
+import {BITCOIND_BIN, BITCOIN_DIR} from './paths.js'
+
+type BitcoindProcess = ChildProcessWithoutNullStreams & {
+	stdout: Readable
+	stderr: Readable
+}
+
+type BitcoindManagerOptions = {
+	binary?: string
+	datadir?: string
+	extraArgs?: string[]
+}
+
+type LogFn = Console['log']
+
+// Pipe each complete line from `src` to `logFn`, prefixed with [bitcoind].
+function pipeBitcoindLines(src: Readable, logFn: LogFn) {
+	const rl = readline.createInterface({input: src})
+	rl.on('line', (line) => {
+		const trimmed = line.trim()
+		if (trimmed) logFn('[bitcoind]', trimmed)
+	})
+}
+
+export class BitcoindManager {
+	private child: BitcoindProcess | null = null
+	private readonly bin: string
+	private readonly datadir: string
+	private readonly extraArgs: string[]
+
+	constructor({binary = BITCOIND_BIN, datadir = BITCOIN_DIR, extraArgs = []}: BitcoindManagerOptions = {}) {
+		this.bin = binary
+		this.datadir = datadir
+		this.extraArgs = extraArgs
+	}
+
+	// Spawn bitcoind as a child process
+	// TODO: decide if we want to auto-restart on exit ever
+	start() {
+		// return early if already running
+		if (this.child) return
+
+		// TODO: chain will be taken from conf. Other flags will need to be passed in.
+		this.child = spawn(this.bin, [`-datadir=${this.datadir}`, '-regtest', '-server', ...this.extraArgs], {
+			stdio: ['pipe', 'pipe', 'pipe'],
+		}) as BitcoindProcess
+
+		console.log('[bitcoind-manager] spawned PID', this.child.pid)
+
+		pipeBitcoindLines(this.child.stdout, console.log)
+		pipeBitcoindLines(this.child.stderr, console.error)
+
+		this.child.on('exit', (code, sig) => {
+			console.error(`[bitcoind] exited (code=${code}, sig=${sig})`)
+			this.child = null
+		})
+
+		this.child.on('error', (err) => console.error('[bitcoind-manager] failed to spawn:', err))
+	}
+
+	// Graceful stop bitcoind
+	async stop() {
+		if (!this.child) return
+		this.child.kill('SIGTERM')
+		await new Promise((res) => this.child?.once('exit', res))
+		this.child = null
+	}
+
+	// Restart bitcoind
+	async restart() {
+		await this.stop()
+		this.start()
+	}
+
+	// Child process status
+	status() {
+		return {running: !!this.child, pid: this.child?.pid ?? null}
+	}
+}

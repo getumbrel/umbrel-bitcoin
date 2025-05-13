@@ -4,7 +4,7 @@ import {api} from './lib/api'
 export default function App() {
 	const {data, isLoading, error} = useQuery({
 		queryKey: ['hello'],
-		queryFn: () => api<{message: string}>('/hello'),
+		queryFn: () => api<{message: string}>(''),
 		refetchInterval: 5000,
 	})
 
