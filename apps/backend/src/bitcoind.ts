@@ -1,6 +1,7 @@
-import {spawn, ChildProcessWithoutNullStreams} from 'child_process'
+import {spawn, ChildProcessWithoutNullStreams} from 'node:child_process'
 import {Readable} from 'node:stream'
 import readline from 'node:readline'
+
 import {BITCOIND_BIN, BITCOIN_DIR} from './paths.js'
 
 type BitcoindProcess = ChildProcessWithoutNullStreams & {
@@ -34,7 +35,7 @@ export class BitcoindManager {
 	constructor({binary = BITCOIND_BIN, datadir = BITCOIN_DIR, extraArgs = []}: BitcoindManagerOptions = {}) {
 		this.bin = binary
 		this.datadir = datadir
-		this.extraArgs = extraArgs
+		this.extraArgs = ['-regtest', '-server', '-rpcuser=bitcoin', '-rpcpassword=secret', '-rpcport=8332', ...extraArgs]
 	}
 
 	// Spawn bitcoind as a child process
@@ -44,7 +45,7 @@ export class BitcoindManager {
 		if (this.child) return
 
 		// TODO: chain will be taken from conf. Other flags will need to be passed in.
-		this.child = spawn(this.bin, [`-datadir=${this.datadir}`, '-regtest', '-server', ...this.extraArgs], {
+		this.child = spawn(this.bin, [`-datadir=${this.datadir}`, ...this.extraArgs], {
 			stdio: ['pipe', 'pipe', 'pipe'],
 		}) as BitcoindProcess
 

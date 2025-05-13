@@ -1,0 +1,6 @@
+{
+	"name": "@umbrel-bitcoin/shared-types",
+	"private": true,
+	"type": "module",
+	"types": "./index.d.ts"
+}

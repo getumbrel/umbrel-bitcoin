@@ -1,8 +1,11 @@
 import Fastify from 'fastify'
 import fse from 'fs-extra'
 
-import {BitcoindManager} from './bitcoind.js'
+import type {SummaryResponse} from '@umbrel-bitcoin/shared-types'
+
 import {APP_STATE_DIR, BITCOIN_DIR} from './paths.js'
+import {BitcoindManager} from './bitcoind.js'
+import {getRpc} from './rpc-client.js'
 
 // Ensure that the required data directories exist before starting bitcoind or the API server
 await Promise.all([fse.ensureDir(BITCOIN_DIR), fse.ensureDir(APP_STATE_DIR)])
@@ -13,7 +16,7 @@ bitcoind.start()
 
 const app = Fastify({logger: true})
 
-// Routes
+// Routes - these are just for POC
 app.get('/api', () => ({message: 'Hello from the Bitcoin Node backend'}))
 
 app.get('/api/bitcoind/status', () => bitcoind.status())
@@ -37,6 +40,21 @@ app.post('/api/bitcoind/stop', async () => {
 app.post('/api/bitcoind/restart', async () => {
 	await bitcoind.restart()
 	return {...bitcoind.status(), message: 'restarted'}
+})
+
+// This is just a test route for POC
+app.get('/api/bitcoind/summary', async (): Promise<SummaryResponse> => {
+	const rpc = getRpc()
+
+	const batch = [
+		{method: 'getnetworkinfo', parameters: []},
+		{method: 'getblockchaininfo', parameters: []},
+		{method: 'getpeerinfo', parameters: []},
+	]
+
+	const [networkInfo, blockchainInfo, peerInfo] = await rpc.command(batch)
+
+	return {networkInfo, blockchainInfo, peerInfo}
 })
 
 // Start the server

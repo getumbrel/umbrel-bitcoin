@@ -1,6 +1,7 @@
-// TODO: Allow env vars to override these
 import path from 'node:path'
 import {fileURLToPath} from 'node:url'
+
+// TODO: Allow env vars to override these
 
 // bitcoind binary
 // for dev-only currently (brew install bitcoin on macOS will install it at /opt/homebrew/bin/bitcoind by default)
