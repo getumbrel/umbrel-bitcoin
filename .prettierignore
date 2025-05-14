@@ -9,7 +9,8 @@ build
 coverage
 
 # generated type declarations
-*.d.ts
+# allow our liba.shared-types to be formatted
+# *.d.ts
 
 # other files
 *.md

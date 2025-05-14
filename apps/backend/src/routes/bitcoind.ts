@@ -1,31 +1,37 @@
+// Routes that query BitcoindManager directly
+// Fastify turns any uncaught error inside these handlers
+// into a 500 Internal Server Error response via its default error handler.
+
 import fp from 'fastify-plugin'
 import type {FastifyInstance} from 'fastify'
 
+import type {BitcoindVersion, BitcoindStatus, BitcoindLifecycleResponse} from '@umbrel-bitcoin/shared-types'
+
 import {bitcoind} from '../services/boot-bitcoind.js'
 
-export default fp(async (f: FastifyInstance) => {
-	// `f` is the Fastify instance injected by fastify-plugin
+export default fp(async (app: FastifyInstance) => {
+	const BASE = '/api/bitcoind'
 
-	f.get('/api/bitcoind/version', () => bitcoind.getVersionInfo())
+	app.get<{Reply: BitcoindVersion}>(`${BASE}/version`, () => bitcoind.getVersionInfo())
 
-	f.get('/api/bitcoind/status', () => bitcoind.status())
+	app.get<{Reply: BitcoindStatus}>(`${BASE}/status`, () => bitcoind.status())
 
-	f.post('/api/bitcoind/start', () => {
-		if (bitcoind.status().running) return {...bitcoind.status(), message: 'already running'}
+	app.post<{Reply: BitcoindLifecycleResponse}>(`${BASE}/start`, () => {
+		if (bitcoind.status().running) return {...bitcoind.status(), result: 'no_op'}
 
 		bitcoind.start()
-		return {...bitcoind.status(), message: 'started'}
+		return {...bitcoind.status(), result: 'started'}
 	})
 
-	f.post('/api/bitcoind/stop', async () => {
-		if (!bitcoind.status().running) return {...bitcoind.status(), message: 'already stopped'}
+	app.post<{Reply: BitcoindLifecycleResponse}>(`${BASE}/stop`, async () => {
+		if (!bitcoind.status().running) return {...bitcoind.status(), result: 'no_op'}
 
 		await bitcoind.stop()
-		return {...bitcoind.status(), message: 'stopped'}
+		return {...bitcoind.status(), result: 'stopped'}
 	})
 
-	f.post('/api/bitcoind/restart', async () => {
+	app.post<{Reply: BitcoindLifecycleResponse}>(`${BASE}/restart`, async () => {
 		await bitcoind.restart()
-		return {...bitcoind.status(), message: 'restarted'}
+		return {...bitcoind.status(), result: 'started'}
 	})
 })
