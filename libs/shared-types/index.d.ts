@@ -20,6 +20,37 @@ export type BitcoindLifecycleResponse = {
 	result: BitcoindLifecycleResult
 }
 
+type PeerDirectionCount = {
+	inbound: number
+	outbound: number
+}
+
+export type PeerTally = {
+	total: number
+	byNetwork: Record<string, PeerDirectionCount>
+}
+
+// subset of getblock (verbosity 1) that we care about
+export type RawBlock = {
+	hash: string
+	height: number
+	time: number
+	nTx: number
+	size: number
+}
+
+export type BlockSummary = {
+	hash: string
+	height: number
+	time: number
+	txs: number
+	size: number
+}
+
+export type BlocksResponse = {
+	blocks: BlockSummary[]
+}
+
 // TODO: Replace these 2 below with actual types
 export type SummaryResponse = {
 	networkInfo: unknown
