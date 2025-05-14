@@ -1,10 +1,9 @@
 // TODO: implement this properly
 import zmq from 'zeromq'
-import {getRpc} from './rpc-client.js'
+import {rpcClient} from './rpc-client.js'
 import EventEmitter from 'node:events'
 
 export const blockStream = new EventEmitter()
-
 ;(async () => {
 	const sock = new zmq.Subscriber()
 	sock.connect('tcp://127.0.0.1:28332')
@@ -14,7 +13,7 @@ export const blockStream = new EventEmitter()
 		const hash = hashBuf.toString('hex')
 
 		try {
-			const hdr = await getRpc().command('getblockheader', hash, true)
+			const hdr = await rpcClient.command('getblockheader', hash, true)
 
 			blockStream.emit('block', {
 				hash,

@@ -8,7 +8,7 @@ import type {SummaryResponse} from '@umbrel-bitcoin/shared-types'
 import {blockStream} from './zmq-listener.js'
 import {APP_STATE_DIR, BITCOIN_DIR} from './paths.js'
 import {BitcoindManager} from './bitcoind.js'
-import {getRpc} from './rpc-client.js'
+import {rpcClient} from './rpc-client.js'
 import './zmq-listener.js'
 
 // Ensure that the required data directories exist before starting bitcoind or the API server
@@ -49,15 +49,13 @@ app.post('/api/bitcoind/restart', async () => {
 
 // This is just a test route for POC
 app.get('/api/bitcoind/summary', async (): Promise<SummaryResponse> => {
-	const rpc = getRpc()
-
 	const batch = [
 		{method: 'getnetworkinfo', parameters: []},
 		{method: 'getblockchaininfo', parameters: []},
 		{method: 'getpeerinfo', parameters: []},
 	]
 
-	const [networkInfo, blockchainInfo, peerInfo] = await rpc.command(batch)
+	const [networkInfo, blockchainInfo, peerInfo] = await rpcClient.command(batch)
 
 	return {networkInfo, blockchainInfo, peerInfo}
 })
