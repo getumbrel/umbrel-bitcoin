@@ -36,6 +36,7 @@ export class BitcoindManager {
 	private readonly bin: string
 	private readonly datadir: string
 	private readonly extraArgs: string[]
+	private lastError: Error | null = null
 
 	constructor({binary = BITCOIND_BIN, datadir = BITCOIN_DIR, extraArgs = []}: BitcoindManagerOptions = {}) {
 		this.bin = binary
@@ -51,6 +52,10 @@ export class BitcoindManager {
 		]
 	}
 
+	setLastError(err: Error): void {
+		this.lastError = err
+	}
+
 	// Spawn bitcoind as a child process
 	// TODO: decide if we want to auto-restart on exit ever
 	start() {
@@ -62,6 +67,7 @@ export class BitcoindManager {
 			stdio: ['pipe', 'pipe', 'pipe'],
 		}) as BitcoindProcess
 
+		this.lastError = null
 		console.log('[bitcoind-manager] spawned PID', this.child.pid)
 
 		pipeBitcoindLines(this.child.stdout, console.log)
@@ -72,7 +78,10 @@ export class BitcoindManager {
 			this.child = null
 		})
 
-		this.child.on('error', (err) => console.error('[bitcoind-manager] failed to spawn:', err))
+		this.child.on('error', (err) => {
+			console.error('[bitcoind-manager] failed to spawn:', err)
+			this.lastError = err
+		})
 	}
 
 	// Graceful stop bitcoind
@@ -91,6 +100,6 @@ export class BitcoindManager {
 
 	// Child process status
 	status() {
-		return {running: !!this.child, pid: this.child?.pid ?? null}
+		return {running: !!this.child, pid: this.child?.pid ?? null, error: this.lastError}
 	}
 }

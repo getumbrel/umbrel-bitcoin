@@ -1,6 +1,6 @@
 import path from 'node:path'
 import {fileURLToPath} from 'node:url'
-
+import fse from 'fs-extra'
 // TODO: Allow env vars to override these
 
 // bitcoind binary
@@ -16,3 +16,8 @@ export const BITCOIN_DIR = path.join(REPO_ROOT, 'data', 'bitcoin')
 
 /** data/app (app config) */
 export const APP_STATE_DIR = path.join(REPO_ROOT, 'data', 'app')
+
+// Ensure that the required data directories exist
+export async function ensureDirs() {
+	await Promise.all([fse.ensureDir(BITCOIN_DIR), fse.ensureDir(APP_STATE_DIR)])
+}
