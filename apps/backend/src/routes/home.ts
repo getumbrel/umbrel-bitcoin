@@ -5,7 +5,7 @@
 import fp from 'fastify-plugin'
 import type {FastifyInstance} from 'fastify'
 
-import type {BlocksResponse, BlockSummary, PeerTally, RawBlock, SummaryResponse} from '@umbrel-bitcoin/shared-types'
+import type {BlocksResponse, BlockSummary, PeerTally, RawBlock} from '@umbrel-bitcoin/shared-types'
 
 import {rpcClient} from '../services/rpc-client.js'
 
@@ -79,18 +79,5 @@ export default fp(async (app: FastifyInstance) => {
 		}))
 
 		return {blocks}
-	})
-
-	// TODO: eventually remove this POC
-	app.get('/api/bitcoind/summary', async (): Promise<SummaryResponse> => {
-		const batch = [
-			{method: 'getnetworkinfo', parameters: []},
-			{method: 'getblockchaininfo', parameters: []},
-			{method: 'getpeerinfo', parameters: []},
-		]
-
-		const [networkInfo, blockchainInfo, peerInfo] = await rpcClient.command(batch)
-
-		return {networkInfo, blockchainInfo, peerInfo}
 	})
 })
