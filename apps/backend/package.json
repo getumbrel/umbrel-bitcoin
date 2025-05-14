@@ -14,8 +14,10 @@
 		"tsx": "^4.19.4"
 	},
 	"dependencies": {
+		"@fastify/websocket": "^11.0.2",
 		"bitcoin-core": "^5.0.0",
 		"fastify": "^5.3.2",
-		"fs-extra": "^11.3.0"
+		"fs-extra": "^11.3.0",
+		"zeromq": "^6.4.2"
 	}
 }

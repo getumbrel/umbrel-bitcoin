@@ -40,7 +40,15 @@ export class BitcoindManager {
 	constructor({binary = BITCOIND_BIN, datadir = BITCOIN_DIR, extraArgs = []}: BitcoindManagerOptions = {}) {
 		this.bin = binary
 		this.datadir = datadir
-		this.extraArgs = ['-regtest', '-server', '-rpcuser=bitcoin', '-rpcpassword=secret', '-rpcport=8332', ...extraArgs]
+		this.extraArgs = [
+			'-regtest',
+			'-server',
+			'-rpcuser=bitcoin',
+			'-rpcpassword=secret',
+			'-rpcport=8332',
+			'-zmqpubhashblock=tcp://127.0.0.1:28332',
+			...extraArgs,
+		]
 	}
 
 	// Spawn bitcoind as a child process

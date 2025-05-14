@@ -1,11 +1,15 @@
 import Fastify from 'fastify'
+import fastifyWs from '@fastify/websocket'
 import fse from 'fs-extra'
 
+import type WebSocket from 'ws'
 import type {SummaryResponse} from '@umbrel-bitcoin/shared-types'
 
+import {blockStream} from './zmq-listener.js'
 import {APP_STATE_DIR, BITCOIN_DIR} from './paths.js'
 import {BitcoindManager} from './bitcoind.js'
 import {getRpc} from './rpc-client.js'
+import './zmq-listener.js'
 
 // Ensure that the required data directories exist before starting bitcoind or the API server
 await Promise.all([fse.ensureDir(BITCOIN_DIR), fse.ensureDir(APP_STATE_DIR)])
@@ -15,6 +19,7 @@ const bitcoind = new BitcoindManager()
 bitcoind.start()
 
 const app = Fastify({logger: true})
+await app.register(fastifyWs)
 
 // Routes - these are just for POC
 app.get('/api', () => ({message: 'Hello from the Bitcoin Node backend'}))
@@ -55,6 +60,13 @@ app.get('/api/bitcoind/summary', async (): Promise<SummaryResponse> => {
 	const [networkInfo, blockchainInfo, peerInfo] = await rpc.command(batch)
 
 	return {networkInfo, blockchainInfo, peerInfo}
+})
+
+// POC for live block updates
+app.get('/api/ws/blocks', {websocket: true}, (socket: WebSocket) => {
+	const send = (b: unknown) => socket.send(JSON.stringify(b))
+	blockStream.on('block', send)
+	socket.on('close', () => blockStream.off('block', send))
 })
 
 // Start the server
