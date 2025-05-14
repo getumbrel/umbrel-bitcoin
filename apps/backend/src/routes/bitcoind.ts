@@ -6,6 +6,8 @@ import {bitcoind} from '../services/boot-bitcoind.js'
 export default fp(async (f: FastifyInstance) => {
 	// `f` is the Fastify instance injected by fastify-plugin
 
+	f.get('/api/bitcoind/version', () => bitcoind.getVersionInfo())
+
 	f.get('/api/bitcoind/status', () => bitcoind.status())
 
 	f.post('/api/bitcoind/start', () => {

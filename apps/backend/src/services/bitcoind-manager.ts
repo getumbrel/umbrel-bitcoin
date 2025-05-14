@@ -1,4 +1,4 @@
-import {spawn, ChildProcessWithoutNullStreams} from 'node:child_process'
+import {spawn, ChildProcessWithoutNullStreams, execFileSync} from 'node:child_process'
 import {Readable} from 'node:stream'
 import readline from 'node:readline'
 
@@ -36,6 +36,7 @@ export class BitcoindManager {
 	private readonly bin: string
 	private readonly datadir: string
 	private readonly extraArgs: string[]
+	private readonly versionInfo: {implementation: string; version: string}
 	private lastError: Error | null = null
 
 	constructor({binary = BITCOIND_BIN, datadir = BITCOIN_DIR, extraArgs = []}: BitcoindManagerOptions = {}) {
@@ -50,6 +51,30 @@ export class BitcoindManager {
 			'-zmqpubhashblock=tcp://127.0.0.1:28332',
 			...extraArgs,
 		]
+
+		// We grab the implementation and version here once so the UI can query it without needing to wait for RPC to be available (e.g., if bitcoind is down or still starting up)
+		try {
+			// Grab the first line of bitcoind --version output
+			// e.g., "Bitcoin Core daemon version v29.0.0"
+			const firstLine = execFileSync(this.bin, ['--version']).toString().split('\n')[0]
+
+			// implementation = everything before the word “version …”
+			// e.g., "Bitcoin Core"
+			const implementation = firstLine.replace(/(?:daemon|RPC client)?\s*version.*$/i, '').trim()
+
+			// version = first vX.Y.Z
+			// e.g., "v29.0.0"
+			const version = (firstLine.match(/v\d+\.\d+\.\d+/) ?? ['unknown'])[0]
+
+			this.versionInfo = {implementation, version}
+		} catch (error) {
+			this.versionInfo = {implementation: 'unknown', version: 'unknown'}
+			console.error('[bitcoind-manager] failed to get static version:', error)
+		}
+	}
+
+	getVersionInfo() {
+		return this.versionInfo
 	}
 
 	setLastError(err: Error): void {
