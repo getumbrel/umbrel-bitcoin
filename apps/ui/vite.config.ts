@@ -1,9 +1,10 @@
 import {defineConfig} from 'vite'
 import react from '@vitejs/plugin-react'
-
+import tailwindcss from '@tailwindcss/vite'
+import path from 'path'
 // https://vite.dev/config/
 export default defineConfig({
-	plugins: [react()],
+	plugins: [react(), tailwindcss()],
 	server: {
 		proxy: {
 			// any request starting with /api → http://localhost:3000
@@ -13,6 +14,13 @@ export default defineConfig({
 				ws: true,
 				rewrite: (path) => path, // keep /api/whatever as-is
 			},
+		},
+	},
+	// Shadcn requirement
+	// https://ui.shadcn.com/docs/installation/vite
+	resolve: {
+		alias: {
+			'@': path.resolve(__dirname, './src'),
 		},
 	},
 })
