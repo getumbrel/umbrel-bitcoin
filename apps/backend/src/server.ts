@@ -2,7 +2,7 @@ import Fastify from 'fastify'
 import fastifyWs from '@fastify/websocket'
 
 import {bootBitcoind, bitcoind} from './services/boot-bitcoind.js'
-import {ensureDirs} from './services/paths.js'
+import {ensureDirs} from './lib/paths.js'
 import routes from './routes.js'
 
 // Ensure that the required data directories exist before we start
