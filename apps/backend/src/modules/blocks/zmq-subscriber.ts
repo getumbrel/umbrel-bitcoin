@@ -5,7 +5,7 @@ import {EventEmitter} from 'node:events'
 
 import zmq from 'zeromq'
 
-import {rpcClient} from './rpc-client.js'
+import {rpcClient} from '../bitcoind/rpc-client.js'
 
 // This emits `{ hash, height, txs, time }` whenever a new block is announced
 export const blockStream = new EventEmitter()

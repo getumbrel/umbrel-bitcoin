@@ -2,7 +2,7 @@ import {spawn, ChildProcessWithoutNullStreams, execFileSync} from 'node:child_pr
 import {Readable} from 'node:stream'
 import readline from 'node:readline'
 
-import {BITCOIND_BIN, BITCOIN_DIR} from '../lib/paths.js'
+import {BITCOIND_BIN, BITCOIN_DIR} from '../../lib/paths.js'
 
 type BitcoindProcess = ChildProcessWithoutNullStreams & {
 	stdout: Readable

@@ -1,4 +1,4 @@
-import {BitcoindManager} from './bitcoind-manager.js'
+import {BitcoindManager} from './manager.js'
 
 // TODO: replace with actual conf logic later
 async function writeMockConf(): Promise<void> {

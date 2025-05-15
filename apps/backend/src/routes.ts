@@ -12,9 +12,9 @@ import type {
 	BlockSummary,
 } from '@umbrel-bitcoin/shared-types'
 
-import {bitcoind} from './modules/boot-bitcoind.js'
-import {rpcClient} from './modules/rpc-client.js'
-import {blockStream} from './modules/zmq-blocks.js'
+import {bitcoind} from './modules/bitcoind/boot.js'
+import {rpcClient} from './modules/bitcoind/rpc-client.js'
+import {blockStream} from './modules/blocks/zmq-subscriber.js'
 
 // Fastify turns any uncaught error inside these handlers
 // into a 500 Internal Server Error response via its default error handler.
