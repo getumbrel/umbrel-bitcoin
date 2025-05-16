@@ -1,7 +1,7 @@
 {
 	"name": "Bitcoin Node",
 	"short_name": "Bitcoin Node",
-	"description": null,
+	"description": "Bitcoin Node",
 	"dir": "auto",
 	"lang": "en-US",
 	"display": "standalone",
