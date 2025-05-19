@@ -2,8 +2,8 @@
 @import 'tw-animate-css';
 
 /* Imported fonts */
-@import '@fontsource-variable/outfit?display=swap';
-@import '@fontsource-variable/dm-sans?display=swap';
+@import '@fontsource-variable/outfit';
+@import '@fontsource-variable/dm-sans';
 /* TODO: import dm-mono */
 
 html,
