@@ -19,7 +19,7 @@ export default function Dock({className}: {className?: string}) {
 
 	return (
 		<Tabs value={activeTab} className={cn('w-max', className)}>
-			<TabsList className='relative flex rounded-full bg-gradient-to-bfrom-[#191919] to-[#0E0E0E] py-6 px-1.5 backdrop-blur-2xl ring-white/6'>
+			<TabsList className='relative flex rounded-full bg-gradient-to-b from-[#191919] to-[#0E0E0E] py-6 px-1.5 backdrop-blur-2xl ring-white/6'>
 				<GradientBorderFromTop />
 
 				<DockTrigger value='/' to='/' Icon={HomeIcon} label='Home' active={activeTab === '/'} />

@@ -1,5 +1,5 @@
 import {Card, CardContent} from '@/components/ui/card'
-import PeersChart from './Peers-Chart'
+import PeersChart from './PeersChart'
 import BlocksPage from './Blocks'
 import Globe from './Globe'
 import StatusDot from './StatusDot'
@@ -8,7 +8,7 @@ import {GradientBorderTopBottom, GradientBorderFromCorners} from '@/components/s
 export default function StatusPanel() {
 	return (
 		<>
-			<Card className='bg-white/2.5 backdrop-blur-2xl border-none mb-6 py-4 rounded-3xl'>
+			<Card className='bg-gradient-to-b from-[#0F0F0FD9] to-[#080808] backdrop-blur-2xl border-none mb-6 py-4 rounded-3xl'>
 				<GradientBorderTopBottom depth='7%' />
 				<CardContent className='flex flex-col md:flex-row px-4 items-center'>
 					{/* Globe + statuses */}

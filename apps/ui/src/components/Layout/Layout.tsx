@@ -2,17 +2,17 @@ import {Outlet} from 'react-router-dom'
 
 import Header from './Header'
 import Dock from './Dock'
-import Background from './Background'
+// import Background from './Background'
 
 // React Router injects the routed page in <Outlet/>.
 export function Layout() {
 	return (
 		<>
 			{/* Moving gradient background. This is full-viewport and never scrolls */}
-			<Background />
+			{/* <Background /> */}
 
 			{/* The full-viewport, flex column div that contains the floating dock, header, and main content */}
-			<div className='h-screen w-screen flex flex-col items-center pt-6 px-4'>
+			<div className='h-screen w-screen flex flex-col items-center pt-6 px-4 bg-black'>
 				{/* Floating dock; content scrolls under it */}
 				<Dock className='fixed bottom-4 left-1/2 -translate-x-1/2 z-30' />
 

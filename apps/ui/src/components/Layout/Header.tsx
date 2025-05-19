@@ -27,7 +27,7 @@ export default function Header({className}: {className?: string}) {
 			</div>
 			<div>
 				{/* TODO: tweak css to Suj's design */}
-				<Button className='cursor-pointer relative overflow-hidden rounded-full bg-white/10 backdrop-blur-xl text-[13px] text-white/80 font-[500] hover:bg-white/15 hover:text-white/80'>
+				<Button className='cursor-pointer relative overflow-hidden rounded-full bg-gradient-to-b from-[#1C1C1C] to-[#171717] backdrop-blur-xl text-[13px] text-white/80 font-[500] hover:bg-white/15 hover:text-white/80'>
 					<GradientBorderFromTop />
 					<WalletIcon />
 					<span>Connect</span>
