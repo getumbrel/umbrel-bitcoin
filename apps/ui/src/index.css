@@ -1,6 +1,17 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
+/* Imported fonts */
+@import '@fontsource-variable/outfit?display=swap';
+@import '@fontsource-variable/dm-sans?display=swap';
+/* TODO: import dm-mono */
+
+html,
+body {
+	/* ── Make DM Sans the default ───────────────────── */
+	font-family: 'DM Sans Variable', sans-serif;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
@@ -116,5 +127,29 @@
 	}
 	body {
 		@apply bg-background text-foreground;
+	}
+}
+
+/* ─── Placeholder for real background ───────────────────────────── */
+@keyframes blob-move {
+	0%,
+	100% {
+		transform: translate(-40%, -30%) scale(1);
+	}
+	33% {
+		transform: translate(50%, -20%) scale(1.2);
+	}
+	66% {
+		transform: translate(10%, 40%) scale(0.9);
+	}
+}
+
+@keyframes blob-shape {
+	0%,
+	100% {
+		border-radius: 42% 58% 46% 54% / 60% 45% 55% 40%;
+	}
+	50% {
+		border-radius: 60% 40% 58% 42% / 40% 55% 45% 60%;
 	}
 }
