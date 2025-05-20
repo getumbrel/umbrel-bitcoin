@@ -66,11 +66,11 @@ export default function PeersChart() {
 				</ChartContainer>
 				{/* Default Legend is too cumbersome to customize, so we're using a custom legend */}
 				{/* TODO: go through and clean this tailwind */}
-				<ul className='flex flex-col items-center gap-2 text-sm'>
+				<ul className='flex flex-col items-center gap-2 text-[12px]'>
 					{chartData.map((d) => {
 						const cfg = chartConfig[d.network]
 						return (
-							<li key={d.network} className='flex w-full max-w-[10rem] justify-between items-center gap-4 text-xs'>
+							<li key={d.network} className='flex w-full max-w-[10rem] justify-between items-center gap-4'>
 								<span className='flex items-center gap-1'>
 									<span className='h-3 w-3 rounded-sm border border-white/20' style={{background: cfg.color}} />
 									<span className='capitalize text-white/60'>{cfg.label}</span>

@@ -6,137 +6,170 @@ import {
 	getPaginationRowModel,
 	getSortedRowModel,
 	useReactTable,
+	type ColumnDef,
+	type SortingState,
+	type ColumnFiltersState,
 } from '@tanstack/react-table'
-import {ArrowUpDown, ChevronDown, MoreHorizontal} from 'lucide-react'
+import {ChevronUp, ChevronDown, MoreHorizontal} from 'lucide-react'
 
 import {Button} from '@/components/ui/button'
-import {Checkbox} from '@/components/ui/checkbox'
-import {
-	DropdownMenu,
-	DropdownMenuCheckboxItem,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuLabel,
-	DropdownMenuSeparator,
-	DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+import {DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger} from '@/components/ui/dropdown-menu'
 import {Input} from '@/components/ui/input'
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from '@/components/ui/table'
+import InsightCard from './InsightsCard'
+import {CardContent, CardFooter, CardHeader} from '@/components/ui/card'
+import {CardTitle} from '@/components/ui/card'
 
-const data: Payment[] = [
+const data: PeerData[] = [
 	{
 		id: 'm5gr84i9',
-		amount: 316,
-		status: 'success',
-		email: 'ken99@example.com',
+		info: {
+			subversion: 'Bitcoin Core',
+			address: '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa.onion',
+		},
+		network: 'onion',
+		relay_txns: true,
+		inbound: false,
+		routable: true,
 	},
 	{
 		id: '3u1reuv4',
-		amount: 242,
-		status: 'success',
-		email: 'Abe45@example.com',
+		info: {
+			subversion: 'Bitcoin Core',
+			address: '10.21.1.10',
+		},
+		network: 'clearnet',
+		relay_txns: true,
+		inbound: false,
+		routable: true,
 	},
 	{
 		id: 'derv1ws0',
-		amount: 837,
-		status: 'processing',
-		email: 'Monserrat44@example.com',
+		info: {
+			subversion: 'Bitcoin Core',
+			address: '11234asdfgkjh34e36345',
+		},
+		network: 'i2p',
+		relay_txns: false,
+		inbound: true,
+		routable: true,
 	},
 	{
 		id: '5kma53ae',
-		amount: 874,
-		status: 'success',
-		email: 'Silas22@example.com',
+		info: {
+			subversion: 'Bitcoin Core',
+			address: '162.222.178.178',
+		},
+		network: 'clearnet',
+		relay_txns: true,
+		inbound: true,
+		routable: false,
 	},
 	{
 		id: 'bhqecj4p',
-		amount: 721,
-		status: 'failed',
-		email: 'carmella@example.com',
+		info: {
+			subversion: 'Bitcoin Core',
+			address: '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa.onion',
+		},
+		network: 'onion',
+		relay_txns: true,
+		inbound: false,
+		routable: true,
 	},
 ]
 
-export type Payment = {
+export type PeerData = {
 	id: string
-	amount: number
-	status: 'pending' | 'processing' | 'success' | 'failed'
-	email: string
+	info: {
+		subversion: string
+		address: string
+	}
+	network: string
+	relay_txns: boolean
+	inbound: boolean
+	routable: boolean
 }
 
-export const columns: ColumnDef<Payment>[] = [
+export const columns: ColumnDef<PeerData>[] = [
 	{
-		id: 'select',
-		header: ({table}) => (
-			<Checkbox
-				checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && 'indeterminate')}
-				onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-				aria-label='Select all'
-			/>
-		),
-		cell: ({row}) => (
-			<Checkbox
-				checked={row.getIsSelected()}
-				onCheckedChange={(value) => row.toggleSelected(!!value)}
-				aria-label='Select row'
-			/>
-		),
-		enableSorting: false,
-		enableHiding: false,
-	},
-	{
-		accessorKey: 'status',
-		header: 'Status',
-		cell: ({row}) => <div className='capitalize'>{row.getValue('status')}</div>,
-	},
-	{
-		accessorKey: 'email',
-		header: ({column}) => {
+		// subversion & address
+		accessorKey: 'info',
+		header: 'Peers',
+		cell: ({row}) => {
+			const info = row.getValue('info') as {subversion: string; address: string}
 			return (
-				<Button variant='ghost' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-					Email
-					<ArrowUpDown />
-				</Button>
+				<div className='flex flex-col'>
+					<div>{info.subversion}</div>
+					<div className='text-[11px] text-muted-foreground'>{info.address}</div>
+				</div>
 			)
 		},
-		cell: ({row}) => <div className='lowercase'>{row.getValue('email')}</div>,
 	},
 	{
-		accessorKey: 'amount',
-		header: () => <div className='text-right'>Amount</div>,
+		// network
+		accessorKey: 'network',
+		header: ({column}) => {
+			return (
+				<div
+					className='text-[#757575] text-[13px] font-[400] cursor-pointer hover:text-white flex items-center gap-2'
+					onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+				>
+					Network
+					{/* Make all other columns sortable */}
+					{column.getIsSorted() === 'asc' ? (
+						<ChevronUp className='h-4 w-4' />
+					) : column.getIsSorted() === 'desc' ? (
+						<ChevronDown className='h-4 w-4' />
+					) : (
+						<ChevronUp className='h-4 w-4' />
+					)}
+				</div>
+			)
+		},
+		cell: ({row}) => <div className='lowercase'>{row.getValue('network')}</div>,
+	},
+	{
+		// whether we relay txns
+		accessorKey: 'relay_txns',
+		header: () => <div>Relay TXNs</div>,
 		cell: ({row}) => {
-			const amount = parseFloat(row.getValue('amount'))
-
-			// Format the amount as a dollar amount
-			const formatted = new Intl.NumberFormat('en-US', {
-				style: 'currency',
-				currency: 'USD',
-			}).format(amount)
-
-			return <div className='text-right font-medium'>{formatted}</div>
+			return <div>{row.getValue('relay_txns') ? 'Yes' : 'No'}</div>
 		},
 	},
+	{
+		// inbound
+		accessorKey: 'inbound',
+		header: () => <div>Inbound</div>,
+		cell: ({row}) => <div>{row.getValue('inbound') ? 'Yes' : 'No'}</div>,
+	},
+	{
+		// routable
+		accessorKey: 'routable',
+		header: () => <div>Routable</div>,
+		cell: ({row}) => <div>{row.getValue('routable') ? 'Yes' : 'No'}</div>,
+	},
+
 	{
 		id: 'actions',
 		enableHiding: false,
 		cell: ({row}) => {
-			const payment = row.original
+			const peer = row.original
 
 			return (
 				<DropdownMenu>
 					<DropdownMenuTrigger asChild>
-						<Button variant='ghost' className='h-8 w-8 p-0'>
+						<Button variant='ghost' className='h-8 w-8 p-0 hover:bg-transparent cursor-pointer group'>
 							<span className='sr-only'>Open menu</span>
-							<MoreHorizontal />
+							<MoreHorizontal className='text-[#757575] group-hover:text-white' />
 						</Button>
 					</DropdownMenuTrigger>
-					<DropdownMenuContent align='end'>
-						<DropdownMenuLabel>Actions</DropdownMenuLabel>
-						<DropdownMenuItem onClick={() => navigator.clipboard.writeText(payment.id)}>
-							Copy payment ID
+					<DropdownMenuContent align='end' className='bg-black border border-[#252525] text-white'>
+						<DropdownMenuItem onClick={() => console.log(`show more details for ${peer.info.address}`)}>
+							More details
 						</DropdownMenuItem>
-						<DropdownMenuSeparator />
-						<DropdownMenuItem>View customer</DropdownMenuItem>
-						<DropdownMenuItem>View payment details</DropdownMenuItem>
+						<DropdownMenuItem onClick={() => console.log(`block peer ${peer.info.address}`)}>
+							Block peer
+						</DropdownMenuItem>
 					</DropdownMenuContent>
 				</DropdownMenu>
 			)
@@ -147,8 +180,8 @@ export const columns: ColumnDef<Payment>[] = [
 export default function PeersTable() {
 	const [sorting, setSorting] = React.useState<SortingState>([])
 	const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
-	const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
 	const [rowSelection, setRowSelection] = React.useState({})
+	const [globalFilter, setGlobalFilter] = React.useState('')
 
 	const table = useReactTable({
 		data,
@@ -159,103 +192,88 @@ export default function PeersTable() {
 		getPaginationRowModel: getPaginationRowModel(),
 		getSortedRowModel: getSortedRowModel(),
 		getFilteredRowModel: getFilteredRowModel(),
-		onColumnVisibilityChange: setColumnVisibility,
 		onRowSelectionChange: setRowSelection,
+		onGlobalFilterChange: setGlobalFilter,
+		globalFilterFn: (row, columnId, filterValue) => {
+			const searchValue = filterValue.toLowerCase()
+			const peer = row.original
+
+			// Search through all relevant fields
+			return (
+				peer.info.subversion.toLowerCase().includes(searchValue) ||
+				peer.info.address.toLowerCase().includes(searchValue) ||
+				peer.network.toLowerCase().includes(searchValue) ||
+				(peer.relay_txns ? 'yes' : 'no').includes(searchValue) ||
+				(peer.inbound ? 'yes' : 'no').includes(searchValue) ||
+				(peer.routable ? 'yes' : 'no').includes(searchValue)
+			)
+		},
 		state: {
 			sorting,
 			columnFilters,
-			columnVisibility,
 			rowSelection,
+			globalFilter,
 		},
 	})
 
+	// TODO: allow filtering
+	// TODO: allow sorting
+	// TODO: allow blocking?
+	// TODO: scroll instead of pagination
+	// TODO: responsiveness
+	// TODO: choose min content height so filtering doesn't shrink content
 	return (
-		<div className='w-full bg-card-gradient backdrop-blur-2xl border-[0.5px] border-white/6 ring-white/6 mb-6 py-4 rounded-3xl'>
-			<div className='flex items-center py-4'>
+		<InsightCard>
+			<CardHeader>
+				<CardTitle className='font-outfit text-white text-[20px] font-[400] pt-2'>Peer Connections</CardTitle>
+			</CardHeader>
+			<CardContent>
 				<Input
-					placeholder='Filter emails...'
-					value={(table.getColumn('email')?.getFilterValue() as string) ?? ''}
-					onChange={(event) => table.getColumn('email')?.setFilterValue(event.target.value)}
-					className='max-w-sm'
+					placeholder='Filter peers...'
+					value={globalFilter ?? ''}
+					onChange={(event) => setGlobalFilter(event.target.value)}
+					className='max-w-sm mb-4 bg-[#272727] border border-transparent text-white placeholder:text-white/50 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-white/10'
 				/>
-				<DropdownMenu>
-					<DropdownMenuTrigger asChild>
-						<Button variant='outline' className='ml-auto'>
-							Columns <ChevronDown />
-						</Button>
-					</DropdownMenuTrigger>
-					<DropdownMenuContent align='end'>
-						{table
-							.getAllColumns()
-							.filter((column) => column.getCanHide())
-							.map((column) => {
-								return (
-									<DropdownMenuCheckboxItem
-										key={column.id}
-										className='capitalize'
-										checked={column.getIsVisible()}
-										onCheckedChange={(value) => column.toggleVisibility(!!value)}
-									>
-										{column.id}
-									</DropdownMenuCheckboxItem>
-								)
-							})}
-					</DropdownMenuContent>
-				</DropdownMenu>
-			</div>
-			<div className='rounded-md border'>
-				<Table>
-					<TableHeader>
-						{table.getHeaderGroups().map((headerGroup) => (
-							<TableRow key={headerGroup.id}>
-								{headerGroup.headers.map((header) => {
-									return (
-										<TableHead key={header.id}>
-											{header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-										</TableHead>
-									)
-								})}
-							</TableRow>
-						))}
-					</TableHeader>
-					<TableBody>
-						{table.getRowModel().rows?.length ? (
-							table.getRowModel().rows.map((row) => (
-								<TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>
-									{row.getVisibleCells().map((cell) => (
-										<TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
-									))}
+				<div className='rounded-md'>
+					<Table>
+						<TableHeader>
+							{table.getHeaderGroups().map((headerGroup) => (
+								<TableRow className='border-b border-[#252525] hover:bg-transparent' key={headerGroup.id}>
+									{headerGroup.headers.map((header) => {
+										return (
+											<TableHead className='text-[#757575] text-[13px] font-[400]' key={header.id}>
+												{header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+											</TableHead>
+										)
+									})}
 								</TableRow>
-							))
-						) : (
-							<TableRow>
-								<TableCell colSpan={columns.length} className='h-24 text-center'>
-									No results.
-								</TableCell>
-							</TableRow>
-						)}
-					</TableBody>
-				</Table>
-			</div>
-			<div className='flex items-center justify-end space-x-2 py-4'>
-				<div className='flex-1 text-sm text-muted-foreground'>
-					{table.getFilteredSelectedRowModel().rows.length} of {table.getFilteredRowModel().rows.length} row(s)
-					selected.
+							))}
+						</TableHeader>
+						<TableBody className='text-white text-[14px] font-[400]'>
+							{table.getRowModel().rows?.length ? (
+								table.getRowModel().rows.map((row) => (
+									<TableRow
+										className='border-b border-[#252525] hover:bg-transparent'
+										key={row.id}
+										data-state={row.getIsSelected() && 'selected'}
+									>
+										{row.getVisibleCells().map((cell) => (
+											<TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
+										))}
+									</TableRow>
+								))
+							) : (
+								<TableRow>
+									<TableCell colSpan={columns.length} className='h-24 text-center'>
+										No results.
+									</TableCell>
+								</TableRow>
+							)}
+						</TableBody>
+					</Table>
 				</div>
-				<div className='space-x-2'>
-					<Button
-						variant='outline'
-						size='sm'
-						onClick={() => table.previousPage()}
-						disabled={!table.getCanPreviousPage()}
-					>
-						Previous
-					</Button>
-					<Button variant='outline' size='sm' onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
-						Next
-					</Button>
-				</div>
-			</div>
-		</div>
+			</CardContent>
+			<CardFooter>{/* Should we put anything here? */}</CardFooter>
+		</InsightCard>
 	)
 }

@@ -1,11 +1,10 @@
-// import { TrendingUp } from "lucide-react"
-import {Bar, BarChart, CartesianGrid, XAxis} from 'recharts'
+import {Bar, BarChart, CartesianGrid, XAxis, YAxis} from 'recharts'
 
-import {Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle} from '@/components/ui/card'
-import {ChartContainer, ChartLegend, ChartLegendContent, ChartTooltip, ChartTooltipContent} from '@/components/ui/chart'
+import {CardContent, CardFooter, CardHeader, CardTitle} from '@/components/ui/card'
+import {ChartContainer, ChartTooltip, ChartTooltipContent} from '@/components/ui/chart'
+import InsightCard from './InsightsCard'
 
 import type {ChartConfig} from '@/components/ui/chart'
-import {GradientBorderFromTop} from '@/components/shared/GradientBorders'
 
 const chartData = [
 	{block: '1', subsidy: 3.125, fees: 0.02},
@@ -47,49 +46,99 @@ const chartConfig = {
 
 export default function RewardsChart() {
 	return (
-		<Card className='bg-card-gradient backdrop-blur-2xl border-none mb-6 py-4 rounded-3xl'>
-			<GradientBorderFromTop />
+		<InsightCard>
 			<CardHeader>
 				<div className='flex justify-between items-center'>
-					<CardTitle className='font-outfit text-white text-[20px] font-[400]'>Block Rewards</CardTitle>
+					<CardTitle className='font-outfit text-white text-[20px] font-[400] pt-2'>Block Rewards</CardTitle>
 					{/* <CardDescription>Last 2016 Blocks</CardDescription> */}
-					{/* custom legend */}
-					<div className='text-white/60'>I am a legend</div>
+					{/* Legend */}
+					<div className='flex items-center gap-4 text-white/60 text-[12px]'>
+						<div className='flex items-center gap-2'>
+							<div className='h-2 w-2 rounded-[2px] bg-[#FF7E05]' />
+							<span>Subsidy</span>
+						</div>
+						<div className='flex items-center gap-2'>
+							<div className='h-2 w-2 rounded-[2px] bg-[hsla(29,100%,51%,0.44)]' />
+							<span>Fees</span>
+						</div>
+					</div>
 				</div>
 			</CardHeader>
 			<CardContent>
 				<ChartContainer config={chartConfig}>
-					<BarChart accessibilityLayer data={chartData}>
+					<BarChart accessibilityLayer data={chartData} margin={{top: 0, right: 0, bottom: 30, left: 0}}>
 						<defs>
-							{/* rgba(255, 126, 5, 0.44) → rgba(255, 126, 5, 0) from top to 86.44% down */}
 							<linearGradient id='subsidyGradient' x1='0' y1='0' x2='0' y2='1'>
 								<stop offset='0%' stopColor='rgba(255,126,5,0.44)' />
 								<stop offset='86.44%' stopColor='rgba(255,126,5,0)' />
 							</linearGradient>
 						</defs>
-						<CartesianGrid vertical={false} stroke='hsla(0, 0%, 48%, 0.15)' strokeWidth={0.5} strokeDasharray='4 4' />
+						<CartesianGrid vertical={false} stroke='hsla(0, 0%, 48%, 0.3)' strokeWidth={0.5} strokeDasharray='4 4' />
 						<XAxis
 							dataKey='block'
 							tickLine={false}
-							tickMargin={10}
+							tickMargin={5}
 							axisLine={false}
 							tickFormatter={(value) => value.slice(0, 3)}
+							label={{value: 'Block', position: 'bottom', offset: 0}}
 						/>
-						<ChartTooltip content={<ChartTooltipContent hideLabel />} />
+						<YAxis
+							tickLine={false}
+							tickMargin={0}
+							axisLine={false}
+							tickFormatter={(value) => value.toFixed(1)}
+							className='text-white/60 text-[12px]'
+							label={{
+								value: 'bitcoin',
+								angle: -90,
+								position: 'insideLeft',
+								offset: 20,
+								className: 'text-white/60 text-[12px]',
+							}}
+						/>
+						<ChartTooltip
+							cursor={false}
+							content={
+								<ChartTooltipContent
+									className='bg-black/90 border-white/10 text-white [&_span]:text-white/60'
+									formatter={(value, name) => {
+										const color = name === 'subsidy' ? '#FF7E05' : 'hsla(29, 100%, 51%, 0.44)'
+										return (
+											<div className='flex items-center gap-2'>
+												<div className='h-2 w-2 rounded-[2px]' style={{backgroundColor: color}} />
+												<span className='text-white/60'>{name === 'subsidy' ? 'Subsidy' : 'Fees'}</span>
+												<span className='text-white font-mono font-medium tabular-nums ml-auto'>
+													{value.toLocaleString()}
+												</span>
+											</div>
+										)
+									}}
+								/>
+							}
+						/>
 						{/* <ChartLegend  content={<ChartLegendContent />} /> */}
-						<Bar dataKey='subsidy' stackId='a' fill='url(#subsidyGradient)' radius={[0, 0, 4, 4]} />
-						<Bar dataKey='fees' stackId='a' fill='var(--color-subsidy)' radius={[4, 4, 0, 0]} />
+						<Bar
+							dataKey='subsidy'
+							stackId='a'
+							fill='url(#subsidyGradient)'
+							radius={[0, 0, 4, 4]}
+							animationDuration={400}
+							animationBegin={0}
+							animationEasing='ease-out'
+						/>
+						<Bar
+							dataKey='fees'
+							stackId='a'
+							fill='var(--color-subsidy)'
+							radius={[4, 4, 0, 0]}
+							animationDuration={400}
+							animationBegin={400}
+							animationEasing='ease-out'
+						/>
 					</BarChart>
 				</ChartContainer>
 			</CardContent>
-			<CardFooter className='flex-col items-start gap-2 text-sm'>
-				{/* <div className="flex gap-2 font-medium leading-none">
-          Trending up by 5.2% this block <TrendingUp className="h-4 w-4" />
-        </div>
-        <div className="leading-none text-muted-foreground">
-          Showing total visitors for the last 6 blocks
-        </div> */}
-			</CardFooter>
-		</Card>
+			<CardFooter></CardFooter>
+		</InsightCard>
 	)
 }

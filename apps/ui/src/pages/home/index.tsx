@@ -5,7 +5,7 @@ import Globe from './Globe'
 import StatusDot from './StatusDot'
 import {GradientBorderTopBottom, GradientBorderFromCorners} from '@/components/shared/GradientBorders'
 
-export default function StatusPanel() {
+export default function HomePage() {
 	return (
 		<>
 			<Card className='bg-card-gradient backdrop-blur-2xl border-none mb-6 py-4 rounded-3xl'>

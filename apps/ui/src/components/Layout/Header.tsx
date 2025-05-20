@@ -15,18 +15,18 @@ export default function Header({className}: {className?: string}) {
 			<div className='flex flex-col md:flex-row md:items-center gap-3.5'>
 				<Logo aria-label='Bitcoin Node logo' className='w-[38px] md:w-[50px] h-[38px] md:h-[50px] shrink-0' />
 				<div>
-					<h1 className='font-outfit text-25 md:text-28 font-[400] bg-text-gradient bg-clip-text text-transparent leading-none pb-2 md:pb-1'>
+					<h1 className='font-outfit text-[25px] md:text-[28px] font-[400] bg-text-gradient bg-clip-text text-transparent leading-none pb-2 md:pb-1'>
 						Bitcoin Node
 					</h1>
-					<p className='text-14 md:text-16 leading-none font-[400] text-[#414141]'>Bitcoin Core 29.0.0</p>
+					<p className='text-[14px] md:text-[16px] leading-none font-[400] text-[#414141]'>Bitcoin Core 29.0.0</p>
 				</div>
 			</div>
 			<div>
 				{/* TODO: tweak css to Suj's design */}
-				<Button className='cursor-pointer relative overflow-hidden rounded-full bg-button-gradient backdrop-blur-xl text-[13px] text-white/80 font-[500] hover:bg-white/15 hover:text-white/80'>
+				<Button className='cursor-pointer rounded-full bg-button-gradient backdrop-blur-xl'>
 					<GradientBorderFromTop />
 					<WalletIcon />
-					<span>Connect</span>
+					<span className='text-[13px] text-white/80 font-[500]'>Connect</span>
 				</Button>
 			</div>
 		</header>

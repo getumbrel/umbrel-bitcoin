@@ -36,9 +36,24 @@ export default function Globe() {
 			mapSamples: 16000, // dots on the map
 			mapBrightness: 5,
 			baseColor: [0.15, 0.15, 0.15], // actual map color
-			markerColor: [251 / 255, 100 / 255, 21 / 255],
+			markerColor: [255 / 255, 126 / 255, 5 / 255],
 			glowColor: [0.1, 0.1, 0.1], // halo
-			markers: [],
+			// placeholder markers for now
+			markers: [
+				// NA
+				{location: [37.7595, -122.4367], size: 0.02},
+				{location: [40.7128, -74.006], size: 0.02},
+				// italy
+				{location: [41.9033, 12.4534], size: 0.02},
+				// russia
+				{location: [55.7558, 37.6173], size: 0.02},
+				// china
+				{location: [39.9087, 116.3975], size: 0.02},
+				// india
+				{location: [20.5937, 78.9629], size: 0.02},
+				// brazil
+				{location: [-14.235, -51.9253], size: 0.02},
+			],
 			scale: 1.1,
 			onRender: (state) => {
 				// This prevents rotation while dragging

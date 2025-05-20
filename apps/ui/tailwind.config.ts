@@ -4,13 +4,6 @@ export default {
 	content: ['./index.html', './src/**/*.{js,ts,jsx,tsx,mdx}'],
 	theme: {
 		extend: {
-			fontSize: {
-				'13': '13px',
-				'14': '14px',
-				'16': '16px',
-				'25': '25px',
-				'28': '28px',
-			},
 			fontFamily: {
 				dmSans: ['DM Sans Variable', 'sans-serif'],
 				outfit: ['Outfit Variable', 'sans-serif'],
