@@ -43,7 +43,8 @@ export class BitcoindManager {
 		this.bin = binary
 		this.datadir = datadir
 		this.extraArgs = [
-			'-signet',
+			'-regtest',
+			// '-signet',
 			'-server',
 			'-rpcuser=bitcoin',
 			'-rpcpassword=secret',
