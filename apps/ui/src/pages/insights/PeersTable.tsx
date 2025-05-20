@@ -1,4 +1,7 @@
+// TODO: Organize and clean up this file
+
 import * as React from 'react'
+
 import {
 	flexRender,
 	getCoreRowModel,
@@ -19,82 +22,37 @@ import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from '@/c
 import InsightCard from './InsightsCard'
 import {CardContent, CardFooter, CardHeader} from '@/components/ui/card'
 import {CardTitle} from '@/components/ui/card'
+import {usePeerInfo} from '@/hooks/usePeers'
+import {timeAgoShort} from '@/lib/time-ago-short'
 
-const data: PeerData[] = [
-	{
-		id: 'm5gr84i9',
-		info: {
-			subversion: 'Bitcoin Core',
-			address: '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa.onion',
-		},
-		network: 'onion',
-		relay_txns: true,
-		inbound: false,
-		routable: true,
-	},
-	{
-		id: '3u1reuv4',
-		info: {
-			subversion: 'Bitcoin Core',
-			address: '10.21.1.10',
-		},
-		network: 'clearnet',
-		relay_txns: true,
-		inbound: false,
-		routable: true,
-	},
-	{
-		id: 'derv1ws0',
-		info: {
-			subversion: 'Bitcoin Core',
-			address: '11234asdfgkjh34e36345',
-		},
-		network: 'i2p',
-		relay_txns: false,
-		inbound: true,
-		routable: true,
-	},
-	{
-		id: '5kma53ae',
-		info: {
-			subversion: 'Bitcoin Core',
-			address: '162.222.178.178',
-		},
-		network: 'clearnet',
-		relay_txns: true,
-		inbound: true,
-		routable: false,
-	},
-	{
-		id: 'bhqecj4p',
-		info: {
-			subversion: 'Bitcoin Core',
-			address: '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa.onion',
-		},
-		network: 'onion',
-		relay_txns: true,
-		inbound: false,
-		routable: true,
-	},
-]
+import CheckmarkIcon from '@/assets/checkmark.svg?react'
+import {FadeScrollArea} from '@/components/shared/FadeScrollArea'
 
-export type PeerData = {
+type PeerRow = {
 	id: string
 	info: {
 		subversion: string
 		address: string
 	}
-	network: string
-	relay_txns: boolean
+	network: 'clearnet' | 'tor' | 'i2p' | 'not_publicly_routable' | 'cjdns'
+	relayTxns: boolean
 	inbound: boolean
-	routable: boolean
+	connectionTime: number
 }
 
-export const columns: ColumnDef<PeerData>[] = [
+export const columns: ColumnDef<PeerRow>[] = [
 	{
 		// subversion & address
 		accessorKey: 'info',
-		header: 'Peers',
+		header: () => {
+			const {data: peers} = usePeerInfo()
+			return (
+				<div>
+					Peers
+					<sup className='ml-1 text-[9px]'>{peers?.length || 0}</sup>
+				</div>
+			)
+		},
 		cell: ({row}) => {
 			const info = row.getValue('info') as {subversion: string; address: string}
 			return (
@@ -130,23 +88,36 @@ export const columns: ColumnDef<PeerData>[] = [
 	},
 	{
 		// whether we relay txns
-		accessorKey: 'relay_txns',
+		accessorKey: 'relayTxns',
 		header: () => <div>Relay TXNs</div>,
 		cell: ({row}) => {
-			return <div>{row.getValue('relay_txns') ? 'Yes' : 'No'}</div>
+			// checkmark filled if true, otherwise checkmark with opacity 0.5
+			return (
+				<div>
+					{row.getValue('relayTxns') ? (
+						<CheckmarkIcon className='h-4 w-4' />
+					) : (
+						<CheckmarkIcon className='h-4 w-4 opacity-20' />
+					)}
+				</div>
+			)
 		},
 	},
 	{
 		// inbound
 		accessorKey: 'inbound',
-		header: () => <div>Inbound</div>,
-		cell: ({row}) => <div>{row.getValue('inbound') ? 'Yes' : 'No'}</div>,
+		header: () => <div>In/Out</div>,
+		cell: ({row}) => <div>{row.getValue('inbound') ? 'Inbound' : 'Outbound'}</div>,
 	},
 	{
-		// routable
-		accessorKey: 'routable',
-		header: () => <div>Routable</div>,
-		cell: ({row}) => <div>{row.getValue('routable') ? 'Yes' : 'No'}</div>,
+		// connection time
+		accessorKey: 'connectionTime',
+		header: () => <div>Connected</div>,
+		// format as a time since connected from UNIX time
+		cell: ({row}) => {
+			const unix = row.getValue<number>('connectionTime') // seconds since epoch
+			return <div>{timeAgoShort(unix)}</div>
+		},
 	},
 
 	{
@@ -183,8 +154,27 @@ export default function PeersTable() {
 	const [rowSelection, setRowSelection] = React.useState({})
 	const [globalFilter, setGlobalFilter] = React.useState('')
 
+	const {data: peers, isLoading} = usePeerInfo()
+
+	/* convert Core objects to the row shape the table expects */
+	const rows: PeerRow[] = React.useMemo(() => {
+		if (!peers) return []
+
+		return peers.map((p) => ({
+			id: String(p.id),
+			info: {
+				subversion: p.subver?.replace(/\//g, '') || 'Unknown',
+				address: p.addr,
+			},
+			network: p.network === 'onion' ? 'tor' : p.network === 'i2p' ? 'i2p' : 'clearnet',
+			relayTxns: p.relaytxes ?? true,
+			inbound: p.inbound,
+			connectionTime: p.conntime,
+		}))
+	}, [peers])
+
 	const table = useReactTable({
-		data,
+		data: rows,
 		columns,
 		onSortingChange: setSorting,
 		onColumnFiltersChange: setColumnFilters,
@@ -203,9 +193,9 @@ export default function PeersTable() {
 				peer.info.subversion.toLowerCase().includes(searchValue) ||
 				peer.info.address.toLowerCase().includes(searchValue) ||
 				peer.network.toLowerCase().includes(searchValue) ||
-				(peer.relay_txns ? 'yes' : 'no').includes(searchValue) ||
-				(peer.inbound ? 'yes' : 'no').includes(searchValue) ||
-				(peer.routable ? 'yes' : 'no').includes(searchValue)
+				(peer.relayTxns ? 'relay' : '').includes(searchValue) ||
+				(peer.inbound ? 'inbound' : 'outbound').includes(searchValue) ||
+				timeAgoShort(peer.connectionTime).includes(searchValue)
 			)
 		},
 		state: {
@@ -219,7 +209,7 @@ export default function PeersTable() {
 	// TODO: allow filtering
 	// TODO: allow sorting
 	// TODO: allow blocking?
-	// TODO: scroll instead of pagination
+	// TODO: scroll
 	// TODO: responsiveness
 	// TODO: choose min content height so filtering doesn't shrink content
 	return (
@@ -232,46 +222,56 @@ export default function PeersTable() {
 					placeholder='Filter peers...'
 					value={globalFilter ?? ''}
 					onChange={(event) => setGlobalFilter(event.target.value)}
-					className='max-w-sm mb-4 bg-[#272727] border border-transparent text-white placeholder:text-white/50 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-white/10'
-				/>
-				<div className='rounded-md'>
-					<Table>
-						<TableHeader>
-							{table.getHeaderGroups().map((headerGroup) => (
-								<TableRow className='border-b border-[#252525] hover:bg-transparent' key={headerGroup.id}>
-									{headerGroup.headers.map((header) => {
-										return (
-											<TableHead className='text-[#757575] text-[13px] font-[400]' key={header.id}>
-												{header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-											</TableHead>
-										)
-									})}
-								</TableRow>
-							))}
-						</TableHeader>
-						<TableBody className='text-white text-[14px] font-[400]'>
-							{table.getRowModel().rows?.length ? (
-								table.getRowModel().rows.map((row) => (
-									<TableRow
-										className='border-b border-[#252525] hover:bg-transparent'
-										key={row.id}
-										data-state={row.getIsSelected() && 'selected'}
-									>
-										{row.getVisibleCells().map((cell) => (
-											<TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
-										))}
+					className='max-w-xs mb-4 border-none bg-[#272727] shadow-[inset_0_-1px_1px_0_rgba(255,255,255,0.2),_inset_0_1px_1px_0_rgba(0,0,0,0.36)] text-white placeholder:text-white/50 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-white/10'
+				></Input>
+				{/* TODO: add sexy scrollbar to FadeScrollArea */}
+				{/* TODO: sticky header */}
+				<FadeScrollArea
+					className='h-[400px]
+             [--fade-top:hsla(0,0%,6%,1)]
+             [--fade-bottom:hsla(0,0%,3%,1)]'
+				>
+					<div className='rounded-md'>
+						<Table>
+							<TableHeader>
+								{table.getHeaderGroups().map((headerGroup) => (
+									<TableRow className='border-b border-[#252525] hover:bg-transparent' key={headerGroup.id}>
+										{headerGroup.headers.map((header) => {
+											return (
+												<TableHead className='text-[#757575] text-[13px] font-[400]' key={header.id}>
+													{header.isPlaceholder
+														? null
+														: flexRender(header.column.columnDef.header, header.getContext())}
+												</TableHead>
+											)
+										})}
 									</TableRow>
-								))
-							) : (
-								<TableRow>
-									<TableCell colSpan={columns.length} className='h-24 text-center'>
-										No results.
-									</TableCell>
-								</TableRow>
-							)}
-						</TableBody>
-					</Table>
-				</div>
+								))}
+							</TableHeader>
+							<TableBody className='text-white text-[14px] font-[400]'>
+								{table.getRowModel().rows?.length ? (
+									table.getRowModel().rows.map((row) => (
+										<TableRow
+											className='border-b border-[#252525] hover:bg-transparent'
+											key={row.id}
+											data-state={row.getIsSelected() && 'selected'}
+										>
+											{row.getVisibleCells().map((cell) => (
+												<TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
+											))}
+										</TableRow>
+									))
+								) : (
+									<TableRow>
+										<TableCell colSpan={columns.length} className='h-24 text-center'>
+											No results.
+										</TableCell>
+									</TableRow>
+								)}
+							</TableBody>
+						</Table>
+					</div>
+				</FadeScrollArea>
 			</CardContent>
 			<CardFooter>{/* Should we put anything here? */}</CardFooter>
 		</InsightCard>

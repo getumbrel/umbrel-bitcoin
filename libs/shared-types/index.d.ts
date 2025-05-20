@@ -25,9 +25,27 @@ type PeerDirectionCount = {
 	outbound: number
 }
 
-export type PeerTally = {
+export type PeerSummary = {
 	total: number
 	byNetwork: Record<string, PeerDirectionCount>
+}
+
+// Partial type of getpeerinfo
+export type PeerInfo = {
+	id: number
+	addr: string
+	network: string
+	relaytxes: boolean
+	lastsend: number
+	lastrecv: number
+	bytessent: number
+	bytesrecv: number
+	conntime: number
+	pingtime: number
+	pingwait: number
+	version: number
+	subver: string
+	inbound: boolean
 }
 
 // subset of getblock (verbosity 1) that we care about

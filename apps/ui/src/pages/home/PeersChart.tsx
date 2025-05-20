@@ -4,7 +4,7 @@ import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card'
 import {ChartContainer} from '@/components/ui/chart'
 import type {ChartConfig} from '@/components/ui/chart'
 
-import {usePeers} from '@/hooks/usePeers'
+import {usePeerSummary} from '@/hooks/usePeers'
 
 const chartConfig = {
 	clearnet: {label: 'Clearnet', color: 'hsl(29 100% 51%)'},
@@ -13,7 +13,7 @@ const chartConfig = {
 } satisfies ChartConfig
 
 export default function PeersChart() {
-	const {data, isLoading} = usePeers()
+	const {data, isLoading} = usePeerSummary()
 
 	const sum = (b?: {inbound: number; outbound: number}) => (b ? b.inbound + b.outbound : 0)
 

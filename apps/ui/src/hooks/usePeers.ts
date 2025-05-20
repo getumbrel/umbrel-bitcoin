@@ -1,11 +1,20 @@
 import {useQuery} from '@tanstack/react-query'
 import {api} from '@/lib/api'
-import type {PeerTally} from '@umbrel-bitcoin/shared-types'
+import type {PeerInfo, PeerSummary} from '@umbrel-bitcoin/shared-types'
 
-export function usePeers() {
+export function usePeerSummary() {
+	return useQuery({
+		queryKey: ['peers/summary'],
+		queryFn: () => api<PeerSummary>('/rpc/peers/summary'),
+		staleTime: 30_000,
+		refetchInterval: 5_000,
+	})
+}
+
+export function usePeerInfo() {
 	return useQuery({
 		queryKey: ['peers'],
-		queryFn: () => api<PeerTally>('/rpc/peers'),
+		queryFn: () => api<PeerInfo[]>('/rpc/peers'),
 		staleTime: 30_000,
 		refetchInterval: 5_000,
 	})

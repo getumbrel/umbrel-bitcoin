@@ -21,7 +21,8 @@ export default fp(async (app: FastifyInstance) => {
 	// rpc routes
 	const rpcBase = `${BASE}/rpc`
 	app.get(`${rpcBase}/sync`, blocks.syncStatus)
-	app.get(`${rpcBase}/peers`, peers.tally)
+	app.get(`${rpcBase}/peers`, peers.peerInfo)
+	app.get(`${rpcBase}/peers/summary`, peers.peerSummary)
 	app.get<{Querystring: {limit?: string}}>(`${rpcBase}/blocks`, (req) => blocks.list(req.query.limit))
 
 	// websocket routes
