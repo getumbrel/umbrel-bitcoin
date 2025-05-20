@@ -1,8 +1,10 @@
 import {ShaderGradientCanvas, ShaderGradient} from '@shadergradient/react'
 
-// ShaderGradient requires style prop
 export default function Background() {
+	// temp black background until we have a good shader gradient
+	return <div className='bg-black absolute inset-0 -z-10' />
 	return (
+		// ShaderGradient requires style prop
 		<ShaderGradientCanvas style={{position: 'absolute', inset: 0, zIndex: -1}} className='bg-black'>
 			<ShaderGradient
 				control='query'
