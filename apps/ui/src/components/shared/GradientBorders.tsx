@@ -1,4 +1,5 @@
 // TODO: tailwindify these and create different ones based on Suj's figma designs
+// tailwind v4 now support radial gradients
 // Also, use proper gradients and colours
 export function GradientBorderFromTop() {
 	return (

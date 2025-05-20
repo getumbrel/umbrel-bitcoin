@@ -47,13 +47,11 @@ const chartConfig = {
 
 export default function RewardsChart() {
 	return (
-		<Card className='bg-gradient-to-b from-[#0F0F0FD9] to-[#080808] backdrop-blur-2xl border-none mb-6 py-4 rounded-3xl'>
+		<Card className='bg-card-gradient backdrop-blur-2xl border-none mb-6 py-4 rounded-3xl'>
 			<GradientBorderFromTop />
 			<CardHeader>
 				<div className='flex justify-between items-center'>
-					<CardTitle className='text-white text-[20px] font-[400]' style={{fontFamily: 'Outfit Variable'}}>
-						Block Rewards
-					</CardTitle>
+					<CardTitle className='font-outfit text-white text-[20px] font-[400]'>Block Rewards</CardTitle>
 					{/* <CardDescription>Last 2016 Blocks</CardDescription> */}
 					{/* custom legend */}
 					<div className='text-white/60'>I am a legend</div>

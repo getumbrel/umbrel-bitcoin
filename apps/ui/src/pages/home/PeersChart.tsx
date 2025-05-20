@@ -25,10 +25,7 @@ export default function PeersChart() {
 	return (
 		<Card className='flex flex-col bg-transparent border-none p-0'>
 			<CardHeader className='md:items-center md:justify-center p-0 -mb-4 md:mb-0'>
-				<CardTitle
-					className=' text-[16px] font-[500] bg-[linear-gradient(180deg,#ffffff_0%,rgba(255,255,255,0.64)_100%)] bg-clip-text text-transparent'
-					style={{fontFamily: 'Outfit Variable'}}
-				>
+				<CardTitle className='font-outfit text-[16px] font-[500] bg-[linear-gradient(180deg,#ffffff_0%,rgba(255,255,255,0.64)_100%)] bg-clip-text text-transparent'>
 					Peers
 				</CardTitle>
 			</CardHeader>
@@ -56,12 +53,7 @@ export default function PeersChart() {
 									if (viewBox && 'cx' in viewBox && 'cy' in viewBox) {
 										return (
 											<text x={viewBox.cx} y={viewBox.cy} textAnchor='middle' dominantBaseline='middle'>
-												<tspan
-													x={viewBox.cx}
-													y={viewBox.cy}
-													className='fill-white text-[16px] font-[400]'
-													style={{fontFamily: 'Outfit Variable'}}
-												>
+												<tspan x={viewBox.cx} y={viewBox.cy} className='font-outfit fill-white text-[16px] font-[400]'>
 													{totalVisitors.toLocaleString()}
 												</tspan>
 											</text>

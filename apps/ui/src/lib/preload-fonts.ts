@@ -1,5 +1,5 @@
-// Pre-load the Outfit font so the very first paint uses it,
-// eliminating the brief “fallback-font → Outfit” re-flow on page load.
+// Pre-load fonts so the very first paint uses them,
+// eliminating the brief fallback-font → actual-font re-flow on page load.
 
 import outfit from '@fontsource-variable/outfit/files/outfit-latin-wght-normal.woff2?url'
 import dmSans from '@fontsource-variable/dm-sans/files/dm-sans-latin-wght-normal.woff2?url'

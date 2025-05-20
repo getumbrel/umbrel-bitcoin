@@ -170,7 +170,7 @@ export default function PeersTable() {
 	})
 
 	return (
-		<div className='w-full bg-gradient-to-b from-[#0F0F0FD9] to-[#080808] backdrop-blur-2xl border-[0.5px] border-white/6 ring-white/6 mb-6 py-4 rounded-3xl'>
+		<div className='w-full bg-card-gradient backdrop-blur-2xl border-[0.5px] border-white/6 ring-white/6 mb-6 py-4 rounded-3xl'>
 			<div className='flex items-center py-4'>
 				<Input
 					placeholder='Filter emails...'

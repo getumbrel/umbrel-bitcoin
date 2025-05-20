@@ -8,7 +8,7 @@ import {GradientBorderTopBottom, GradientBorderFromCorners} from '@/components/s
 export default function StatusPanel() {
 	return (
 		<>
-			<Card className='bg-gradient-to-b from-[#0F0F0FD9] to-[#080808] backdrop-blur-2xl border-none mb-6 py-4 rounded-3xl'>
+			<Card className='bg-card-gradient backdrop-blur-2xl border-none mb-6 py-4 rounded-3xl'>
 				<GradientBorderTopBottom depth='7%' />
 				<CardContent className='flex flex-col md:flex-row px-4 items-center'>
 					{/* Globe + statuses */}
@@ -28,9 +28,7 @@ export default function StatusPanel() {
 
 						{/* TODO: add pre-sync + header statuses */}
 						<h2 className='absolute top-[80%] left-[5%] text-[30px]'>
-							<span className='bg-gradient-to-b from-white to-[rgba(255,255,255,0.64)] bg-clip-text text-transparent font-[500]'>
-								Synchronized{' '}
-							</span>
+							<span className='bg-text-gradient bg-clip-text text-transparent font-[500]'>Synchronized </span>
 							<span className='text-white/60'>100%</span>
 						</h2>
 					</div>
