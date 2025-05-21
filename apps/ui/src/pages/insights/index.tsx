@@ -1,3 +1,4 @@
+// TODO: make sure we handle pruned nodes properly here
 import RewardsChart from './RewardsChart'
 import PeersTable from './PeersTable'
 
