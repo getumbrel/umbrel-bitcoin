@@ -1,5 +1,5 @@
 import type WebSocket from 'ws'
-import type {BlocksResponse, RawBlock, BlockSummary} from '@umbrel-bitcoin/shared-types'
+import type {BlocksResponse, RawBlock, BlockSummary, BlockReward} from '@umbrel-bitcoin/shared-types'
 
 import {rpcClient} from '../bitcoind/rpc-client.js'
 import {blockStream} from './zmq-subscriber.js'
@@ -45,6 +45,33 @@ export async function list(limit?: string): Promise<BlocksResponse> {
 	}))
 
 	return {blocks}
+}
+
+type BlockStatsLite = {
+	height: number
+	subsidy: number // sat
+	totalfee: number // sat
+}
+
+export async function rewards(limit = 144): Promise<BlockReward[]> {
+	// Get current tip height
+	const tip = await rpcClient.command<number>('getblockcount')
+
+	// build a batch of getblockstats calls (one per height)
+	const calls = Array.from({length: limit}, (_, i) => ({
+		method: 'getblockstats',
+		parameters: [tip - i],
+	}))
+
+	const stats = await rpcClient.command(calls)
+	console.log(stats)
+
+	// convert sat → BTC and return in oldest->newest order
+	return stats.reverse().map((s: BlockStatsLite) => ({
+		height: s.height,
+		subsidyBTC: s.subsidy / 1e8,
+		feesBTC: s.totalfee / 1e8,
+	}))
 }
 
 // Attach a websocket and stream new block summaries

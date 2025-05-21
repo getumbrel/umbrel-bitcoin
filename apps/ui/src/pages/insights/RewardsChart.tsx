@@ -1,3 +1,4 @@
+// TODO: finalize this and then make the chart reusable
 import {Bar, BarChart, CartesianGrid, XAxis, YAxis} from 'recharts'
 
 import {CardContent, CardFooter, CardHeader, CardTitle} from '@/components/ui/card'
@@ -5,46 +6,29 @@ import {ChartContainer, ChartTooltip, ChartTooltipContent} from '@/components/ui
 import InsightCard from './InsightsCard'
 
 import type {ChartConfig} from '@/components/ui/chart'
-
-const chartData = [
-	{block: '1', subsidy: 3.125, fees: 0.02},
-	{block: '2', subsidy: 3.125, fees: 0.025},
-	{block: '3', subsidy: 3.125, fees: 0.05},
-	{block: '4', subsidy: 3.125, fees: 0.023},
-	{block: '5', subsidy: 3.125, fees: 0.129},
-	{block: '6', subsidy: 3.125, fees: 0.08},
-	{block: '7', subsidy: 3.125, fees: 0.02},
-	{block: '8', subsidy: 3.125, fees: 0.025},
-	{block: '9', subsidy: 3.125, fees: 0.05},
-	{block: '10', subsidy: 3.125, fees: 0.023},
-	{block: '11', subsidy: 3.125, fees: 0.129},
-	{block: '12', subsidy: 3.125, fees: 0.08},
-	{block: '13', subsidy: 3.125, fees: 0.02},
-	{block: '14', subsidy: 3.125, fees: 0.025},
-	{block: '15', subsidy: 3.125, fees: 0.05},
-	{block: '16', subsidy: 3.125, fees: 0.023},
-	{block: '17', subsidy: 3.125, fees: 0.129},
-	{block: '18', subsidy: 3.125, fees: 0.08},
-	{block: '19', subsidy: 3.125, fees: 0.02},
-	{block: '20', subsidy: 3.125, fees: 0.025},
-	{block: '21', subsidy: 3.125, fees: 0.05},
-	{block: '22', subsidy: 3.125, fees: 0.023},
-	{block: '23', subsidy: 3.125, fees: 0.129},
-	{block: '24', subsidy: 3.125, fees: 0.08},
-]
+import {useBlockRewards} from '@/hooks/useBlockRewards'
 
 const chartConfig = {
-	subsidy: {
-		label: 'Subsidy',
-		color: '#FF7E05',
-	},
 	fees: {
 		label: 'Fees',
+		color: '#FF7E05',
+	},
+	subsidy: {
+		label: 'Subsidy',
 		color: 'hsla(29, 100%, 51%, 0.44)',
 	},
 } satisfies ChartConfig
 
 export default function RewardsChart() {
+	const {data: rewards = [], isLoading} = useBlockRewards(144)
+	console.log(rewards)
+
+	const chartData = rewards.map((r) => ({
+		block: r.height.toString(),
+		subsidy: r.subsidyBTC,
+		fees: r.feesBTC,
+	}))
+
 	return (
 		<InsightCard>
 			<CardHeader>
@@ -52,13 +36,14 @@ export default function RewardsChart() {
 					<CardTitle className='font-outfit text-white text-[20px] font-[400] pt-2'>Block Rewards</CardTitle>
 					{/* <CardDescription>Last 2016 Blocks</CardDescription> */}
 					{/* Legend */}
+					{/* Default Legend is too cumbersome to customize, so we're using a custom legend */}
 					<div className='flex items-center gap-4 text-white/60 text-[12px]'>
 						<div className='flex items-center gap-2'>
-							<div className='h-2 w-2 rounded-[2px] bg-[#FF7E05]' />
+							<div className='h-2 w-2 rounded-[2px] bg-[hsla(29,100%,51%,0.44)]' />
 							<span>Subsidy</span>
 						</div>
 						<div className='flex items-center gap-2'>
-							<div className='h-2 w-2 rounded-[2px] bg-[hsla(29,100%,51%,0.44)]' />
+							<div className='h-2 w-2 rounded-[2px] bg-[#FF7E05]' />
 							<span>Fees</span>
 						</div>
 					</div>
@@ -79,7 +64,6 @@ export default function RewardsChart() {
 							tickLine={false}
 							tickMargin={5}
 							axisLine={false}
-							tickFormatter={(value) => value.slice(0, 3)}
 							label={{value: 'Block', position: 'bottom', offset: 0}}
 						/>
 						<YAxis
@@ -102,7 +86,7 @@ export default function RewardsChart() {
 								<ChartTooltipContent
 									className='bg-black/90 border-white/10 text-white [&_span]:text-white/60'
 									formatter={(value, name) => {
-										const color = name === 'subsidy' ? '#FF7E05' : 'hsla(29, 100%, 51%, 0.44)'
+										const color = name === 'subsidy' ? 'hsla(29, 100%, 51%, 0.44)' : '#FF7E05'
 										return (
 											<div className='flex items-center gap-2'>
 												<div className='h-2 w-2 rounded-[2px]' style={{backgroundColor: color}} />
@@ -116,7 +100,6 @@ export default function RewardsChart() {
 								/>
 							}
 						/>
-						{/* <ChartLegend  content={<ChartLegendContent />} /> */}
 						<Bar
 							dataKey='subsidy'
 							stackId='a'
@@ -129,7 +112,7 @@ export default function RewardsChart() {
 						<Bar
 							dataKey='fees'
 							stackId='a'
-							fill='var(--color-subsidy)'
+							fill='#FF7E05'
 							radius={[4, 4, 0, 0]}
 							animationDuration={400}
 							animationBegin={400}

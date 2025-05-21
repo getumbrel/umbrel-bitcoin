@@ -88,3 +88,9 @@ export type SyncStatus = {
 	blockHeight: number
 	validatedHeaderHeight: number
 }
+
+export type BlockReward = {
+	height: number
+	subsidyBTC: number
+	feesBTC: number
+}

@@ -24,6 +24,8 @@ export default fp(async (app: FastifyInstance) => {
 	app.get(`${rpcBase}/peers`, peers.peerInfo)
 	app.get(`${rpcBase}/peers/summary`, peers.peerSummary)
 	app.get<{Querystring: {limit?: string}}>(`${rpcBase}/blocks`, (req) => blocks.list(req.query.limit))
+	// TODO: fix req.query.limit type
+	app.get<{Querystring: {limit?: string}}>(`${rpcBase}/rewards`, (req) => blocks.rewards(req.query.limit))
 
 	// websocket routes
 	// Note: Fastify-Websocket plugin must already be registered via app.register(fastifyWs)
