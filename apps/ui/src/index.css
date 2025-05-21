@@ -131,26 +131,40 @@ body {
 	}
 }
 
-/* ─── Placeholder for real background ───────────────────────────── */
-@keyframes blob-move {
-	0%,
-	100% {
-		transform: translate(-40%, -30%) scale(1);
+@layer utilities {
+	@keyframes fade-in {
+		from {
+			opacity: 0;
+		}
+		to {
+			opacity: 1;
+		}
 	}
-	33% {
-		transform: translate(50%, -20%) scale(1.2);
-	}
-	66% {
-		transform: translate(10%, 40%) scale(0.9);
-	}
-}
 
-@keyframes blob-shape {
-	0%,
-	100% {
-		border-radius: 42% 58% 46% 54% / 60% 45% 55% 40%;
+	@keyframes shimmer-band {
+		0% {
+			background-position: 200% 0;
+		}
+		100% {
+			background-position: -200% 0;
+		}
 	}
-	50% {
-		border-radius: 60% 40% 58% 42% / 40% 55% 45% 60%;
+
+	.animate-shimmer {
+		background-image: linear-gradient(
+			90deg,
+			transparent 0%,
+			rgba(255, 255, 255, 0) 40%,
+			rgba(255, 255, 255, 0.9) 50%,
+			rgba(255, 255, 255, 0) 60%,
+			transparent 100%
+		);
+		background-size: 200% 100%;
+		background-repeat: no-repeat;
+		/* background-position: -200% 0; */
+		-webkit-background-clip: text;
+		background-clip: text; /* gradient only on glyphs */
+		color: transparent; /* overlay itself invisible */
+		animation: shimmer-band 3s linear infinite;
 	}
 }

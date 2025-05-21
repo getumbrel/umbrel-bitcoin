@@ -3,9 +3,9 @@ import PeersTable from './PeersTable'
 
 export default function InsightsPage() {
 	return (
-		<>
-			<RewardsChart />
+		<div className='flex flex-col gap-10'>
 			<PeersTable />
-		</>
+			<RewardsChart />
+		</div>
 	)
 }

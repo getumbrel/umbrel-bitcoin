@@ -1,12 +1,22 @@
-// TODO: Placeholder for status dot component
-// create dynamic status
-export default function StatusDot() {
+import {clsx} from 'clsx'
+
+export default function StatusDot({running}: {running: boolean}) {
 	return (
-		<span className='relative inline-flex items-center' role='status' aria-label='running'>
+		<span className='relative inline-flex items-center' role='status' aria-label={running ? 'running' : 'stopped'}>
 			{/* halo */}
-			<span className='absolute inset-0 rounded-full bg-[#0BC39E] blur-[2px]' />
+			<span
+				className={clsx(
+					'absolute inset-0 rounded-full blur-[2px] transition-colors duration-200',
+					running ? 'bg-[#0BC39E]' : 'bg-[#e93232]',
+				)}
+			/>
 			{/* solid core */}
-			<span className='relative inline-block h-2 w-2 rounded-full bg-[#0BC39E] shadow' />
+			<span
+				className={clsx(
+					'relative inline-block h-2 w-2 rounded-full shadow transition-colors duration-200',
+					running ? 'bg-[#0BC39E]' : 'bg-[#e93232]',
+				)}
+			/>
 		</span>
 	)
 }

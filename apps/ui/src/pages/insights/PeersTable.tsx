@@ -84,7 +84,7 @@ export const columns: ColumnDef<PeerRow>[] = [
 				</div>
 			)
 		},
-		cell: ({row}) => <div className='lowercase'>{row.getValue('network')}</div>,
+		cell: ({row}) => <div className='capitalize'>{row.getValue('network')}</div>,
 	},
 	{
 		// whether we relay txns
@@ -107,7 +107,7 @@ export const columns: ColumnDef<PeerRow>[] = [
 		// inbound
 		accessorKey: 'inbound',
 		header: () => <div>In/Out</div>,
-		cell: ({row}) => <div>{row.getValue('inbound') ? 'Inbound' : 'Outbound'}</div>,
+		cell: ({row}) => <div className='capitalize'>{row.getValue('inbound') ? 'inbound' : 'outbound'}</div>,
 	},
 	{
 		// connection time
@@ -227,7 +227,7 @@ export default function PeersTable() {
 				{/* TODO: add sexy scrollbar to FadeScrollArea */}
 				{/* TODO: sticky header */}
 				<FadeScrollArea
-					className='h-[400px]
+					className='h-[350px]
              [--fade-top:hsla(0,0%,6%,1)]
              [--fade-bottom:hsla(0,0%,3%,1)]'
 				>

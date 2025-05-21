@@ -37,6 +37,7 @@ export class BitcoindManager {
 	private readonly datadir: string
 	private readonly extraArgs: string[]
 	private readonly versionInfo: {implementation: string; version: string}
+	private startedAt: number | null = null
 	private lastError: Error | null = null
 
 	constructor({binary = BITCOIND_BIN, datadir = BITCOIN_DIR, extraArgs = []}: BitcoindManagerOptions = {}) {
@@ -45,6 +46,7 @@ export class BitcoindManager {
 		this.extraArgs = [
 			'-regtest',
 			// '-signet',
+			// '-testnet',
 			'-server',
 			'-rpcuser=bitcoin',
 			'-rpcpassword=secret',
@@ -88,6 +90,8 @@ export class BitcoindManager {
 		// return early if already running
 		if (this.child) return
 
+		this.startedAt = Date.now()
+
 		// TODO: chain will be taken from conf. Other flags will need to be passed in.
 		this.child = spawn(this.bin, [`-datadir=${this.datadir}`, ...this.extraArgs], {
 			stdio: ['pipe', 'pipe', 'pipe'],
@@ -116,6 +120,7 @@ export class BitcoindManager {
 		this.child.kill('SIGTERM')
 		await new Promise((res) => this.child?.once('exit', res))
 		this.child = null
+		this.startedAt = null
 	}
 
 	// Restart bitcoind
@@ -126,6 +131,6 @@ export class BitcoindManager {
 
 	// Child process status
 	status() {
-		return {running: !!this.child, pid: this.child?.pid ?? null, error: this.lastError}
+		return {running: !!this.child, startedAt: this.startedAt, error: this.lastError, pid: this.child?.pid ?? null}
 	}
 }

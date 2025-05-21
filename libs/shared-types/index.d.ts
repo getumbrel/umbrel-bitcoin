@@ -7,9 +7,10 @@ export type BitcoindVersion = {
 
 export type BitcoindStatus = {
 	running: boolean
+	startedAt: number | null
+	error: Error | null
 	// TODO: we probably don't want to pid to the UI, but nice to have in dev right now
 	pid: number | null
-	error: Error | null
 }
 
 type BitcoindLifecyclerResult = 'started' | 'stopped' | 'no_op'
@@ -79,4 +80,11 @@ export type SummaryResponse = {
 export type StatusResponse = {
 	running: boolean
 	pid: number
+}
+
+export type SyncStatus = {
+	syncProgress: number
+	isInitialBlockDownload: boolean
+	blockHeight: number
+	validatedHeaderHeight: number
 }
