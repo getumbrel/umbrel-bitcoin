@@ -53,14 +53,15 @@ export default function HomePage() {
 			<Card className='bg-card-gradient backdrop-blur-2xl border-none mb-6 py-4 rounded-3xl'>
 				<GradientBorderTopBottom depth='7%' />
 				<CardContent className='flex flex-col md:flex-row px-4 items-center'>
-					{/* Globe + statuses */}
+					{/* Peers Globe + statuses */}
 					<div className='relative w-full flex-none md:flex-1 h-64 md:h-[375px] rounded-2xl bg-neutral-900/20 border-white/10 border-[0.5px] overflow-hidden'>
 						<div className='absolute top-[-50%] left-[-40%] w-[500%] h-[500%] rounded-full bg-black pointer-events-none' />
 						<GradientBorderFromCorners />
 
 						<Globe />
 
-						{/* TODO: name this component */}
+						{/* Running status */}
+						{/* TODO: don't quickly flash not running to running on refresh */}
 						<AnimatePresence mode='wait'>
 							<motion.h3
 								// the key prop tells Motion when state flips
@@ -84,8 +85,9 @@ export default function HomePage() {
 							</motion.h3>
 						</AnimatePresence>
 
-						{/* We don't show if not running or isLoading */}
+						{/* Sync status */}
 						<AnimatePresence mode='wait'>
+							{/* We don't show if not running or isLoading */}
 							{running && !isLoading && (
 								<motion.h2
 									key='sync-banner'
