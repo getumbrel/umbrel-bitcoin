@@ -209,9 +209,9 @@ export default function PeersTable() {
 	// TODO: allow filtering
 	// TODO: allow sorting
 	// TODO: allow blocking?
-	// TODO: scroll
 	// TODO: responsiveness
 	// TODO: choose min content height so filtering doesn't shrink content
+	// TODO: sticky header
 	return (
 		<InsightCard>
 			<CardHeader>
@@ -224,8 +224,6 @@ export default function PeersTable() {
 					onChange={(event) => setGlobalFilter(event.target.value)}
 					className='max-w-xs mb-4 border-none bg-[#272727] shadow-[inset_0_-1px_1px_0_rgba(255,255,255,0.2),_inset_0_1px_1px_0_rgba(0,0,0,0.36)] text-white placeholder:text-white/50 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-white/10'
 				></Input>
-				{/* TODO: add sexy scrollbar to FadeScrollArea */}
-				{/* TODO: sticky header */}
 				<FadeScrollArea
 					className='h-[350px]
              [--fade-top:hsla(0,0%,6%,1)]
@@ -235,7 +233,10 @@ export default function PeersTable() {
 						<Table>
 							<TableHeader>
 								{table.getHeaderGroups().map((headerGroup) => (
-									<TableRow className='border-b border-[#252525] hover:bg-transparent' key={headerGroup.id}>
+									<TableRow
+										className='border-b border-[#252525] bg-[#0B0B0B] hover:bg-[#0B0B0B] shadow-[inset_0_4px_4px_0_rgba(0,0,0,0.5)]'
+										key={headerGroup.id}
+									>
 										{headerGroup.headers.map((header) => {
 											return (
 												<TableHead className='text-[#757575] text-[13px] font-[400]' key={header.id}>
