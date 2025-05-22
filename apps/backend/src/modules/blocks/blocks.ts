@@ -4,16 +4,6 @@ import type {BlocksResponse, RawBlock, BlockSummary, BlockReward} from '@umbrel-
 import {rpcClient} from '../bitcoind/rpc-client.js'
 import {blockStream} from './zmq-subscriber.js'
 
-export async function syncStatus() {
-	const info = await rpcClient.command('getblockchaininfo')
-	return {
-		syncProgress: info.verificationprogress,
-		isInitialBlockDownload: info.initialblockdownload,
-		blockHeight: info.blocks,
-		validatedHeaderHeight: info.headers,
-	}
-}
-
 // Get the latest N block summaries
 export async function list(limit?: string): Promise<BlocksResponse> {
 	// default to 20 blocks

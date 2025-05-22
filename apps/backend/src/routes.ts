@@ -4,7 +4,7 @@ import type {FastifyInstance} from 'fastify'
 import * as bitcoind from './modules/bitcoind/bitcoind.js'
 import * as peers from './modules/peers/peers.js'
 import * as blocks from './modules/blocks/blocks.js'
-
+import * as sync from './modules/sync/sync.js'
 // Fastify turns any uncaught error inside these handlers
 // into a 500 Internal Server Error response via its default error handler.
 export default fp(async (app: FastifyInstance) => {
@@ -20,7 +20,7 @@ export default fp(async (app: FastifyInstance) => {
 
 	// rpc routes
 	const rpcBase = `${BASE}/rpc`
-	app.get(`${rpcBase}/sync`, blocks.syncStatus)
+	app.get(`${rpcBase}/sync`, sync.syncStatus)
 	app.get(`${rpcBase}/peers`, peers.peerInfo)
 	app.get(`${rpcBase}/peers/summary`, peers.peerSummary)
 	app.get<{Querystring: {limit?: string}}>(`${rpcBase}/blocks`, (req) => blocks.list(req.query.limit))
