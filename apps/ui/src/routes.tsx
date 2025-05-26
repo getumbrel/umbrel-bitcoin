@@ -9,21 +9,10 @@ import SettingsPage from './pages/settings'
 // Header and floating Dock are shared across all pages
 export const router = createBrowserRouter(
 	createRoutesFromElements(
-		<>
-			{/* Home Page */}
-			<Route element={<Layout />}>
-				<Route path='/' index element={<HomePage />} />
-			</Route>
-
-			{/* Insights Page */}
-			<Route element={<Layout />}>
-				<Route path='insights' element={<InsightsPage />} />
-			</Route>
-
-			{/* Settings Page */}
-			<Route element={<Layout />}>
-				<Route path='settings' element={<SettingsPage />} />
-			</Route>
-		</>,
+		<Route element={<Layout />}>
+			<Route index element={<HomePage />} />
+			<Route path='insights' element={<InsightsPage />} />
+			<Route path='settings' element={<SettingsPage />} />
+		</Route>,
 	),
 )

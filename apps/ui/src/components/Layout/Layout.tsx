@@ -4,8 +4,14 @@ import Header from './Header'
 import Dock from './Dock'
 import Background from './Background'
 
+import {usePrefetchInsights} from '@/hooks/usePrefetchInsights'
+
 // React Router injects the routed page in <Outlet/>.
 export function Layout() {
+	// Prefetch data for the insights page on first mount
+	// Fires after the first paint, so it never delays a page's render or its own fetches
+	usePrefetchInsights()
+
 	return (
 		<>
 			{/* Moving gradient background. This is fixed to the full-viewport and never scrolls */}

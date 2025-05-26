@@ -1,4 +1,4 @@
-import {useId} from 'react'
+import {useDeferredValue, useId} from 'react'
 import {BarChart, Bar, CartesianGrid, XAxis, YAxis} from 'recharts'
 import {formatDistanceStrict} from 'date-fns'
 
@@ -31,6 +31,9 @@ export default function RewardsChart() {
 		feesBTC: feesSat / 1e8,
 	}))
 
+	// Defer the data to avoid blocking the main thread and allow the chart to render immediately and the dock tab to animate smoothly
+	const deferredData = useDeferredValue(chartData)
+
 	const legend = (
 		<div className='flex items-center gap-4 text-white/60 text-[12px]'>
 			{Object.entries(SERIES).map(([k, {label, color}]) => (
@@ -45,7 +48,7 @@ export default function RewardsChart() {
 	return (
 		<ChartCard title='Block Rewards' legend={legend}>
 			<ChartContainer config={SERIES}>
-				<BarChart data={chartData} margin={DEFAULT_CHART_MARGIN} barCategoryGap={1} barSize={6}>
+				<BarChart data={deferredData} margin={DEFAULT_CHART_MARGIN} barCategoryGap={1} barSize={6}>
 					{/* Gradient definitions */}
 					<defs>
 						<linearGradient id={fillId} x1='0' y1='0' x2='0' y2='1'>

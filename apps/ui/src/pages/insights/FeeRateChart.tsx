@@ -1,4 +1,4 @@
-import {useId} from 'react'
+import {useDeferredValue, useId} from 'react'
 import {AreaChart, CartesianGrid, XAxis, YAxis, Area} from 'recharts'
 import {formatDistanceStrict} from 'date-fns'
 
@@ -32,10 +32,13 @@ export default function FeeRateChart() {
 		p90: p.p90,
 	}))
 
+	// Defer the data to avoid blocking the main thread and allow the chart to render immediately and the dock tab to animate smoothly
+	const deferredData = useDeferredValue(chartData)
+
 	return (
 		<ChartCard title='Fee Rates'>
 			<ChartContainer config={SERIES}>
-				<AreaChart data={chartData} margin={DEFAULT_CHART_MARGIN}>
+				<AreaChart data={deferredData} margin={DEFAULT_CHART_MARGIN}>
 					{/* Gradient definitions */}
 					<defs>
 						{/* Gradient under the curve */}
