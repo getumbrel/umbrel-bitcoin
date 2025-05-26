@@ -2,7 +2,7 @@ import {rpcClient} from '../bitcoind/rpc-client.js'
 
 import type {PeerInfo, PeerSummary} from '@umbrel-bitcoin/shared-types'
 
-// We cache the peer info for so that multiple pages on the UI can share the same data when toggling quickly between views
+// We cache the peer info so that multiple pages on the UI can share the same data when toggling quickly between views
 let cache: {data: PeerInfo[]; expiry: number} | null = null
 
 async function getPeerInfo(): Promise<PeerInfo[]> {

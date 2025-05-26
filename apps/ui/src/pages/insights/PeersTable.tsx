@@ -1,6 +1,5 @@
 // TODO: Organize and clean up this file
-
-import * as React from 'react'
+import {useMemo, useState} from 'react'
 
 import {
 	flexRender,
@@ -20,13 +19,18 @@ import {DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger
 import {Input} from '@/components/ui/input'
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from '@/components/ui/table'
 import InsightCard from './InsightsCard'
-import {CardContent, CardFooter, CardHeader} from '@/components/ui/card'
+import {CardContent, CardHeader} from '@/components/ui/card'
 import {CardTitle} from '@/components/ui/card'
 import {usePeerInfo} from '@/hooks/usePeers'
 import {timeAgoShort} from '@/lib/time-ago-short'
 
 import CheckmarkIcon from '@/assets/checkmark.svg?react'
 import {FadeScrollArea} from '@/components/shared/FadeScrollArea'
+
+function truncateMiddle(str: string, keep = 10) {
+	if (str.length <= keep * 2 + 1) return str
+	return `${str.slice(0, keep)}…${str.slice(-keep)}`
+}
 
 type PeerRow = {
 	id: string
@@ -58,7 +62,7 @@ export const columns: ColumnDef<PeerRow>[] = [
 			return (
 				<div className='flex flex-col'>
 					<div>{info.subversion}</div>
-					<div className='text-[11px] text-muted-foreground'>{info.address}</div>
+					<div className='text-[11px] text-muted-foreground'>{truncateMiddle(info.address)}</div>
 				</div>
 			)
 		},
@@ -149,15 +153,15 @@ export const columns: ColumnDef<PeerRow>[] = [
 ]
 
 export default function PeersTable() {
-	const [sorting, setSorting] = React.useState<SortingState>([])
-	const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
-	const [rowSelection, setRowSelection] = React.useState({})
-	const [globalFilter, setGlobalFilter] = React.useState('')
+	const [sorting, setSorting] = useState<SortingState>([])
+	const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
+	const [rowSelection, setRowSelection] = useState({})
+	const [globalFilter, setGlobalFilter] = useState('')
 
 	const {data: peers, isLoading} = usePeerInfo()
 
 	/* convert Core objects to the row shape the table expects */
-	const rows: PeerRow[] = React.useMemo(() => {
+	const rows: PeerRow[] = useMemo(() => {
 		if (!peers) return []
 
 		return peers.map((p) => ({
@@ -274,7 +278,6 @@ export default function PeersTable() {
 					</div>
 				</FadeScrollArea>
 			</CardContent>
-			<CardFooter>{/* Should we put anything here? */}</CardFooter>
 		</InsightCard>
 	)
 }

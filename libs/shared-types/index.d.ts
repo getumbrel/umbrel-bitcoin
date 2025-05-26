@@ -91,6 +91,28 @@ export type SyncStatus = {
 
 export type BlockReward = {
 	height: number
-	subsidyBTC: number
-	feesBTC: number
+	subsidySat: number
+	feesSat: number
+	time: number
+}
+
+export type BlockSizeSample = {
+	height: number
+	sizeBytes: number
+	time: number
+}
+
+export type FeeRatePoint = {
+	height: number
+	p10: number // 10th-percentile
+	p50: number // 50th-percentile
+	p90: number // 90th-percentile
+	time: number
+}
+
+export type Stats = {
+	peers: number // total connections
+	mempoolBytes: number // Total memory usage for the mempool in bytes
+	chainBytes: number // the estimated size of the block and undo files on disk in bytes
+	uptimeSec: number // seconds since bitcoind started (0 if down)
 }
