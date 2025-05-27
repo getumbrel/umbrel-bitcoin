@@ -12,6 +12,7 @@ import {motion} from 'framer-motion'
 import {AnimatePresence} from 'framer-motion'
 import {useSyncStatus} from '@/hooks/useSyncStatus'
 import {calcSyncPercent, syncStage} from '@/lib/sync-progress'
+import BlockCubes from './BlockCubes'
 
 export default function HomePage() {
 	const {data: status, isError} = useBitcoindStatus()
@@ -50,7 +51,7 @@ export default function HomePage() {
 
 	return (
 		<>
-			<Card className='bg-card-gradient backdrop-blur-2xl border-none mb-6 py-4 rounded-3xl'>
+			<Card className='bg-card-gradient backdrop-blur-2xl border-none mb-4 py-4 rounded-3xl'>
 				<GradientBorderTopBottom depth='7%' />
 				<CardContent className='flex flex-col md:flex-row px-4 items-center'>
 					{/* Peers Globe + statuses */}
@@ -117,8 +118,9 @@ export default function HomePage() {
 			</Card>
 
 			{/* Blocks page — hidden on mobile */}
-			<div className='hidden md:block'>
-				<BlocksPage />
+			<div className='hidden md:block w-full'>
+				{/* <BlocksPage /> */}
+				<BlockCubes />
 			</div>
 		</>
 	)
