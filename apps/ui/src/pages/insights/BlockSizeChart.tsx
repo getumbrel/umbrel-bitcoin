@@ -7,7 +7,14 @@ import {ChartContainer, ChartTooltip} from '@/components/ui/chart'
 
 import {ChartCard, DEFAULT_CHART_MARGIN, DEFAULT_GRID_PROPS, makeXAxis, makeYAxis} from './ChartDefaults'
 import {useBlockSize} from '@/hooks/useBlockSize'
-import {sliceLast24h} from '@/lib/chartHelpers'
+import {
+	sliceLast24h,
+	findClosestDataPoint,
+	calculateHoursAgo,
+	bytesToMB,
+	hoursToMs,
+	mbToBytes,
+} from '@/lib/chartHelpers'
 
 const SERIES = {
 	sizeMB: {label: 'Size (MB)', color: '#FF7E05'},
@@ -20,22 +27,22 @@ export default function BlockSizeChart() {
 
 	// 144 blocks is exactly 24 hours at 1 block per 10 min.
 	// 200 blocks ensures we have 24 hours of data even at worst-case historical block times
-	const {data: raw = []} = useBlockSize(200)
+	const {data: raw = [], isLoading} = useBlockSize(200)
 
 	// slice the last 24 hours of data
 	const {slice, minBlock, maxBlock} = sliceLast24h(raw)
 
 	const chartData = slice.map((p) => ({
-		block: p.height.toString(),
-		hoursAgo: (Date.now() / 1000 - p.time) / 3600,
-		sizeMB: p.sizeBytes / 1_000_000,
+		block: p.height,
+		hoursAgo: calculateHoursAgo(p.time),
+		sizeMB: bytesToMB(p.sizeBytes),
 	}))
 
 	// Defer the data to avoid blocking the main thread and allow the chart to render immediately and the dock tab to animate smoothly
 	const deferredData = useDeferredValue(chartData)
 
 	return (
-		<ChartCard title='Block Size'>
+		<ChartCard title='Block Size' loading={isLoading}>
 			<ChartContainer config={SERIES}>
 				<AreaChart data={deferredData} margin={DEFAULT_CHART_MARGIN}>
 					{/* Gradient definitions */}
@@ -60,8 +67,8 @@ export default function BlockSizeChart() {
 						content={({active, payload}) => {
 							if (!active || !payload?.length) return null
 
-							const d = payload[0].payload // what you already map out
-							const ageMs = d.hoursAgo * 3_600_000 // convert h → ms once
+							const d = payload[0].payload
+							const ageMs = hoursToMs(d.hoursAgo)
 
 							return (
 								<div className='rounded-md border border-white/10 bg-black/90 p-2 text-[12px] text-white'>
@@ -84,7 +91,7 @@ export default function BlockSizeChart() {
 									<div className='flex items-center gap-2'>
 										<span className='text-white/60'>Size</span>
 										<span className='ml-auto font-mono tabular-nums text-[#FF7E05]'>
-											{prettyBytes(d.sizeMB * 1_000_000, {maximumFractionDigits: 2})}
+											{prettyBytes(mbToBytes(d.sizeMB), {maximumFractionDigits: 2})}
 										</span>
 									</div>
 								</div>
@@ -96,13 +103,35 @@ export default function BlockSizeChart() {
 					<CartesianGrid {...DEFAULT_GRID_PROPS} />
 
 					<YAxis {...makeYAxis('MB')} domain={[0, (dataMax: number) => Math.ceil(dataMax)]} />
+
+					{/* Main x-axis that we plot against (hours-ago) */}
 					<XAxis
-						{...makeXAxis(`Blocks ${minBlock?.toLocaleString()} – ${maxBlock?.toLocaleString()}`)}
+						// {...makeXAxis(`Blocks ${minBlock?.toLocaleString()} – ${maxBlock?.toLocaleString()}`)}
+						{...makeXAxis('')}
 						type='number'
 						dataKey='hoursAgo'
 						domain={[24, 0]}
 						ticks={[24, 18, 12, 6, 0]}
-						tickFormatter={(h) => `-${h} h`}
+						tickFormatter={(h) => (h === 0 ? 'now' : `-${h} h`)}
+						reversed
+					/>
+
+					{/* Secondary x-axis that shows block-height labels */}
+					<XAxis
+						orientation='bottom'
+						xAxisId='height'
+						type='number'
+						// reuses the same scale as the "hours-ago" axis
+						dataKey='hoursAgo'
+						// only show ticks at 24, 18, 12, and 6 hours ago, not 0
+						ticks={[24, 18, 12, 6]}
+						// map each tick's hours-ago value to the nearest datapoint's block-height for a pseudo-accurate label
+						tickFormatter={(h) => {
+							const closest = findClosestDataPoint(deferredData, h, (item) => item.hoursAgo)
+							return closest?.block ? Number(closest.block).toLocaleString() : ''
+						}}
+						axisLine={false}
+						tickLine={false}
 						reversed
 					/>
 

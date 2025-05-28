@@ -1,5 +1,4 @@
 import type {CartesianGridProps, XAxisProps, YAxisProps} from 'recharts'
-import type {ValueType, NameType} from 'recharts/types/component/DefaultTooltipContent'
 
 import {CardHeader, CardTitle, CardContent, CardFooter} from '@/components/ui/card'
 import InsightCard from './InsightsCard'
@@ -30,29 +29,37 @@ export const makeYAxis = (label: string): Partial<YAxisProps> => ({
 	},
 })
 
-export const makeTooltip =
-	(series: Record<string, {label: string; color: string}>) =>
-	(value: ValueType, name: NameType): React.ReactNode => {
-		// coerce back to string so we can index our map safely
-		const key = String(name)
-		const {label, color} = series[key]
-
-		return (
-			<div className='flex items-center gap-2'>
-				<div className='h-2 w-2 rounded-[2px]' style={{backgroundColor: color}} />
-				<span className='text-white/60'>{label}</span>
-				<span className='text-white font-mono font-medium tabular-nums ml-auto'>{Number(value).toLocaleString()}</span>
+// TODO: add better loading placeholder
+export function ChartLoadingPlaceholder({title}: {title: string}) {
+	return (
+		<div className='flex items-center justify-center w-full aspect-video text-white/40'>
+			<div className='flex flex-col items-center gap-3'>
+				<div className='flex gap-1'>
+					{[...Array(3)].map((_, i) => (
+						<div
+							key={i}
+							className='w-2 h-2 bg-white/20 rounded-full animate-pulse'
+							style={{
+								animationDelay: `${i * 0.2}s`,
+								animationDuration: '1.5s',
+							}}
+						/>
+					))}
+				</div>
+				<span className='text-sm'>{`Loading ${title.toLowerCase()} data...`}</span>
 			</div>
-		)
-	}
+		</div>
+	)
+}
 
-interface Props {
+interface ChartCardProps {
 	title: string
 	legend?: React.ReactNode
 	children: React.ReactNode
+	loading?: boolean
 }
 
-export function ChartCard({title, legend, children}: Props) {
+export function ChartCard({title, legend, children, loading}: ChartCardProps) {
 	return (
 		<InsightCard>
 			<CardHeader className='flex justify-between items-center'>
@@ -60,7 +67,7 @@ export function ChartCard({title, legend, children}: Props) {
 				{legend}
 			</CardHeader>
 
-			<CardContent>{children}</CardContent>
+			<CardContent>{loading ? <ChartLoadingPlaceholder title={title} /> : children}</CardContent>
 			<CardFooter />
 		</InsightCard>
 	)

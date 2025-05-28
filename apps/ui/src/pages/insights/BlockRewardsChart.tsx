@@ -6,7 +6,7 @@ import {ChartContainer, ChartTooltip} from '@/components/ui/chart'
 
 import {ChartCard, DEFAULT_GRID_PROPS, DEFAULT_CHART_MARGIN, makeXAxis, makeYAxis} from './ChartDefaults'
 import {useBlockRewards} from '@/hooks/useBlockRewards'
-import {sliceLast24h} from '@/lib/chartHelpers'
+import {sliceLast24h, calculateHoursAgo, hoursToMs, satsToBTC} from '@/lib/chartHelpers'
 
 const SERIES = {
 	subsidy: {label: 'Subsidy', color: 'hsla(29,100%,51%,0.44)'},
@@ -19,16 +19,16 @@ export default function RewardsChart() {
 
 	// 144 blocks is exactly 24 hours at 1 block per 10 min.
 	// 200 blocks ensures we have 24 hours of data even at worst-case historical block times
-	const {data: raw = []} = useBlockRewards(200)
+	const {data: raw = [], isLoading} = useBlockRewards(200)
 
 	// slice the last 24 hours of data
 	const {slice} = sliceLast24h(raw)
 
 	const chartData = slice.map(({height, subsidySat, feesSat, time}) => ({
-		block: height.toString(),
-		hoursAgo: (Date.now() / 1000 - time) / 3600,
-		subsidyBTC: subsidySat / 1e8,
-		feesBTC: feesSat / 1e8,
+		block: height,
+		hoursAgo: calculateHoursAgo(time),
+		subsidyBTC: satsToBTC(subsidySat),
+		feesBTC: satsToBTC(feesSat),
 	}))
 
 	// Defer the data to avoid blocking the main thread and allow the chart to render immediately and the dock tab to animate smoothly
@@ -46,7 +46,7 @@ export default function RewardsChart() {
 	)
 
 	return (
-		<ChartCard title='Block Rewards' legend={legend}>
+		<ChartCard title='Block Rewards' legend={legend} loading={isLoading}>
 			<ChartContainer config={SERIES}>
 				<BarChart data={deferredData} margin={DEFAULT_CHART_MARGIN} barCategoryGap={1} barSize={6}>
 					{/* Gradient definitions */}
@@ -64,8 +64,8 @@ export default function RewardsChart() {
 						content={({active, payload}) => {
 							if (!active || !payload?.length) return null
 
-							const d = payload[0].payload // what you already map out
-							const ageMs = d.hoursAgo * 3_600_000 // convert h → ms once
+							const d = payload[0].payload
+							const ageMs = hoursToMs(d.hoursAgo)
 
 							return (
 								<div className='rounded-md border border-white/10 bg-black/90 p-2 text-[12px] text-white'>
@@ -112,17 +112,18 @@ export default function RewardsChart() {
 						interval='preserveStartEnd'
 						minTickGap={60}
 						tickFormatter={(v) => Number(v).toLocaleString()}
+						reversed
 					/>
 
 					<Bar
 						dataKey='subsidyBTC'
 						stackId='a'
 						fill={`url(#${fillId})`}
-						radius={[0, 0, 4, 4]}
+						// radius={[0, 0, 4, 4]}
 						isAnimationActive={false}
 						barSize={10}
 					/>
-					<Bar dataKey='feesBTC' stackId='a' fill='#FF7E05' radius={[4, 4, 0, 0]} isAnimationActive={false} />
+					<Bar dataKey='feesBTC' stackId='a' fill='#FF7E05' radius={[2, 2, 0, 0]} isAnimationActive={false} />
 				</BarChart>
 			</ChartContainer>
 		</ChartCard>

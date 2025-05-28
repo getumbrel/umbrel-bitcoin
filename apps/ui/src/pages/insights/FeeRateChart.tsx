@@ -6,7 +6,7 @@ import {ChartContainer, ChartTooltip} from '@/components/ui/chart'
 
 import {ChartCard, DEFAULT_CHART_MARGIN, DEFAULT_GRID_PROPS, makeXAxis, makeYAxis} from './ChartDefaults'
 import {useFeeRates} from '@/hooks/useFeeRates'
-import {sliceLast24h} from '@/lib/chartHelpers'
+import {sliceLast24h, findClosestDataPoint, calculateHoursAgo, hoursToMs} from '@/lib/chartHelpers'
 
 const SERIES = {
 	p50: {label: '50th-percentile', color: 'hsl(29 100% 51%)'},
@@ -19,14 +19,14 @@ export default function FeeRateChart() {
 
 	// 144 blocks is exactly 24 hours at 1 block per 10 min.
 	// 200 blocks ensures we have 24 hours of data even at worst-case historical block times
-	const {data: raw = []} = useFeeRates(200)
+	const {data: raw = [], isLoading} = useFeeRates(200)
 
 	// slice the last 24 hours of data
 	const {slice, minBlock, maxBlock} = sliceLast24h(raw)
 
 	const chartData = slice.map((p) => ({
-		block: p.height.toString(),
-		hoursAgo: (Date.now() / 1000 - p.time) / 3600,
+		block: p.height,
+		hoursAgo: calculateHoursAgo(p.time),
 		p10: p.p10,
 		p50: p.p50,
 		p90: p.p90,
@@ -36,7 +36,7 @@ export default function FeeRateChart() {
 	const deferredData = useDeferredValue(chartData)
 
 	return (
-		<ChartCard title='Fee Rates'>
+		<ChartCard title='Fee Rates' loading={isLoading}>
 			<ChartContainer config={SERIES}>
 				<AreaChart data={deferredData} margin={DEFAULT_CHART_MARGIN}>
 					{/* Gradient definitions */}
@@ -62,8 +62,8 @@ export default function FeeRateChart() {
 						content={({active, payload}) => {
 							if (!active || !payload?.length) return null
 
-							const d = payload[0].payload // what you already map out
-							const ageMs = d.hoursAgo * 3_600_000 // convert h → ms once
+							const d = payload[0].payload
+							const ageMs = hoursToMs(d.hoursAgo)
 
 							return (
 								<div className='rounded-md border border-white/10 bg-black/90 p-2 text-[12px] text-white'>
@@ -93,16 +93,38 @@ export default function FeeRateChart() {
 					/>
 
 					{/* axes / grid / data */}
-					<CartesianGrid {...DEFAULT_GRID_PROPS} vertical={false} />
+					<CartesianGrid {...DEFAULT_GRID_PROPS} />
 
 					<YAxis {...makeYAxis('sat/vB')} domain={[0, (dataMax: number) => Math.ceil(dataMax) + 1]} />
+
+					{/* Main x-axis that we plot against (hours-ago) */}
 					<XAxis
-						{...makeXAxis(`Blocks ${minBlock?.toLocaleString()} – ${maxBlock?.toLocaleString()} (last 24h)`)}
+						// {...makeXAxis(`Blocks ${minBlock?.toLocaleString()} – ${maxBlock?.toLocaleString()} (last 24h)`)}
+						{...makeXAxis('')}
 						type='number'
 						dataKey='hoursAgo'
 						domain={[24, 0]}
 						ticks={[24, 18, 12, 6, 0]}
-						tickFormatter={(h) => `-${h} h`}
+						tickFormatter={(h) => (h === 0 ? 'now' : `-${h} h`)}
+						reversed
+					/>
+
+					{/* Secondary x-axis that shows block-height labels */}
+					<XAxis
+						orientation='bottom'
+						xAxisId='height'
+						type='number'
+						// reuses the same scale as the "hours-ago" axis
+						dataKey='hoursAgo'
+						// only show ticks at 24, 18, 12, and 6 hours ago, not 0
+						ticks={[24, 18, 12, 6]}
+						// map each tick's hours-ago value to the nearest datapoint's block-height for a pseudo-accurate label
+						tickFormatter={(h) => {
+							const closest = findClosestDataPoint(deferredData, h, (item) => item.hoursAgo)
+							return closest?.block ? Number(closest.block).toLocaleString() : ''
+						}}
+						axisLine={false}
+						tickLine={false}
 						reversed
 					/>
 
