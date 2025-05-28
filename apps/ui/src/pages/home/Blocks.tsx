@@ -176,9 +176,9 @@ function Cube({
 // The full scene with lighting
 function Scene() {
 	const globalMouse = useGlobalMouse()
-	// const {data: blocks = [], isLoading} = useBlocks() // blocks[0] is newest
-	const {data: blocks = []} = useBlocks() // blocks[0] is newest
-	const isLoading = false
+	const {data: blocks = [], isLoading} = useBlocks() // blocks[0] is newest
+	// const {data: blocks = []} = useBlocks()
+	// const isLoading = false
 
 	return (
 		<>
