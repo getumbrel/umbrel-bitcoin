@@ -1,11 +1,11 @@
-import {peerSummary} from '../peers/peers.js'
+import {peerCount} from '../peers/peers.js'
 import {rpcClient} from '../bitcoind/rpc-client.js'
 import {bitcoind} from '../bitcoind/boot.js'
 import type {Stats} from '@umbrel-bitcoin/shared-types'
 
 export async function summary(): Promise<Stats> {
 	const [peerSum, mempool, chainInfo] = await Promise.all([
-		peerSummary(), // already cached 5s in peers.ts
+		peerCount(), // already cached 5s in peers.ts
 		rpcClient.command('getmempoolinfo'),
 		rpcClient.command('getblockchaininfo'),
 	])

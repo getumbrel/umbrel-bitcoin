@@ -29,7 +29,8 @@ export default fp(async (app: FastifyInstance) => {
 	app.get(`${rpcBase}/stats`, stats.summary)
 
 	app.get(`${rpcBase}/peers/info`, peers.peerInfo)
-	app.get(`${rpcBase}/peers/summary`, peers.peerSummary)
+	app.get(`${rpcBase}/peers/count`, peers.peerCount)
+	app.get(`${rpcBase}/peers/locations`, peers.peerLocations)
 
 	app.get<{Querystring: {limit?: number}}>(`${rpcBase}/blocks`, (req) => blocks.list(req.query.limit))
 	app.get<{Querystring: {limit?: number}}>(`${rpcBase}/blocks/rewards`, (req) => blocks.rewards(req.query.limit))

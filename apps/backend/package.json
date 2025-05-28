@@ -9,6 +9,7 @@
 	},
 	"devDependencies": {
 		"@types/fs-extra": "^11.0.4",
+		"@types/geoip-lite": "^1.4.4",
 		"@types/node": "^22.15.17",
 		"@types/ws": "^8.18.1",
 		"tsx": "^4.19.4"
@@ -16,8 +17,10 @@
 	"dependencies": {
 		"@fastify/websocket": "^11.0.2",
 		"bitcoin-core": "^5.0.0",
+		"cities.json": "^1.1.50",
 		"fastify": "^5.3.2",
 		"fs-extra": "^11.3.0",
+		"geoip-lite": "^1.4.10",
 		"zeromq": "^6.4.2"
 	}
 }

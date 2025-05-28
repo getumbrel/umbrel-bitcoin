@@ -21,14 +21,9 @@ export type BitcoindLifecycleResponse = {
 	result: BitcoindLifecycleResult
 }
 
-type PeerDirectionCount = {
-	inbound: number
-	outbound: number
-}
-
-export type PeerSummary = {
+export type PeerCount = {
 	total: number
-	byNetwork: Record<string, PeerDirectionCount>
+	byNetwork: Record<string, {inbound: number; outbound: number}>
 }
 
 // Partial type of getpeerinfo
@@ -49,6 +44,12 @@ export type PeerInfo = {
 	inbound: boolean
 }
 
+export type PeerLocation = {
+	addr: string
+	network: string
+	location: [number, number]
+}
+
 // subset of getblock (verbosity 1) that we care about
 export type RawBlock = {
 	hash: string
@@ -56,6 +57,7 @@ export type RawBlock = {
 	time: number
 	nTx: number
 	size: number
+	weight: number
 }
 
 export type BlockSummary = {
@@ -64,6 +66,7 @@ export type BlockSummary = {
 	time: number
 	txs: number
 	size: number
+	weight: number
 }
 
 export type BlocksResponse = {

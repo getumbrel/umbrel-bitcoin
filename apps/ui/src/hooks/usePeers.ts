@@ -1,12 +1,12 @@
 import {useQuery} from '@tanstack/react-query'
 import {api} from '@/lib/api'
-import type {PeerInfo, PeerSummary} from '@umbrel-bitcoin/shared-types'
+import type {PeerInfo, PeerCount, PeerLocation} from '@umbrel-bitcoin/shared-types'
 
 // TODO: settle on cache times
-export function usePeerSummary() {
+export function usePeerCount() {
 	return useQuery({
-		queryKey: ['peers/summary'],
-		queryFn: () => api<PeerSummary>('/rpc/peers/summary'),
+		queryKey: ['peers/count'],
+		queryFn: () => api<PeerCount>('/rpc/peers/count'),
 		staleTime: 30_000,
 		refetchInterval: 5_000,
 	})
@@ -16,6 +16,15 @@ export function usePeerInfo() {
 	return useQuery({
 		queryKey: ['peers/info'],
 		queryFn: () => api<PeerInfo[]>('/rpc/peers/info'),
+		staleTime: 30_000,
+		refetchInterval: 5_000,
+	})
+}
+
+export function usePeerLocations() {
+	return useQuery({
+		queryKey: ['peers/locations'],
+		queryFn: () => api<PeerLocation[]>('/rpc/peers/locations'),
 		staleTime: 30_000,
 		refetchInterval: 5_000,
 	})
