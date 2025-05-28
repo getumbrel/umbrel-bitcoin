@@ -2,28 +2,17 @@ import {rpcClient} from '../bitcoind/rpc-client.js'
 
 import type {PeerInfo, PeerCount, PeerLocation} from '@umbrel-bitcoin/shared-types'
 import {ipToLatLng} from './ip-to-location.js'
+import {cache} from '../../lib/cache.js'
 
-// We cache the peer info so that multiple methods below can share the same data on quick request intervals
-// and also to limit the number of requests to bitcoind from multiple tabs being open or DDoS
-let cache: {data: PeerInfo[]; expiry: number} | null = null
+// Cached getpeerinfo response
+const getPeerInfoRPC = () => cache('peerinfo', 5_000, () => rpcClient.command<PeerInfo[]>('getpeerinfo'))
 
-async function getPeerInfoRPC(): Promise<PeerInfo[]> {
-	// return cached data if it exists and is not expired
-	if (cache && cache.expiry > Date.now()) return cache.data
-
-	// fetch new data from bitcoind if cache is older than 5 seconds
-	const data = await rpcClient.command<PeerInfo[]>('getpeerinfo')
-	cache = {data, expiry: Date.now() + 5_000}
-
-	return data
-}
-
-// Full getpeerinfo response
+// Raw bitcoind getpeerinfo response
 export async function peerInfo(): Promise<PeerInfo[]> {
 	return getPeerInfoRPC()
 }
 
-// Summary of number of peers by network and incoming/outgoing
+// Count peers by network + direction (incoming vs outgoing)
 export async function peerCount(): Promise<PeerCount> {
 	const peers = await getPeerInfoRPC()
 
@@ -40,7 +29,7 @@ export async function peerCount(): Promise<PeerCount> {
 	return summary
 }
 
-// Lat/long for each peer
+// Geolocated (or faked) latitude and longitude for each peer
 export async function peerLocations(): Promise<PeerLocation[]> {
 	const peers = await getPeerInfoRPC()
 	return peers.map((p) => {

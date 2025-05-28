@@ -66,7 +66,6 @@ export type BlockSummary = {
 	time: number
 	txs: number
 	size: number
-	weight: number
 }
 
 export type BlocksResponse = {

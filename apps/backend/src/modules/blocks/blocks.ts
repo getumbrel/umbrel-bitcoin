@@ -1,4 +1,9 @@
 import type WebSocket from 'ws'
+
+import {rpcClient} from '../bitcoind/rpc-client.js'
+import {blockStream} from './zmq-subscriber.js'
+import {cache} from '../../lib/cache.js'
+
 import type {
 	BlocksResponse,
 	RawBlock,
@@ -8,46 +13,39 @@ import type {
 	FeeRatePoint,
 } from '@umbrel-bitcoin/shared-types'
 
-import {rpcClient} from '../bitcoind/rpc-client.js'
-import {blockStream} from './zmq-subscriber.js'
-
+// Partial type of bitcoind's getblockstats RPC
 type BlockStatsLite = {
 	height: number
-	subsidy: number // sat
-	totalfee: number // sat
-	total_weight: number // bytes
-	total_size: number // bytes
-	avgfeerate: number // sat/vB
+	subsidy: number
+	totalfee: number
+	total_weight: number
+	total_size: number
+	avgfeerate: number
 	feerate_percentiles: number[]
-	time: number // unix timestamp
+	time: number
 }
 
-// We cache the block stats so multiple endpoints can share
-let cache: {data: BlockStatsLite[]; expiry: number} | null = null
+// Number of blocks to fetch per batch rpc.
+// Individual methods then slice the response to the desired limit.
+const NUM_BLOCKS_PER_BATCH = 200
 
-async function getBlockStatsBatch(limit: number): Promise<BlockStatsLite[]> {
-	if (cache && cache.expiry > Date.now() && cache.data.length >= limit) return cache.data.slice(-limit)
+// Cached getblockstats response
+const getBlockStatsBatchRPC = () =>
+	cache('blockstats', 10_000, async () => {
+		const tip = await rpcClient.command<number>('getblockcount')
 
-	const tip = await rpcClient.command<number>('getblockcount')
-	const calls = Array.from({length: limit}, (_, i) => ({
-		method: 'getblockstats',
-		parameters: [tip - i],
-	}))
+		const calls = Array.from({length: NUM_BLOCKS_PER_BATCH}, (_, i) => ({
+			method: 'getblockstats',
+			parameters: [tip - i],
+		}))
 
-	// oldest → newest
-	const stats = (await rpcClient.command<BlockStatsLite[]>(calls)).reverse()
+		return await rpcClient.command<BlockStatsLite[]>(calls)
+	})
 
-	// 1-min TTL (reduce this)
-	cache = {data: stats, expiry: Date.now() + 60_000}
-
-	return stats
-}
-
-// Block rewards
+// Block rewards (subsidy + fee totals)
 export async function rewards(limit = 144): Promise<BlockReward[]> {
-	const stats = await getBlockStatsBatch(limit)
-
-	return stats.map((s: BlockStatsLite) => ({
+	const stats = (await getBlockStatsBatchRPC()).slice(-limit)
+	return stats.map((s) => ({
 		height: s.height,
 		subsidySat: s.subsidy,
 		feesSat: s.totalfee,
@@ -55,10 +53,9 @@ export async function rewards(limit = 144): Promise<BlockReward[]> {
 	}))
 }
 
-// Block size
+// Total block sizes
 export async function blockSizes(limit = 144): Promise<BlockSizeSample[]> {
-	const stats = await getBlockStatsBatch(limit)
-
+	const stats = (await getBlockStatsBatchRPC()).slice(-limit)
 	return stats.map((s) => ({
 		height: s.height,
 		sizeBytes: s.total_size,
@@ -66,24 +63,16 @@ export async function blockSizes(limit = 144): Promise<BlockSizeSample[]> {
 	}))
 }
 
-// Fee rates
+// Fee-rate percentiles (p10/p50/p90)
 export async function feeRates(limit = 144): Promise<FeeRatePoint[]> {
-	const stats = await getBlockStatsBatch(limit)
-
-	// TODO: remove unused percentiles
+	const stats = (await getBlockStatsBatchRPC()).slice(-limit)
 	return stats.map((s) => {
 		const [p10, , p50, , p90] = s.feerate_percentiles ?? [0, 0, 0, 0, 0]
-		return {
-			height: s.height,
-			p10,
-			p50,
-			p90,
-			time: s.time,
-		}
+		return {height: s.height, p10, p50, p90, time: s.time}
 	})
 }
 
-// Get the latest N block summaries
+// Latest N block summaries
 export async function list(limit = 20): Promise<BlocksResponse> {
 	// get the current tip height to use as the starting point
 	const tipHeight = await rpcClient.command<number>('getblockcount')
@@ -111,7 +100,7 @@ export async function list(limit = 20): Promise<BlocksResponse> {
 	return {blocks}
 }
 
-// Attach a websocket and stream new block summaries
+// WebSocket push for new blocks
 export function wsStream(socket: WebSocket) {
 	const send = (b: unknown) => socket.send(JSON.stringify(b))
 	blockStream.on('block', send)
