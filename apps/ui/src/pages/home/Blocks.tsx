@@ -1,3 +1,11 @@
+// TODOS:
+// - proper loading state
+// - destroy canvas properly when unmounting
+// - add an IBD animation
+// - add a new block animation
+// - add testris-cube component
+// - tweak material parameters and lighting to get closer to Suj's design
+
 import {useRef, useState, useEffect} from 'react'
 import * as THREE from 'three'
 import {Canvas, useFrame} from '@react-three/fiber'
