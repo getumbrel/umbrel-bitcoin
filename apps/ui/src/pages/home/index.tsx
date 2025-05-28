@@ -1,18 +1,16 @@
-// TODO: modularize this page
-import {Card, CardContent} from '@/components/ui/card'
-import PeersChart from './PeersChart'
-import BlocksPage from './Blocks'
-import Globe from './Globe'
-import StatusDot from './StatusDot'
-import {GradientBorderTopBottom, GradientBorderFromCorners} from '@/components/shared/GradientBorders'
-
 import {formatDistanceToNowStrict} from 'date-fns'
+import {motion, AnimatePresence} from 'framer-motion'
+
+import {Card, CardContent} from '@/components/ui/card'
+import {GradientBorderTopBottom, GradientBorderFromCorners} from '@/components/shared/GradientBorders'
+import Globe from './Globe'
+import PeersChart from './PeersChart'
+import StatusDot from './StatusDot'
+import Blocks from './Blocks'
+
 import {useBitcoindStatus} from '@/hooks/useBitcoind'
-import {motion} from 'framer-motion'
-import {AnimatePresence} from 'framer-motion'
 import {useSyncStatus} from '@/hooks/useSyncStatus'
 import {calcSyncPercent, syncStage} from '@/lib/sync-progress'
-import BlockCubes from './BlockCubes'
 
 export default function HomePage() {
 	const {data: status, isError} = useBitcoindStatus()
@@ -51,7 +49,7 @@ export default function HomePage() {
 
 	return (
 		<>
-			<Card className='bg-card-gradient backdrop-blur-2xl border-none mb-4 py-4 rounded-3xl'>
+			<Card className='bg-card-gradient backdrop-blur-2xl border-none mb-5 py-4 rounded-3xl'>
 				<GradientBorderTopBottom depth='7%' />
 				<CardContent className='flex flex-col md:flex-row px-4 items-center'>
 					{/* Peers Globe + statuses */}
@@ -119,8 +117,8 @@ export default function HomePage() {
 
 			{/* Blocks page — hidden on mobile */}
 			<div className='hidden md:block w-full'>
-				{/* <BlocksPage /> */}
-				<BlockCubes />
+				{/* <TempBlocksComponent /> */}
+				<Blocks />
 			</div>
 		</>
 	)
