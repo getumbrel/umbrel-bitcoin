@@ -30,7 +30,7 @@ export function Layout() {
 				{/* Main content below the header */}
 				{/* The outer scroll container is the full width of the viewport so that scrolling can be triggered outside of the inner floating column */}
 				{/* TODO: implement a scroll fade */}
-				<main className='flex-1 min-h-0 overflow-y-auto overscroll-contain pb-28 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'>
+				<main className='flex-1 min-h-0 overflow-y-auto overscroll-contain pb-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'>
 					{/* Inner column has a max width of 768px to float within the viewport */}
 					<div className='w-full max-w-screen-md mx-auto'>
 						<Outlet />

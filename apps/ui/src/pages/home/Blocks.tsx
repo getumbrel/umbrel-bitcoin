@@ -144,32 +144,16 @@ function Cube({
 			{!loading && (
 				<mesh ref={facePlane} position={[0, 0, PLANE_Z]}>
 					<planeGeometry args={[faceSize, faceSize]} />
-					<meshStandardMaterial color='#222' transparent={true} opacity={1} metalness={0.8} roughness={0.5} />
+					<meshStandardMaterial color='#000' transparent={true} opacity={0.8} metalness={0.8} roughness={0.5} />
 				</mesh>
 			)}
 
 			{block && !loading && (
 				<>
-					<Text
-						position={[-1.2, -0.8, PLANE_Z + 0.02]}
-						fontSize={0.3}
-						color='#ffffff'
-						anchorX='left'
-						anchorY='bottom'
-						material-metalness={0.2}
-						material-roughness={0.8}
-					>
+					<Text position={[-1.2, -0.8, PLANE_Z + 0.02]} fontSize={0.3} color='#ffffff' anchorX='left' anchorY='bottom'>
 						{block.height?.toLocaleString() ?? '—'}
 					</Text>
-					<Text
-						position={[-1.2, -1.1, PLANE_Z + 0.02]}
-						fontSize={0.2}
-						color='#aaaaaa'
-						anchorX='left'
-						anchorY='bottom'
-						material-metalness={0.1}
-						material-roughness={0.8}
-					>
+					<Text position={[-1.2, -1.1, PLANE_Z + 0.02]} fontSize={0.2} color='#aaaaaa' anchorX='left' anchorY='bottom'>
 						{typeof block.size === 'number' ? prettyBytes(block.size) : '—'} •{' '}
 						{typeof block.time === 'number'
 							? `${prettyMs(Date.now() - block.time * 1000, {compact: true, unitCount: 1})} ago`
@@ -184,8 +168,7 @@ function Cube({
 // The full scene with lighting
 function Scene() {
 	const globalMouse = useGlobalMouse()
-	const {data: blocks = [], isLoading} = useBlocks() // blocks[0] is newest
-	// const {data: blocks = []} = useBlocks()
+	const {data: blocks = [], isLoading} = useBlocks()
 	// const isLoading = false
 
 	return (
@@ -197,7 +180,7 @@ function Scene() {
 
 				return (
 					<Cube
-						key={slot} // slot index key is fine
+						key={slot}
 						index={slot}
 						baseX={baseX}
 						globalMouse={globalMouse}

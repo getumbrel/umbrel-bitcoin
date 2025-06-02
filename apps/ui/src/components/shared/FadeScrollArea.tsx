@@ -14,7 +14,7 @@ import {SexyScrollBar} from '@/components/shared/SexyScrollBar'
 
 type Props = React.ComponentProps<typeof ScrollRoot>
 
-export function FadeScrollArea({className, children, ...props}: Props) {
+export default function FadeScrollArea({className, children, ...props}: Props) {
 	const viewportRef = React.useRef<HTMLDivElement | null>(null)
 	const contentRef = React.useRef<HTMLDivElement | null>(null)
 	const [showTop, setShowTop] = React.useState(false)

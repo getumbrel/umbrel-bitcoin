@@ -1,9 +1,8 @@
-import {Cell, Label, Pie, PieChart} from 'recharts'
+import {useState} from 'react'
+import {PieChart, Pie, Cell, Label, Sector, type PieProps} from 'recharts'
 
-import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card'
-import {ChartContainer} from '@/components/ui/chart'
-import type {ChartConfig} from '@/components/ui/chart'
-
+import {Card, CardHeader, CardTitle, CardContent} from '@/components/ui/card'
+import {ChartContainer, type ChartConfig} from '@/components/ui/chart'
 import {usePeerCount} from '@/hooks/usePeers'
 
 const chartConfig = {
@@ -12,30 +11,57 @@ const chartConfig = {
 	i2p: {label: 'I2P', color: 'hsl(29 100% 15%)'},
 } satisfies ChartConfig
 
+// Active slice when hovering over the chart
+// We increase the size of the slice outwards slightly and add a glow effect
+const renderActiveSlice: PieProps['activeShape'] = (props: any) => {
+	const {cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill} = props
+	return (
+		<Sector
+			cx={cx}
+			cy={cy}
+			innerRadius={innerRadius - 0}
+			outerRadius={outerRadius + 3} // small pop outwards
+			startAngle={startAngle}
+			endAngle={endAngle}
+			cornerRadius={4}
+			fill={fill}
+			style={{filter: `drop-shadow(0 0 4px ${fill})`}} // glow effect
+		/>
+	)
+}
+
 export default function PeersChart() {
 	const {data, isLoading} = usePeerCount()
 
-	const sum = (b?: {inbound: number; outbound: number}) => (b ? b.inbound + b.outbound : 0)
+	// Active slice when hovering over the chart
+	const [activeIndex, setActiveIndex] = useState<number | null>(null)
 
-	const torTotal = sum(data?.byNetwork['onion'])
-	const i2pTotal = sum(data?.byNetwork['i2p'])
-
-	// we count everything else as clearnet (ipv4, ipv6, cjdns, not_publicly_routable)
+	// create buckets for each network
+	const torTotal = data?.byNetwork['onion']?.total ?? 0
+	const i2pTotal = data?.byNetwork['i2p']?.total ?? 0
 	const clearnetTotal = Object.entries(data?.byNetwork ?? {}).reduce(
-		(acc, [key, bucket]) => (key === 'onion' || key === 'i2p' ? acc : acc + sum(bucket)),
+		(acc, [key, bucket]) => (key === 'onion' || key === 'i2p' ? acc : acc + bucket?.total),
 		0,
 	)
 
-	const chartData: {network: string; total: number; color: string}[] = [
+	const totalPeers = data?.total ?? 0
+
+	const chartData = [
 		{network: 'clearnet', total: clearnetTotal, color: chartConfig.clearnet.color},
 		{network: 'tor', total: torTotal, color: chartConfig.tor.color},
 		{network: 'i2p', total: i2pTotal, color: chartConfig.i2p.color},
 	]
 
-	const totalPeers = data?.total ?? 0
+	// Get the display value and label for the center text
+	const centerValue = activeIndex !== null ? (chartData[activeIndex]?.total ?? 0) : totalPeers
+	const centerLabel =
+		activeIndex !== null ? chartConfig[chartData[activeIndex]?.network as keyof typeof chartConfig]?.label : null
 
-	// TODO: make responsive
-	// TODO: show skeleton while isLoading?
+	/* helper for glow on legend items */
+	const glowStyle = (color: string) => ({
+		filter: `drop-shadow(0 0 4px ${color})`,
+	})
+
 	return (
 		<Card className='flex flex-col bg-transparent border-none p-0'>
 			<CardHeader className='md:items-center md:justify-center p-0 -mb-4 md:mb-0'>
@@ -43,8 +69,9 @@ export default function PeersChart() {
 					Peers
 				</CardTitle>
 			</CardHeader>
-			<CardContent className='flex flex-1 flex-row-reverse md:flex-col items-center pb-0 gap-8 p-0 border-none'>
-				<ChartContainer config={chartConfig} className='w-[130px] h-[130px] mt-[-10px]'>
+
+			<CardContent className='flex flex-1 flex-row-reverse md:flex-col items-center pb-0 gap-8 p-0'>
+				<ChartContainer config={chartConfig} className='w-[150px] h-[150px] mt-[-10px]'>
 					{/* TODO: figure out simple way to add a box shadow to the outer edge of each slice */}
 					<PieChart>
 						<Pie
@@ -52,43 +79,73 @@ export default function PeersChart() {
 							dataKey='total'
 							nameKey='network'
 							innerRadius={48}
-							outerRadius={65} // explicit outer radius for clarity
-							strokeWidth={0} // no extra ring
+							outerRadius={65}
 							paddingAngle={2.5} // gap between slices
 							cornerRadius={3} // rounded slice ends
+							strokeWidth={0} // no extra ring
+							activeIndex={activeIndex ?? undefined}
+							activeShape={renderActiveSlice}
+							onMouseEnter={(_, idx) => setActiveIndex(idx)}
+							onMouseLeave={() => setActiveIndex(null)}
 						>
 							{chartData.map((d) => (
 								<Cell key={d.network} fill={d.color} />
 							))}
 							<Label
-								content={({viewBox}) => {
-									if (viewBox && 'cx' in viewBox && 'cy' in viewBox) {
-										return (
-											<text x={viewBox.cx} y={viewBox.cy} textAnchor='middle' dominantBaseline='middle'>
-												<tspan x={viewBox.cx} y={viewBox.cy} className='font-outfit fill-white text-[16px] font-[400]'>
-													{totalPeers.toLocaleString()}
-												</tspan>
+								content={({viewBox}) =>
+									viewBox &&
+									'cx' in viewBox &&
+									'cy' in viewBox &&
+									typeof viewBox.cx === 'number' &&
+									typeof viewBox.cy === 'number' ? (
+										<g>
+											<text
+												x={viewBox.cx}
+												y={viewBox.cy}
+												textAnchor='middle'
+												dominantBaseline='middle'
+												className='font-outfit fill-white text-[16px] font-[400]'
+											>
+												{centerValue.toLocaleString()}
 											</text>
-										)
-									}
-								}}
+											{centerLabel && (
+												<text
+													x={viewBox.cx}
+													y={viewBox.cy + 16}
+													textAnchor='middle'
+													dominantBaseline='middle'
+													className='font-outfit fill-white text-[10px] font-[400] opacity-80'
+												>
+													{centerLabel}
+												</text>
+											)}
+										</g>
+									) : null
+								}
 							/>
 						</Pie>
 					</PieChart>
 				</ChartContainer>
+
 				{/* Default Legend is too cumbersome to customize, so we're using a custom legend */}
 				{/* TODO: go through and clean this tailwind */}
-				<ul className='flexnneex-col items-center gap-2 text-[12px]'>
-					{chartData.map((d) => {
-						const cfg = chartConfig[d.network as keyof typeof chartConfig]
+				<ul className='flex flex-col items-center gap-2 text-[12px]'>
+					{chartData.map((data, index) => {
+						const config = chartConfig[data.network as keyof typeof chartConfig]
+						const hovered = index === activeIndex
 						return (
-							<li key={d.network} className='flex w-full max-w-[10rem] justify-between items-center gap-4'>
+							<li
+								key={data.network}
+								onMouseEnter={() => setActiveIndex(index)}
+								onMouseLeave={() => setActiveIndex(null)}
+								className='flex w-full max-w-[10rem] justify-between items-center gap-4 cursor-pointer select-none'
+								style={hovered ? glowStyle(config.color) : undefined}
+							>
 								<span className='flex items-center gap-1'>
-									<span className='h-3 w-3 rounded-sm border border-white/20' style={{background: cfg.color}} />
-									<span className='capitalize text-white/60'>{cfg.label}</span>
+									<span className='h-3 w-3 rounded-sm border border-white/20' style={{background: config.color}} />
+									<span className='capitalize text-white/60'>{config.label}</span>
 								</span>
-
-								<span className='text-white/40'>{d.total}</span>
+								<span className='text-white/40'>{data.total}</span>
 							</li>
 						)
 					})}

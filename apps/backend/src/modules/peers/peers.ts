@@ -20,10 +20,12 @@ export async function peerCount(): Promise<PeerCount> {
 	const summary: PeerCount = {total: peers.length, byNetwork: {}}
 
 	for (const p of peers) {
-		const bucket = (summary.byNetwork[p.network] ??= {inbound: 0, outbound: 0})
+		const bucket = (summary.byNetwork[p.network] ??= {inbound: 0, outbound: 0, total: 0})
 
 		if (p.inbound) bucket.inbound++
 		else bucket.outbound++
+
+		bucket.total++
 	}
 
 	return summary

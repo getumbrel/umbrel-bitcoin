@@ -25,7 +25,7 @@ import {usePeerInfo} from '@/hooks/usePeers'
 import {timeAgoShort} from '@/lib/time-ago-short'
 
 import CheckmarkIcon from '@/assets/checkmark.svg?react'
-import {FadeScrollArea} from '@/components/shared/FadeScrollArea'
+import FadeScrollArea from '@/components/shared/FadeScrollArea'
 
 function truncateMiddle(str: string, keep = 10) {
 	if (str.length <= keep * 2 + 1) return str

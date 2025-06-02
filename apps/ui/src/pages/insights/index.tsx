@@ -8,7 +8,7 @@ import StatSummary from './StatSummary'
 
 export default function InsightsPage() {
 	return (
-		<div className='flex flex-col gap-10'>
+		<div className='flex flex-col gap-10 pb-26'>
 			<StatSummary />
 			<BlockRewardsChart />
 			<BlockSizeChart />

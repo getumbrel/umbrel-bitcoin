@@ -23,7 +23,7 @@ export type BitcoindLifecycleResponse = {
 
 export type PeerCount = {
 	total: number
-	byNetwork: Record<string, {inbound: number; outbound: number}>
+	byNetwork: Record<string, {inbound: number; outbound: number; total: number}>
 }
 
 // Partial type of getpeerinfo

@@ -23,8 +23,8 @@ export function SexyScrollBar({className, orientation = 'vertical', ...props}: S
 
 					// 3px wide scrollbar
 					vertical
-						? // vertical: 5px offset from the right edge
-							'before:absolute before:top-0 before:bottom-0 before:right-[-5px] ' +
+						? // vertical: 20px offset from the right edge
+							'before:absolute before:top-0 before:bottom-0 before:right-[-20px] ' +
 								'before:w-[3px] before:rounded-full ' +
 								'before:bg-[hsla(0,0%,100%,0.15)]'
 						: // horizontal: flush with bottom edge
