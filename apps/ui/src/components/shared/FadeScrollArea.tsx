@@ -76,7 +76,11 @@ export default function FadeScrollArea({className, children, ...props}: Props) {
 				/>
 			)}
 
-			<SexyScrollBar />
+			<SexyScrollBar orientation='vertical' />
+
+			{/* horizontal scrollbar needs a higher z-index that than the vertical fade to be visible when there is y-overflow*/}
+			<SexyScrollBar orientation='horizontal' className='h-2 z-11' />
+
 			<ScrollCorner />
 		</ScrollRoot>
 	)

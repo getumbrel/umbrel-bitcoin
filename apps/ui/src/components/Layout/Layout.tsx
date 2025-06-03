@@ -1,4 +1,4 @@
-import {Outlet} from 'react-router-dom'
+import {Outlet, useLocation} from 'react-router-dom'
 
 import Header from './Header'
 import Dock from './Dock'
@@ -11,6 +11,9 @@ export function Layout() {
 	// Prefetch data for the insights page on first mount
 	// Fires after the first paint, so it never delays a page's render or its own fetches
 	usePrefetchInsights()
+
+	const {pathname} = useLocation()
+	const isSettingsPage = pathname.startsWith('/settings')
 
 	return (
 		<>
@@ -30,7 +33,11 @@ export function Layout() {
 				{/* Main content below the header */}
 				{/* The outer scroll container is the full width of the viewport so that scrolling can be triggered outside of the inner floating column */}
 				{/* TODO: implement a scroll fade */}
-				<main className='flex-1 min-h-0 overflow-y-auto overscroll-contain pb-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'>
+				<main
+					className={`flex-1 min-h-0 overscroll-contain pb-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${
+						isSettingsPage ? 'overflow-hidden' : 'overflow-y-auto'
+					}`}
+				>
 					{/* Inner column has a max width of 768px to float within the viewport */}
 					<div className='w-full max-w-screen-md mx-auto'>
 						<Outlet />

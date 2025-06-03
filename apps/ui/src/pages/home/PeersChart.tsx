@@ -52,6 +52,12 @@ export default function PeersChart() {
 		{network: 'i2p', total: i2pTotal, color: chartConfig.i2p.color},
 	]
 
+	// If total peers are 0 we show a placeholder slice so the donut chart shows up.
+	const displayData = totalPeers === 0 ? [{network: 'placeholder', total: 1, color: 'hsl(0 0% 20%)'}] : chartData
+
+	// Disable donut slice interactions when showing placeholder (legend is still interactive)
+	const isInteractive = totalPeers > 0
+
 	// Get the display value and label for the center text
 	const centerValue = activeIndex !== null ? (chartData[activeIndex]?.total ?? 0) : totalPeers
 	const centerLabel =
@@ -73,9 +79,10 @@ export default function PeersChart() {
 			<CardContent className='flex flex-1 flex-row-reverse md:flex-col items-center pb-0 gap-8 p-0'>
 				<ChartContainer config={chartConfig} className='w-[150px] h-[150px] mt-[-10px]'>
 					{/* TODO: figure out simple way to add a box shadow to the outer edge of each slice */}
+					{/* TODO: await isLoading false before animating the chart in */}
 					<PieChart>
 						<Pie
-							data={chartData}
+							data={displayData}
 							dataKey='total'
 							nameKey='network'
 							innerRadius={48}
@@ -83,12 +90,12 @@ export default function PeersChart() {
 							paddingAngle={2.5} // gap between slices
 							cornerRadius={3} // rounded slice ends
 							strokeWidth={0} // no extra ring
-							activeIndex={activeIndex ?? undefined}
-							activeShape={renderActiveSlice}
-							onMouseEnter={(_, idx) => setActiveIndex(idx)}
-							onMouseLeave={() => setActiveIndex(null)}
+							activeIndex={isInteractive ? (activeIndex ?? undefined) : undefined}
+							activeShape={isInteractive ? renderActiveSlice : undefined}
+							onMouseEnter={isInteractive ? (_, idx) => setActiveIndex(idx) : undefined}
+							onMouseLeave={isInteractive ? () => setActiveIndex(null) : undefined}
 						>
-							{chartData.map((d) => (
+							{displayData.map((d) => (
 								<Cell key={d.network} fill={d.color} />
 							))}
 							<Label
