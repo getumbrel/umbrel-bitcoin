@@ -61,7 +61,7 @@ export default function FadeScrollArea({className, children, ...props}: Props) {
 			{/* gradient hints use CSS vars */}
 			{showTop && (
 				<div
-					className='pointer-events-none absolute inset-x-0 top-0 h-20 z-10'
+					className='pointer-events-none absolute inset-x-0 top-0 h-20'
 					style={{
 						background: 'linear-gradient(to bottom, var(--fade-top, #0f0f0f) 0%, transparent 100%)',
 					}}
@@ -69,7 +69,7 @@ export default function FadeScrollArea({className, children, ...props}: Props) {
 			)}
 			{showBottom && (
 				<div
-					className='pointer-events-none absolute inset-x-0 bottom-0 h-20 z-10'
+					className='pointer-events-none absolute inset-x-0 bottom-0 h-20'
 					style={{
 						background: 'linear-gradient(to top, var(--fade-bottom, #080808) 0%, transparent 100%)',
 					}}
@@ -77,9 +77,7 @@ export default function FadeScrollArea({className, children, ...props}: Props) {
 			)}
 
 			<SexyScrollBar orientation='vertical' />
-
-			{/* horizontal scrollbar needs a higher z-index that than the vertical fade to be visible when there is y-overflow*/}
-			<SexyScrollBar orientation='horizontal' className='h-2 z-11' />
+			<SexyScrollBar orientation='horizontal' />
 
 			<ScrollCorner />
 		</ScrollRoot>
