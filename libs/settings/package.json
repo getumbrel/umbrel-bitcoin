@@ -1,0 +1,9 @@
+{
+	"name": "@umbrel-bitcoin/settings",
+	"private": true,
+	"type": "module",
+	"types": "./index.ts",
+	"dependencies": {
+		"zod": "^3.25.34"
+	}
+}
