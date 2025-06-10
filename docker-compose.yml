@@ -1,0 +1,132 @@
+# docker-compose.yml — development stack only (prod compose lives in umbrelOS App Store)
+
+version: '3.7' # version 3.7 matches current umbrelOS app-store requirement
+
+# Same network subnet as umbrelOS apps
+networks:
+  devnet:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.21.0.0/16
+
+services:
+  # Backend container with hot reload.
+  # In production the React bundle is baked into backend, but in dev we have a separate ui container for vite hot-reload.
+  backend:
+    user: '1000:1000'
+    build:
+      context: .
+      dockerfile: apps/backend/Dockerfile
+      target: dev # use the hot-reload dev stage, not the full production image
+    working_dir: /repo
+    volumes:
+      - .:/repo # live source for hot reload
+      - ./__node_modules_linux__:/repo/node_modules # deps cache
+      - ./data:/data # persistent app, bitcoin, i2pd dirs
+
+    # We install workspaces only when package-lock.json changes (uses hash guard).
+    # TODO: handle changes to non-root package.json files.
+    command: >
+      bash -c '
+        set -e
+        hash=$$(sha256sum /repo/package-lock.json | awk "{print \$$1}")
+        stamp=/repo/node_modules/.linux_stamp
+        if [ ! -f "$$stamp" ] || ! grep -q "$$hash" "$$stamp"; then
+          echo "⏳ Installing workspaces (hash $$hash)…"
+          npm ci --workspaces --include-workspace-root
+          echo "$$hash" > "$$stamp"
+        else
+          echo "✅ node_modules up-to-date (hash $$hash)"
+        fi
+        npm --workspace apps/backend run dev
+      '
+
+    # Health check to report “healthy” once node_modules exists.
+    # The ui container waits until all dependencies are ready.
+    healthcheck:
+      test: ['CMD-SHELL', 'test -f /repo/node_modules/.linux_stamp']
+      interval: 5s
+      retries: 20
+    environment:
+      # BITCOIND_BIN: bitcoind-binary-path-override
+      # BITCOIN_DIR: bitcoin-dir-override
+      # APP_STATE_DIR: app-state-dir-override
+      # RPC_HOST: rpc-host-override
+      # RPC_USER: rpc-user-override
+      # RPC_PASS: rpc-pass-override
+      TOR_HOST: 10.21.22.10
+      TOR_SOCKS_PORT: 9050
+      TOR_CONTROL_PORT: 9051
+      TOR_CONTROL_PASSWORD: supersecretpassword
+      I2P_HOST: 10.21.22.11
+      I2P_SAM_PORT: 7656
+      PEER_WHITELIST: '10.21.0.0/16'
+      DEFAULT_CHAIN: regtest # dev override
+    networks:
+      devnet:
+        ipv4_address: 10.21.21.8 # matches existing APP_BITCOIN_NODE_IP on umbrelOS app store
+
+  # UI container with vite hot-reload.
+  # In production the React bundle is baked into backend, but in dev we have a separate ui container for vite hot-reload.
+  ui:
+    user: '1000:1000'
+    build:
+      context: .
+      dockerfile: apps/ui/Dockerfile
+    working_dir: /repo/apps/ui
+
+    # Wait until backend’s health-check says node_modules is ready so that all dependencies are available.
+    depends_on:
+      backend:
+        condition: service_healthy
+    volumes:
+      - .:/repo
+      - ./__node_modules_linux__:/repo/node_modules # shares same deps cache as backend container
+    command: ['npm', 'run', 'dev', '--', '--host']
+    ports:
+      - '5173:5173' # localhost:5173 for ui
+    environment:
+      VITE_API_BASE: http://backend:3000
+    networks: [devnet]
+
+  tor:
+    image: getumbrel/tor:0.4.7.8@sha256:2ace83f22501f58857fa9b403009f595137fa2e7986c4fda79d82a8119072b6a
+    user: '1000:1000' # match bind-mount ownership
+    restart: on-failure
+    # no volume in dev so Tor state is ephemeral
+    # uses /tmp so non-root user can write torrc + keys
+    environment:
+      HOME: '/tmp'
+    # creates a working torrc file in /tmp/torrc
+    entrypoint: >
+      bash -c '
+        TORRC=/tmp/torrc
+        PASS="supersecretpassword"
+        HASH=$$(tor --hash-password "$$PASS" | tail -n1)
+
+        # overwrite torrc with minimal dev settings
+        {
+          echo "SocksPort 0.0.0.0:9050"
+          echo "ControlPort 0.0.0.0:9051"
+          echo "CookieAuthentication 1"
+          echo "CookieAuthFileGroupReadable 1"
+          echo "HashedControlPassword $$HASH"
+        } > "$$TORRC"
+
+        exec tor -f "$$TORRC"
+      '
+    networks:
+      devnet:
+        ipv4_address: 10.21.22.10 # matches existing APP_BITCOIN_TOR_PROXY_IP on umbrelOS app store
+
+  i2p:
+    image: purplei2p/i2pd:release-2.44.0@sha256:d154a599793c393cf9c91f8549ba7ece0bb40e5728e1813aa6dd4c210aa606f6
+    user: '1000:1000'
+    command: --sam.enabled=true --sam.address=0.0.0.0 --sam.port=7656 --loglevel=error
+    restart: on-failure
+    volumes:
+      - ./data/i2pd:/home/i2pd/data
+    networks:
+      devnet:
+        ipv4_address: 10.21.22.11 # matches existing APP_BITCOIN_I2P_DAEMON_IP on umbrelOS app store

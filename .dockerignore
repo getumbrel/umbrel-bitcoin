@@ -1,0 +1,18 @@
+# Version-control noise
+.git
+.gitignore
+
+# OS / editor cruft
+.DS_Store
+.vscode/
+.idea/
+
+# Dependency directories anywhere in the tree
+**/node_modules
+
+# Build artefacts (you can add more as they appear)
+**/dist
+**/build
+
+# Local data mounts – we don't need them inside the build context
+data

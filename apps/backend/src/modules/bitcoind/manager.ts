@@ -40,16 +40,17 @@ export class BitcoindManager {
 	private startedAt: number | null = null
 	private lastError: Error | null = null
 
+	// TODO: finalize hardcoded args and allow extraArgs from env vars
 	constructor({binary = BITCOIND_BIN, datadir = BITCOIN_DIR, extraArgs = []}: BitcoindManagerOptions = {}) {
 		this.bin = binary
 		this.datadir = datadir
 		this.extraArgs = [
-			'-regtest',
+			// '-regtest',
 			// '-signet',
 			// '-testnet',
 			'-server',
 			'-rpcuser=bitcoin',
-			'-rpcpassword=secret',
+			'-rpcpassword=supersecretpassword',
 			'-rpcport=8332',
 			'-zmqpubhashblock=tcp://127.0.0.1:28332',
 			...extraArgs,

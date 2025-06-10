@@ -327,11 +327,11 @@ export const settingsMetadata = {
 		unit: 'MB',
 	},
 
-	mempoolexpirey: {
+	mempoolexpiry: {
 		tab: 'optimization',
 		kind: 'number',
 		label: 'Memory Expiration',
-		bitcoinLabel: 'mempoolexpirey',
+		bitcoinLabel: 'mempoolexpiry',
 		description:
 			"Set the time threshold (in hours) for unconfirmed transactions to remain in your node's mempool before being removed. By adjusting it, you can manage your node's memory usage and ensure outdated, unconfirmed transactions are discarded. A shorter expiry time helps keep your mempool up-to-date and reduces memory usage, while a longer expiry time allows transactions to remain in the pool for an extended period in case of network congestion or delayed confirmations.",
 		step: 1,

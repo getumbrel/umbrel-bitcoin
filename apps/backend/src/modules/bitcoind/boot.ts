@@ -1,16 +1,13 @@
 import {BitcoindManager} from './manager.js'
-
-// TODO: replace with actual conf logic later
-async function writeMockConf(): Promise<void> {
-	// Just mock async work for now
-	await new Promise((r) => setTimeout(r, 5))
-}
+import {ensureConfig} from '../config/config.js'
 
 // Single bitcoind manager instance that is used throughout the backend
 export const bitcoind = new BitcoindManager()
 
 // Boot up bitcoind
 export async function bootBitcoind(): Promise<void> {
-	await writeMockConf()
+	// Ensure that the bitcoind configuration files are written and up-to-date before starting bitcoind
+	await ensureConfig()
+
 	bitcoind.start()
 }

@@ -11,7 +11,7 @@ export default defineConfig({
 		proxy: {
 			// any request starting with /api → http://localhost:3000
 			'/api': {
-				target: 'http://localhost:3000',
+				target: process.env['VITE_API_BASE'] || 'http://localhost:3000',
 				changeOrigin: true,
 				ws: true,
 				rewrite: (path) => path, // keep /api/whatever as-is

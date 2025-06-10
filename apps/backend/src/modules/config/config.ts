@@ -48,6 +48,12 @@ function applyDerivedSettings(settings: SettingsSchema): SettingsSchema {
 // Load from disk -> merge defaults -> validate. */
 async function loadAndValidateSettings(): Promise<SettingsSchema> {
 	const partial = await fse.readJson(SETTINGS_JSON).catch(() => ({}))
+
+	// If we're in dev and no settings.json exists yet (e.g., first run), use the DEFAULT_CHAIN override if set (allows us to start in regtest)
+	if (!('chain' in partial) && process.env['DEFAULT_CHAIN']) {
+		partial.chain = process.env['DEFAULT_CHAIN']
+	}
+
 	return settingsSchema.parse(mergeWithDefaults(partial))
 }
 
@@ -110,10 +116,43 @@ function handleTorProxy(lines: string[], settings: SettingsSchema): string[] {
 	// Remove any existing “proxy=” lines first
 	const withoutProxy = lines.filter((line) => !line.startsWith('proxy='))
 	if (settings['torProxyForClearnet']) {
-		// TODO: set the actual tor proxy ip and port here via env vars
-		withoutProxy.push('proxy=127.0.0.1:9050')
+		withoutProxy.push(`proxy=${process.env['TOR_HOST']}:${process.env['TOR_SOCKS_PORT']}`)
 	}
 	return withoutProxy
+}
+
+function appendPeerWhitelist(lines: string[]): string[] {
+	lines.push(`whitelist=${process.env['PEER_WHITELIST']}`)
+	return lines
+}
+
+function appendTor(lines: string[], settings: SettingsSchema): string[] {
+	const torOut = settings['onlynet'].includes('tor')
+	const torIn = settings['listen'].includes('tor')
+
+	if (torOut || torIn) {
+		lines = lines.filter((l) => !l.startsWith('onion='))
+		lines.push(`onion=${process.env['TOR_HOST']}:${process.env['TOR_SOCKS_PORT']}`)
+	}
+	if (torIn) {
+		lines = lines.filter((l) => !l.startsWith('torcontrol='))
+		lines.push(
+			`torcontrol=${process.env['TOR_HOST']}:${process.env['TOR_CONTROL_PORT']}`,
+			`torpassword=${process.env['TOR_CONTROL_PASSWORD']}`,
+		)
+	}
+	return lines
+}
+
+function appendI2p(lines: string[], settings: SettingsSchema): string[] {
+	const i2pOut = settings['onlynet'].includes('i2p')
+	const i2pIn = settings['listen'].includes('i2p')
+
+	if (i2pOut || i2pIn) {
+		lines = lines.filter((l) => !l.startsWith('i2psam='))
+		lines.push(`i2psam=${process.env['I2P_HOST']}:${process.env['I2P_SAM_PORT']}`)
+	}
+	return lines
 }
 
 // Append the “[chain]” network stanza with bind addresses
@@ -122,8 +161,9 @@ function appendNetworkStanza(lines: string[], settings: SettingsSchema): string[
 	return lines.concat([
 		'', // blank spacer
 		`[${net}]`, // e.g. “[signet]” or “[main]”
-		'bind=0.0.0.0:8333',
-		// (If you ever want onion bind: e.g. `bind=${BITCOIND_IP}:8334=onion`)
+		'bind=0.0.0.0:8333', // clearnet
+		// TODO: look into whether this should be bound to just the IP of the container
+		'bind=0.0.0.0:8334', // onion
 	])
 }
 
@@ -132,6 +172,9 @@ function generateConfLines(settings: SettingsSchema): string[] {
 
 	// apply specific rules for certain settings
 	lines = handleTorProxy(lines, settings)
+	lines = appendPeerWhitelist(lines)
+	lines = appendTor(lines, settings)
+	lines = appendI2p(lines, settings)
 	lines = appendNetworkStanza(lines, settings)
 	return lines
 }

@@ -1,34 +1,43 @@
+### TODO:
+- [ ] show indication  of which chain is active
+- [ ] Connect modal
+- [ ] Add advanced tab for custom config
+- [ ] handle automated settings.json corruption detection/fix
+- [ ] Add loading animation for blocks
+- [ ] Add sync animation for blocks
+- [ ] Add new single-block animation for blocks
+- [ ] Hook blocks up to websocket once IBD is complete
+- [ ] responsiveness everywhere
+- [ ] add newly requested config options
+- [ ] heavily test config logic and options
+- [ ] add success and error toasts to settings page
+- [ ] add log to settings page when error occurs
+
 ### Monorepo scaffolding
 
 - Pinned Node LTS version in .nvmrc. You can run `nvm use` to use that version.
 - Backend is node and Fastify (Bun doesn't have zeromq support (and other bugginess), and Elysia does not have full support for node currently).
 - Frontend is React and Vite with Tanstack Query. Vite dev-server proxies /api/** to http://localhost:3000/**
-- The root package.json declares npm workspaces (apps/*, libs/*).
-- Two workspaces right now: apps/backend and apps/ui.
-- From the root directory you can run `npm install` and shared dependencies are hoisted to the root-level node_modules.
-- You can install new packages from the root dir into the backend or ui workspaces. e.g., `npm i -w apps/ui @tanstack/react-query`
+- The root package.json declares npm workspaces (apps/*, libs/*). From the root directory you can run `npm install` and shared dependencies are hoisted to the root-level node_modules.
+- Current workspaces: apps/backend, apps/ui, libs/shared-types, libs/settings.
+- You can install new packages from the root dir into a workspace. e.g., `npm i -w apps/ui @tanstack/react-query`
 - Typescript config: Root tsconfig.base.json for base options. Backend tsconfig.json extends the base. UI keeps Vite’s tsconfig.app.json / tsconfig.node.json and extends the base.
 - Linting: Flat ESLint config at the root. Overrides add project configs for backend and UI, plus React/React-Hooks rules. Stylistic rules disabled in favour of Prettier.
 - Prettier: Root prettier.config.js for shared config. .prettierignore excludes node_modules, build artifacts, etc.
 - Shared types – libs/shared-types/index.d.ts with a package.json named @umbrel-bitcoin/shared-types for easy import.
+- Shared settings – libs/settings/index.ts with a package.json named @umbrel-bitcoin/settings for easy import.
 
 ### Backend
 
 - BitcoindManager – spawns bitcoind as a child process, handles start / stop / restart, streams logs...
 - RPC client – using bitcoin-core (npm i bitcoin-core)
 
-### Running this early POC in dev:
+### Development
 
-Install bitcoind on macOS:
+From repo root run:
 
-```bash
-brew install bitcoin
+```sh
+docker compose up
 ```
 
-Currently the bitcoind binary is hardcoded in `apps/backend/src/paths.ts` to `/opt/homebrew/bin/bitcoind`
-
-Run both backend and frontend from the root directory:
-
-```bash
-npm run dev
-```
+This will give you hot-reload for both backend and frontend.
