@@ -1,7 +1,7 @@
 ### TODO:
 - [ ] show indication  of which chain is active
 - [ ] Connect modal
-- [ ] Add advanced tab for custom config
+- [x] Add advanced tab for custom config
 - [ ] handle automated settings.json corruption detection/fix
 - [ ] Add loading animation for blocks
 - [ ] Add sync animation for blocks
@@ -10,8 +10,8 @@
 - [ ] responsiveness everywhere
 - [ ] add newly requested config options
 - [ ] heavily test config logic and options
-- [ ] add success and error toasts to settings page
-- [ ] add log to settings page when error occurs
+- [x] add success and error toasts to settings page
+- [x] add log to settings page when error occurs
 - [ ] assumeutxo
 - [ ] use rpcauth
 - [ ] bring in the rest of the env vars from app store exports.sh

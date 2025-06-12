@@ -8,8 +8,11 @@ import type {ExitInfo} from '@umbrel-bitcoin/shared-types'
 import {BITCOIND_BIN, BITCOIN_DIR} from '../../lib/paths.js'
 
 export const RPC_PORT = process.env['RPC_PORT'] || '8332'
-export const RPC_USER = process.env['RPC_USER'] || 'bitcoin'
-export const RPC_PASS = process.env['RPC_PASS'] || 'supersecretpassword'
+export const RPC_USER = process.env['RPC_USER'] || 'umbrel'
+export const RPC_PASS = process.env['RPC_PASS'] || 'moneyprintergobrrr'
+const RPC_AUTH =
+	process.env['RPC_AUTH'] ||
+	'umbrel:5071d8b3ba93e53e414446ff9f1b7d7b$6d45cff9f3b500d78b543211f6bc74994448f1f35bfd313ddde834b42e7b5f73'
 
 type BitcoindProcess = ChildProcessWithoutNullStreams & {
 	stdout: Readable
@@ -67,9 +70,7 @@ export class BitcoindManager {
 		this.bin = binary
 		this.datadir = datadir
 		this.extraArgs = [
-			// TODO: change to rpcauth
-			`-rpcuser=${RPC_USER}`,
-			`-rpcpassword=${RPC_PASS}`,
+			`-rpcauth=${RPC_AUTH}`,
 			`-rpcport=${RPC_PORT}`,
 			'-zmqpubhashblock=tcp://127.0.0.1:28332',
 			...extraArgs,

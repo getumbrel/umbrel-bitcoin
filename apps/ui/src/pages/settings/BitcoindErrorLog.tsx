@@ -9,10 +9,10 @@ import {Checkbox} from '@/components/ui/checkbox'
 import FadeScrollArea from '@/components/shared/FadeScrollArea'
 
 import {useBitcoindExitInfo} from '@/hooks/useBitcoindExitInfo'
-import { Button } from '@/components/ui/button'
+import {Button} from '@/components/ui/button'
 
 // Simple regex to filter log lines by severity (case-insensitive)
-const ERROR_REGEX = /(error|fatal|panic|disk full|corrupt)/i
+const ERROR_REGEX = /(error|fatal|panic|disk full|corrupt|invalid)/i
 const WARN_REGEX = /(warn)/i
 
 export default function BitcoindErrorLog() {
@@ -45,13 +45,14 @@ export default function BitcoindErrorLog() {
 					block: 'center',
 				})
 			}, 300) // Slightly longer than the animation duration
-			
+
 			return () => clearTimeout(timer)
 		}
 	}, [searchParams, exitInfo])
 
 	// Filter for showing only error lines
-	const visibleLines = errorsOnly && exitInfo ? exitInfo.logTail.filter((line) => ERROR_REGEX.test(line)) : exitInfo?.logTail || []
+	const visibleLines =
+		errorsOnly && exitInfo ? exitInfo.logTail.filter((line) => ERROR_REGEX.test(line)) : exitInfo?.logTail || []
 
 	// Download the log as a .txt file without navigating away from the page
 	const downloadLog = () => {

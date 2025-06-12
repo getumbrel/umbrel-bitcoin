@@ -55,6 +55,7 @@ services:
       # RPC_HOST: rpc-host-override
       # RPC_USER: rpc-user-override
       # RPC_PASS: rpc-pass-override
+      # RPC_AUTH: rpc-auth-override
       TOR_HOST: 10.21.22.10
       TOR_SOCKS_PORT: 9050
       TOR_CONTROL_PORT: 9051
