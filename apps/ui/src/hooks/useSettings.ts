@@ -24,6 +24,7 @@ export function useUpdateSettings() {
 		// Update/invalidate the cache so all components see the new values
 		onSuccess: (fresh) => {
 			qc.setQueryData(['settings'], fresh)
+			qc.setQueryData(['bitcoindExit'], null) // clear bticoind crash state
 
 			// TODO: refetch / invalidate other queries that will change due to bitcoind restart
 			// qc.invalidateQueries({ queryKey: ['peers/info'] })

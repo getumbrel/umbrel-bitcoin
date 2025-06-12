@@ -5,12 +5,16 @@ import Dock from './Dock'
 import Background from './Background'
 
 import {usePrefetchInsights} from '@/hooks/usePrefetchInsights'
+import {useBitcoindExitSocket} from '@/hooks/useBitcoindExitSocket'
 
 // React Router injects the routed page in <Outlet/>.
 export function Layout() {
 	// Prefetch data for the insights page on first mount
 	// Fires after the first paint, so it never delays a page's render or its own fetches
 	usePrefetchInsights()
+
+	// Listen for bitcoind exit events so we can show a toast notification if it crashes / has crashed
+	useBitcoindExitSocket()
 
 	const {pathname} = useLocation()
 	const isSettingsPage = pathname.startsWith('/settings')

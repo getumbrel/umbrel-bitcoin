@@ -12,6 +12,12 @@
 - [ ] heavily test config logic and options
 - [ ] add success and error toasts to settings page
 - [ ] add log to settings page when error occurs
+- [ ] assumeutxo
+- [ ] use rpcauth
+- [ ] bring in the rest of the env vars from app store exports.sh
+- [ ] old bitcoin-config.json --> new settings.json migration
+- [ ] Address all TODOs in the codebase
+- [ ] one place for query keys
 
 ### Monorepo scaffolding
 

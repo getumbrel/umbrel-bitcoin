@@ -1,11 +1,13 @@
 // Individual settings are rendered dynamically from the settings metadata (libs/settings/settings.meta.ts).
 // The metadata file acts as a single source of truth for deriving this UI and validation schema.
 
-import {useEffect, useMemo, useState} from 'react'
+import {useEffect, useMemo, useRef, useState} from 'react'
+import {useSearchParams} from 'react-router-dom'
 import {useForm, FormProvider, Controller} from 'react-hook-form'
 import {Search} from 'lucide-react'
 import {zodResolver} from '@hookform/resolvers/zod'
 import clsx from 'clsx'
+import {toast} from 'sonner'
 
 import {Card, CardHeader, CardContent, CardFooter, CardTitle} from '@/components/ui/card'
 import {Tabs, TabsList, TabsTrigger, TabsContent} from '@/components/ui/tabs'
@@ -19,6 +21,9 @@ import {Form} from './Form'
 import Toggle from './Toggle'
 import InputField from './InputField'
 import {SettingsDisabledContext, useInputsDisabled} from './SettingsDisabledContext'
+import DangerZoneAlert from './DangerZoneAlert'
+import BitcoindErrorLog from './BitcoindErrorLog'
+import CustomConfigEditor from './CustomConfigEditor'
 
 import {
 	settingsSchema,
@@ -28,18 +33,33 @@ import {
 	type Tab,
 	type Option,
 } from '@umbrel-bitcoin/settings'
+
 import {useSettings, useUpdateSettings} from '@/hooks/useSettings'
+import {useBitcoindExitInfo} from '@/hooks/useBitcoindExitInfo'
 
 type SettingName = keyof typeof settingsMetadata
 
 // Trigger for each tab
 function SettingsTabTrigger({value, children}: {value: string; children: React.ReactNode}) {
+	const {data: exitInfo} = useBitcoindExitInfo()
+	const hasCrash = exitInfo != null
+
 	return (
 		<TabsTrigger
 			value={value}
 			className='text-[12px] bg-transparent border-b-[1.5px] border-transparent data-[state=active]:border-white data-[state=active]:text-white data-[state=active]:bg-transparent data-[state=active]:border-t-0 data-[state=active]:border-l-0 data-[state=active]:border-r-0 data-[state=inactive]:border-transparent focus-visible:outline-none focus:outline-none focus:ring-0 focus:border-transparent text-white/60 rounded-none hover:text-white/80 transition-none pb-3 mb-[-2px]'
 		>
 			{children}
+
+			{/* We show a pulsating red dot in the Advanced tab if bitcoind has crashed */}
+			{value === 'advanced' && hasCrash && (
+				<span className='relative inline-flex h-2 w-2'>
+					{/* outer expanding ring that pings */}
+					<span className='absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75 animate-ping' />
+					{/* solid center dot */}
+					<span className='relative inline-flex h-2 w-2 rounded-full bg-red-500' />
+				</span>
+			)}
 		</TabsTrigger>
 	)
 }
@@ -253,9 +273,14 @@ function FieldRenderer({name, form}: {name: SettingName; form: ReturnType<typeof
 	return null
 }
 
-/* ================================================================== */
-
+// MAIN COMPONENT
 export default function SettingsCard() {
+	// Tab routing state
+	const [searchParams, setSearchParams] = useSearchParams()
+	const initialTab = searchParams.get('tab') ?? 'peers'
+	const [currentTab, setCurrentTab] = useState(initialTab)
+
+	// Form data state
 	const {data: initialSettings, isLoading} = useSettings()
 	const updateSettings = useUpdateSettings()
 
@@ -282,11 +307,44 @@ export default function SettingsCard() {
 	// Disable all inputs when we're loading loading the initial settings or when the form is submitting
 	const isInputsDisabled = isLoading || isSubmitting
 
+	// These toast refs are used to clear / update the toast later without causing re-renders
+	// This is so we can show a loading toast if restarting bitcoind is taking longer than X seconds, and then update it to a success or error toast without re-rendering
+	const loadingToastId = useRef<string | number | null>(null)
+	const loadingTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
 	const onSave = (data: SettingsSchema) => {
+		// If the mutation takes longer than 1 second, we show a loading toast
+		loadingTimer.current = setTimeout(() => {
+			loadingToastId.current = toast.loading('Hang tight, Bitcoin Core is restarting...', {duration: Infinity})
+		}, 1000)
+
 		updateSettings.mutate(data, {
-			onSuccess: (updatedSettings) => {
+			onSuccess: (updated) => {
+				clearTimeout(loadingTimer.current!)
+				const id = loadingToastId.current
+				if (id != null) {
+					toast.success('Settings applied', {id, duration: 4000})
+				} else {
+					toast.success('Settings applied')
+				}
+
 				// reset "dirty" state with backend-confirmed values
-				form.reset(updatedSettings)
+				form.reset(updated)
+			},
+			onError: (err) => {
+				clearTimeout(loadingTimer.current!)
+				const id = loadingToastId.current
+				const msg = err instanceof Error ? err.message : 'Unknown error'
+
+				if (id != null) {
+					toast.error(`Failed to save: ${msg}`, {id, duration: 4000})
+				} else {
+					toast.error(`Failed to save: ${msg}`)
+				}
+			},
+			onSettled: () => {
+				// Clear the toast refs for next time
+				loadingToastId.current = null
 			},
 		})
 	}
@@ -333,7 +391,13 @@ export default function SettingsCard() {
 							</div>
 						</CardHeader>
 						<CardContent>
-							<Tabs defaultValue='peers'>
+							<Tabs
+								value={currentTab}
+								onValueChange={(val: string) => {
+									setCurrentTab(val)
+									setSearchParams(val === 'peers' ? {} : {tab: val})
+								}}
+							>
 								{/* TabsList */}
 								{/* TODO: this needs to be a horizontally scrollable fade area for mobile */}
 								<div
@@ -355,7 +419,7 @@ export default function SettingsCard() {
 								{/* TabsContent for each category */}
 								<FadeScrollArea
 									className={clsx(
-										'h-[calc(100vh-375px)] [--fade-top:hsla(0,0%,6%,1)][--fade-bottom:hsla(0,0%,3%,1)] pt-6',
+										'h-[calc(100vh-375px)] [--fade-top:hsla(0,0%,6%,1)][--fade-bottom:hsla(0,0%,3%,1)]',
 										// add the height of the tabs list when searching to prevent layout shift
 										isSearching && 'h-[calc(100vh-375px+44px)]',
 									)}
@@ -393,11 +457,12 @@ export default function SettingsCard() {
 											</TabsContent>
 
 											<TabsContent value='advanced' className='space-y-6 pt-6'>
-												<p className='text-white text-[14px] font-[400]'>- ability to add custom config options</p>
-												<p className='text-white text-[14px] font-[400]'>- show log stream?</p>
-												<p className='text-white text-[14px] font-[400]'>
-													- allow reindex from this tab (chainstate and full)?
-												</p>
+												{/* TODO: determine where to place the log */}
+												<DangerZoneAlert />
+												<CustomConfigEditor />
+												<BitcoindErrorLog />
+
+												{/* Currently we don't have anything from settings.meta.ts that shows up in advanced. */}
 												<SettingsTabContent tab='advanced' form={form} />
 											</TabsContent>
 										</>

@@ -21,6 +21,13 @@ export type BitcoindLifecycleResponse = {
 	result: BitcoindLifecycleResult
 }
 
+export type ExitInfo = {
+	code: number | null
+	sig: NodeJS.Signals | null
+	logTail: string[]
+	message: string
+}
+
 export type PeerCount = {
 	total: number
 	byNetwork: Record<string, {inbound: number; outbound: number; total: number}>

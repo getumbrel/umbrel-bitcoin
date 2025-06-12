@@ -1,8 +1,15 @@
 import {spawn, ChildProcessWithoutNullStreams, execFileSync} from 'node:child_process'
+import {EventEmitter} from 'node:events'
 import {Readable} from 'node:stream'
 import readline from 'node:readline'
 
+import type {ExitInfo} from '@umbrel-bitcoin/shared-types'
+
 import {BITCOIND_BIN, BITCOIN_DIR} from '../../lib/paths.js'
+
+export const RPC_PORT = process.env['RPC_PORT'] || '8332'
+export const RPC_USER = process.env['RPC_USER'] || 'bitcoin'
+export const RPC_PASS = process.env['RPC_PASS'] || 'supersecretpassword'
 
 type BitcoindProcess = ChildProcessWithoutNullStreams & {
 	stdout: Readable
@@ -21,7 +28,7 @@ type LogFn = Console['log']
 // NOTE: Readable stream emits a data event for every chunk it receives.
 // Each chunk wakes the event-loop and runs the callback below.
 // I need to check if bitcoind is chatty enough in IBD that this could be a problem.
-// The callback below is tiny, so shouldn't be a problem. But I need to fouble check that
+// The callback below is tiny, so shouldn't be a problem. But need to double check that
 // we don't starve other work on the event loop.
 function pipeBitcoindLines(src: Readable, logFn: LogFn) {
 	const rl = readline.createInterface({input: src})
@@ -36,22 +43,34 @@ export class BitcoindManager {
 	private readonly bin: string
 	private readonly datadir: string
 	private readonly extraArgs: string[]
-	private readonly versionInfo: {implementation: string; version: string}
+	private readonly _versionInfo: {implementation: string; version: string}
 	private startedAt: number | null = null
 	private lastError: Error | null = null
+	private _exitInfo: ExitInfo | null = null
+
+	// Ring buffer for the last N log lines (stderr+stdout)
+	// We use this to show the last N log lines in the UI when bitcoind crashes
+	private readonly logRing: string[] = []
+	private readonly RING_MAX = 200
+	private recordLine = (line: string) => {
+		if (this.logRing.push(line) > this.RING_MAX) this.logRing.shift()
+	}
+
+	// EventEmitter that fires `"exit"` with an `ExitInfo` payload
+	// We use this to notify the UI when bitcoind crashes
+	public readonly events = new EventEmitter()
+	// flag to prevent emitting an exit event if we are purposefully stopping bitcoind (e.g., changing config via the UI)
+	private expectingExit = false
 
 	// TODO: finalize hardcoded args and allow extraArgs from env vars
 	constructor({binary = BITCOIND_BIN, datadir = BITCOIN_DIR, extraArgs = []}: BitcoindManagerOptions = {}) {
 		this.bin = binary
 		this.datadir = datadir
 		this.extraArgs = [
-			// '-regtest',
-			// '-signet',
-			// '-testnet',
-			'-server',
-			'-rpcuser=bitcoin',
-			'-rpcpassword=supersecretpassword',
-			'-rpcport=8332',
+			// TODO: change to rpcauth
+			`-rpcuser=${RPC_USER}`,
+			`-rpcpassword=${RPC_PASS}`,
+			`-rpcport=${RPC_PORT}`,
 			'-zmqpubhashblock=tcp://127.0.0.1:28332',
 			...extraArgs,
 		]
@@ -70,15 +89,20 @@ export class BitcoindManager {
 			// e.g., "v29.0.0"
 			const version = (firstLine.match(/v\d+\.\d+\.\d+/) ?? ['unknown'])[0]
 
-			this.versionInfo = {implementation, version}
+			this._versionInfo = {implementation, version}
 		} catch (error) {
-			this.versionInfo = {implementation: 'unknown', version: 'unknown'}
+			this._versionInfo = {implementation: 'unknown', version: 'unknown'}
 			console.error('[bitcoind-manager] failed to get static version:', error)
 		}
 	}
 
-	getVersionInfo() {
-		return this.versionInfo
+	public get versionInfo() {
+		return this._versionInfo
+	}
+
+	// Returns latest bitcoind crash snapshot, or `null` if the node is running / never crashed
+	public get exitInfo(): ExitInfo | null {
+		return this._exitInfo
 	}
 
 	setLastError(err: Error): void {
@@ -91,9 +115,11 @@ export class BitcoindManager {
 		// return early if already running
 		if (this.child) return
 
+		// Clear any previous log tail
+		this.logRing.length = 0
+
 		this.startedAt = Date.now()
 
-		// TODO: chain will be taken from conf. Other flags will need to be passed in.
 		this.child = spawn(this.bin, [`-datadir=${this.datadir}`, ...this.extraArgs], {
 			stdio: ['pipe', 'pipe', 'pipe'],
 		}) as BitcoindProcess
@@ -101,25 +127,51 @@ export class BitcoindManager {
 		this.lastError = null
 		console.log('[bitcoind-manager] spawned PID', this.child.pid)
 
-		pipeBitcoindLines(this.child.stdout, console.log)
-		pipeBitcoindLines(this.child.stderr, console.error)
+		// Capture stdout and log + record to ring buffer
+		pipeBitcoindLines(this.child.stdout, (prefix, line) => {
+			console.log(prefix, line)
+			this.recordLine(line)
+		})
+
+		// Capture stderr and log + record to ring buffer
+		pipeBitcoindLines(this.child.stderr, (prefix, line) => {
+			console.error(prefix, line)
+			this.recordLine(line)
+		})
 
 		this.child.on('exit', (code, sig) => {
 			console.error(`[bitcoind] exited (code=${code}, sig=${sig})`)
+
+			// Skip emitting crash info if we expected this exit
+			if (this.expectingExit) return
+
+			this._exitInfo = {
+				code,
+				sig,
+				logTail: [...this.logRing],
+				message: `Bitcoin Core stopped (code ${code ?? 'null'})`,
+			}
+
+			this.events.emit('exit', this._exitInfo)
 			this.child = null
 		})
 
+		// handle spawn errors
 		this.child.on('error', (err) => {
 			console.error('[bitcoind-manager] failed to spawn:', err)
 			this.lastError = err
 		})
 	}
 
-	// Graceful stop bitcoind
+	// Gracefully stop bitcoind
 	async stop() {
 		if (!this.child) return
+
+		// we don't want to emit an exit event if we are purposefully stopping bitcoind
+		this.expectingExit = true
 		this.child.kill('SIGTERM')
 		await new Promise((res) => this.child?.once('exit', res))
+		this.expectingExit = false
 		this.child = null
 		this.startedAt = null
 	}

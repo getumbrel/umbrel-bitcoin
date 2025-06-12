@@ -15,6 +15,11 @@ const SETTINGS_JSON = path.join(APP_STATE_DIR, 'settings.json')
 const UMBREL_CONF = path.join(BITCOIN_DIR, 'umbrel-bitcoin.conf')
 const BITCOIN_CONF = path.join(BITCOIN_DIR, 'bitcoin.conf')
 
+const BITCOIN_CONF_BANNER = [
+	'# Load additional configuration file, relative to the data directory.',
+	`includeconf=${path.basename(UMBREL_CONF)}`,
+].join('\n')
+
 // In-memory cache of the current settings
 // We update this cache with the latest settings every time we update the settings.json file
 let cachedSettings: SettingsSchema | undefined
@@ -192,17 +197,12 @@ async function writeUmbrelConf(settings: SettingsSchema): Promise<void> {
 async function ensureIncludeLine() {
 	await fse.ensureFile(BITCOIN_CONF)
 
-	const banner = [
-		'# Load additional configuration file, relative to the data directory.',
-		`includeconf=${path.basename(UMBREL_CONF)}`,
-	].join('\n')
-
 	const current = await fse.readFile(BITCOIN_CONF, 'utf8').catch(() => '')
 
 	// return early if the banner is already present
-	if (current.startsWith(banner)) return
+	if (current.startsWith(BITCOIN_CONF_BANNER)) return
 
-	const newContents = `${banner}\n${current}`
+	const newContents = `${BITCOIN_CONF_BANNER}\n${current}`
 
 	await writeWithBackup(BITCOIN_CONF, newContents)
 }
@@ -254,4 +254,33 @@ export async function updateSettings(patch: Partial<SettingsSchema>): Promise<Se
 	// Update in‐memory settings cache if we were successful
 	cachedSettings = merged
 	return merged
+}
+
+// Get custom options from bitcoin.conf file
+// Return only the lines after the banner lines that includeconf=umbrel-bitcoin.conf
+export async function getCustomOptions(): Promise<string> {
+	await fse.ensureFile(BITCOIN_CONF)
+
+	const full = await fse.readFile(BITCOIN_CONF, 'utf8')
+
+	// Slice off the banner text
+	let extra = full.startsWith(BITCOIN_CONF_BANNER) ? full.slice(BITCOIN_CONF_BANNER.length) : full
+
+	return extra.replace(/^\n/, '').trimEnd()
+}
+
+// Overwrite bitcoin.conf with our banner + user-supplied lines.
+// Accepts any text: comments (#), blank lines, section headers, etc.
+export async function updateCustomOptions(rawText: string): Promise<string> {
+	// Normalise line endings and trim trailing whitespace
+	const userLines = rawText.replace(/\r\n/g, '\n').trimEnd()
+
+	const newContents = userLines ? `${BITCOIN_CONF_BANNER}\n${userLines}\n` : `${BITCOIN_CONF_BANNER}\n`
+
+	await writeWithBackup(BITCOIN_CONF, newContents)
+
+	// Restart bitcoind so the new config is applied
+	await restart()
+
+	return userLines
 }
