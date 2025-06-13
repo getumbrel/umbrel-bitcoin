@@ -153,6 +153,15 @@ function handleI2P(lines: string[], settings: SettingsSchema): string[] {
 	return lines
 }
 
+function handlePruneConversion(lines: string[], settings: SettingsSchema): string[] {
+	// if prune > 0 convert from GB to MiB (1 GB = 953.674 MiB)
+	if (settings['prune'] > 0) {
+		lines = lines.filter((l) => !l.startsWith('prune='))
+		lines.push(`prune=${Math.round(settings['prune'] * 953.674)}`)
+	}
+	return lines
+}
+
 // HANDLERS FOR LINES WE ALWAYS ADD TO umbrel-bitcoin.conf
 
 function appendPeerWhitelist(lines: string[]): string[] {
@@ -164,7 +173,9 @@ function appendPeerWhitelist(lines: string[]): string[] {
 }
 
 function appendRpcAuth(lines: string[]): string[] {
-	lines.push(`rpcauth=${process.env['RPC_AUTH'] || 'umbrel:5071d8b3ba93e53e414446ff9f1b7d7b$6d45cff9f3b500d78b543211f6bc74994448f1f35bfd313ddde834b42e7b5f73'}`)
+	lines.push(
+		`rpcauth=${process.env['RPC_AUTH'] || 'umbrel:5071d8b3ba93e53e414446ff9f1b7d7b$6d45cff9f3b500d78b543211f6bc74994448f1f35bfd313ddde834b42e7b5f73'}`,
+	)
 	return lines
 }
 
@@ -190,7 +201,7 @@ function appendNetworkStanza(lines: string[], settings: SettingsSchema): string[
 	const net = settings['chain'] ?? 'main'
 	lines.push('') // blank spacer
 	lines.push(`[${net}]`) // e.g. "[signet]", "[main]", etc
-	
+
 	// p2p and tor binds
 	lines.push(`port=${process.env['P2P_PORT'] || '8333'}`)
 	lines.push(`bind=0.0.0.0:${process.env['P2P_PORT'] || '8333'}`)
@@ -211,7 +222,8 @@ function generateConfLines(settings: SettingsSchema): string[] {
 	lines = handleTorProxy(lines, settings)
 	lines = handleTor(lines, settings)
 	lines = handleI2P(lines, settings)
-	
+	lines = handlePruneConversion(lines, settings)
+
 	// append lines that we always want to be present
 	lines = appendPeerWhitelist(lines)
 	lines = appendRpcAllowIps(lines)
