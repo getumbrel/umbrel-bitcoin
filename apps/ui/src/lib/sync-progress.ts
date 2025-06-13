@@ -30,16 +30,16 @@ export function calcSyncPercent(syncStatus?: SyncStatus): number {
 	return 0
 }
 
-// TODO we may want to allow querying for IBD status somewhere so we can not fetch data for certain graphs during IBD
 export type SyncStage =
 	| 'pre-headers' // pre-synchronizing blockheaders
 	| 'headers' // synchronizing blockheaders
-	| 'syncing' // syncing, whether in IBD or not
+	| 'IBD' // initial block download
+	| 'synced' // may not be 100% but we're out of IBD
 
 export function syncStage(syncStatus?: SyncStatus): SyncStage {
 	if (!syncStatus) return 'pre-headers'
 
-	const {blockHeight, validatedHeaderHeight} = syncStatus
+	const {blockHeight, validatedHeaderHeight, isInitialBlockDownload} = syncStatus
 
 	// If validatedHeaderHeight is 0, bitcoind is "Pre-synchronizing blockheaders"
 	// If bitcoin restarts during the next phase (sychronizing blockheaders), it will need to pre-sync headers again, but
@@ -49,6 +49,9 @@ export function syncStage(syncStatus?: SyncStatus): SyncStage {
 	// If validatedHeaderHeight > 0 and blockHeight is 0, bitcoind is "Synchronizing blockheaders"
 	if (validatedHeaderHeight > 0 && blockHeight === 0) return 'headers'
 
-	// Otherwise we are syncing blocks
-	return 'syncing'
+	// If bitcoind is still showing IBD, we show IBD stage
+	if (isInitialBlockDownload) return 'IBD'
+
+	// Otherwise we are synced and out of IBD
+	return 'synced'
 }

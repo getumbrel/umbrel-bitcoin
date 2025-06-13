@@ -14,8 +14,7 @@ export const blockStream = new EventEmitter()
 async function startBlockSubscriber(): Promise<void> {
 	const subscriber = new zmq.Subscriber()
 
-	// TODO: read endpoint from env
-	subscriber.connect('tcp://127.0.0.1:28332')
+	subscriber.connect(`tcp://0.0.0.0:${process.env['ZMQ_HASHBLOCK_PORT'] || '28334'}`)
 	subscriber.subscribe('hashblock')
 
 	for await (const [, hashBuffer] of subscriber) {

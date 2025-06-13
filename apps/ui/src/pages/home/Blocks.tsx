@@ -14,7 +14,10 @@ import {Text} from '@react-three/drei'
 import prettyBytes from 'pretty-bytes'
 import prettyMs from 'pretty-ms'
 
-import {useBlocks} from '@/hooks/useBlocks'
+import {useSyncStatus} from '@/hooks/useSyncStatus'
+import {syncStage} from '@/lib/sync-progress'
+import {useLatestBlocks} from '@/hooks/useLatestBlocks'
+
 import type {BlockSummary} from '@umbrel-bitcoin/shared-types'
 
 // Parameters for cube dimensions and spacing
@@ -168,8 +171,14 @@ function Cube({
 // The full scene with lighting
 function Scene() {
 	const globalMouse = useGlobalMouse()
-	const {data: blocks = [], isLoading} = useBlocks()
-	// const isLoading = false
+
+	// Determine sync stage (e.g., headers, pre-headers, IBD, synced) to set query/ws params and determine which animations to show
+	const {data: syncStatus} = useSyncStatus()
+	const stage = syncStage(syncStatus)
+
+	const {data: blocks = [], isLoading: isLoadingBlocks} = useLatestBlocks({stage})
+
+	const isLoading = stage === 'pre-headers' || stage === 'headers' || isLoadingBlocks
 
 	return (
 		<>

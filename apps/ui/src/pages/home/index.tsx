@@ -117,8 +117,7 @@ export default function HomePage() {
 
 			{/* Blocks page — hidden on mobile */}
 			<div className='hidden md:block w-full'>
-				{/* <TempBlocksComponent /> */}
-				{/* <Blocks /> */}
+				<Blocks />
 			</div>
 		</>
 	)
