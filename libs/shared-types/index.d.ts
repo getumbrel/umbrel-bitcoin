@@ -13,7 +13,7 @@ export type BitcoindStatus = {
 	pid: number | null
 }
 
-type BitcoindLifecyclerResult = 'started' | 'stopped' | 'no_op'
+type BitcoindLifecycleResult = 'started' | 'stopped' | 'no_op'
 
 export type BitcoindLifecycleResponse = {
 	running: boolean
