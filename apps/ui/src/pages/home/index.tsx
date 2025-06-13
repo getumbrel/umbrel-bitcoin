@@ -96,7 +96,9 @@ export default function HomePage() {
 									transition={{duration: 0.25}}
 									className='absolute top-[70%] md:top-[80%] left-[5%] text-[30px]'
 								>
-									<span className='bg-text-gradient bg-clip-text text-transparent font-[500]'>Synchronizing&nbsp;</span>
+									<span className='bg-text-gradient bg-clip-text text-transparent font-[500]'>
+										{percentSynced === 100 ? 'Synchronized' : 'Synchronizing'}&nbsp;
+									</span>
 									<span className='text-white/60'>{percentSynced}%</span>
 
 									{/* We only show the subtitle if the sync is not complete */}

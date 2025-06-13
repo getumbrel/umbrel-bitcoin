@@ -1,23 +1,23 @@
 ### TODO:
-- [ ] show indication  of which chain is active
+- [ ] Address all TODOs in the codebase
+- [ ] responsiveness for every page (not yet implemented fully for mobile)
+- [ ] show indication of which chain network is being used (mainnet, testnet, etc)
 - [ ] Connect modal
-- [x] Add advanced tab for custom config
 - [ ] handle automated settings.json corruption detection/fix
-- [ ] Add loading animation for blocks
-- [ ] Add sync animation for blocks
-- [ ] Add new single-block animation for blocks
-- [ ] Hook blocks up to websocket once IBD is complete
-- [ ] responsiveness everywhere
-- [x] add newly requested config options
+- [ ] Add block animations (loading, during-IBD, new block)
 - [ ] heavily test config logic and options
+- [ ] assumeutxo
+- [ ] old bitcoin-config.json --> new settings.json migration
+- [ ] one place for query keys
+- [ ] fix settings page not rendering sometimes
+- [x] add a "syncing" state to the charts
+- [x] Add advanced tab for custom config
+- [x] Hook blocks up to websocket once IBD is complete
+- [x] add newly requested config options
 - [x] add success and error toasts to settings page
 - [x] add log to settings page when error occurs
-- [ ] assumeutxo
 - [x] use rpcauth
 - [x] bring in the rest of the env vars from app store exports.sh
-- [ ] old bitcoin-config.json --> new settings.json migration
-- [ ] Address all TODOs in the codebase
-- [ ] one place for query keys
 
 ### Monorepo scaffolding
 
