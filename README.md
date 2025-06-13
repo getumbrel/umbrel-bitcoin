@@ -1,5 +1,6 @@
 ### TODO:
 - [ ] Address all TODOs in the codebase
+- [ ] Add background
 - [ ] responsiveness for every page (not yet implemented fully for mobile)
 - [ ] show indication of which chain network is being used (mainnet, testnet, etc)
 - [ ] Connect modal
