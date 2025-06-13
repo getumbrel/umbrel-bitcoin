@@ -30,7 +30,7 @@ export const makeYAxis = (label: string): Partial<YAxisProps> => ({
 })
 
 // TODO: add better loading placeholder
-export function ChartLoadingPlaceholder({title}: {title: string}) {
+export function ChartLoadingPlaceholder({title, text}: {title: string; text?: string}) {
 	return (
 		<div className='flex items-center justify-center w-full aspect-video text-white/40'>
 			<div className='flex flex-col items-center gap-3'>
@@ -46,7 +46,7 @@ export function ChartLoadingPlaceholder({title}: {title: string}) {
 						/>
 					))}
 				</div>
-				<span className='text-sm'>{`Loading ${title.toLowerCase()} data...`}</span>
+				<span className='text-sm'>{text ?? `Loading ${title.toLowerCase()} data...`}</span>
 			</div>
 		</div>
 	)
@@ -57,17 +57,20 @@ interface ChartCardProps {
 	legend?: React.ReactNode
 	children: React.ReactNode
 	loading?: boolean
+	syncing?: boolean
 }
 
-export function ChartCard({title, legend, children, loading}: ChartCardProps) {
+export function ChartCard({title, legend, children, loading, syncing}: ChartCardProps) {
+	const placeholderText = syncing ? 'Your node is syncing… charts will appear once it is caught up.' : undefined
 	return (
 		<InsightCard>
 			<CardHeader className='flex justify-between items-center'>
 				<CardTitle className='font-outfit text-white text-[20px] font-[400] pt-2'>{title}</CardTitle>
 				{legend}
 			</CardHeader>
-
-			<CardContent>{loading ? <ChartLoadingPlaceholder title={title} /> : children}</CardContent>
+			<CardContent>
+				{loading || syncing ? <ChartLoadingPlaceholder title={title} text={placeholderText} /> : children}
+			</CardContent>
 			<CardFooter />
 		</InsightCard>
 	)

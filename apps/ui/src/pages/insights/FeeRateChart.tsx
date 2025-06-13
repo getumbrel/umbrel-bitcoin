@@ -5,8 +5,11 @@ import {formatDistanceStrict} from 'date-fns'
 import {ChartContainer, ChartTooltip} from '@/components/ui/chart'
 
 import {ChartCard, DEFAULT_CHART_MARGIN, DEFAULT_GRID_PROPS, makeXAxis, makeYAxis} from './ChartDefaults'
-import {useFeeRates} from '@/hooks/useFeeRates'
 import {sliceLast24h, findClosestDataPoint, calculateHoursAgo, hoursToMs} from '@/lib/chartHelpers'
+
+import {useFeeRates} from '@/hooks/useFeeRates'
+import {useSyncStatus} from '@/hooks/useSyncStatus'
+import {syncStage} from '@/lib/sync-progress'
 
 const SERIES = {
 	p50: {label: '50th-percentile', color: 'hsl(29 100% 51%)'},
@@ -17,9 +20,14 @@ export default function FeeRateChart() {
 	const fillId = useId()
 	const strokeId = useId()
 
+	// Deterine if we're still in IBD (we won't query for data in IBD)
+	const {data: syncStatus} = useSyncStatus()
+	const stage = syncStage(syncStatus)
+	const inIBD = stage !== 'synced' // 'pre-headers' | 'headers' | 'IBD'
+
 	// 144 blocks is exactly 24 hours at 1 block per 10 min.
 	// 200 blocks ensures we have 24 hours of data even at worst-case historical block times
-	const {data: raw = [], isLoading} = useFeeRates(200)
+	const {data: raw = [], isLoading} = useFeeRates(200, {enabled: !inIBD})
 
 	// slice the last 24 hours of data
 	const {slice, minBlock, maxBlock} = sliceLast24h(raw)
@@ -36,7 +44,7 @@ export default function FeeRateChart() {
 	const deferredData = useDeferredValue(chartData)
 
 	return (
-		<ChartCard title='Fee Rates' loading={isLoading}>
+		<ChartCard title='Fee Rates' loading={isLoading} syncing={inIBD}>
 			<ChartContainer config={SERIES}>
 				<AreaChart data={deferredData} margin={DEFAULT_CHART_MARGIN}>
 					{/* Gradient definitions */}

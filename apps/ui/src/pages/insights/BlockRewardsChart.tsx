@@ -5,8 +5,11 @@ import {formatDistanceStrict} from 'date-fns'
 import {ChartContainer, ChartTooltip} from '@/components/ui/chart'
 
 import {ChartCard, DEFAULT_GRID_PROPS, DEFAULT_CHART_MARGIN, makeXAxis, makeYAxis} from './ChartDefaults'
-import {useBlockRewards} from '@/hooks/useBlockRewards'
 import {sliceLast24h, calculateHoursAgo, hoursToMs, satsToBTC} from '@/lib/chartHelpers'
+
+import {useBlockRewards} from '@/hooks/useBlockRewards'
+import {syncStage} from '@/lib/sync-progress'
+import {useSyncStatus} from '@/hooks/useSyncStatus'
 
 const SERIES = {
 	subsidy: {label: 'Subsidy', color: 'hsla(29,100%,51%,0.44)'},
@@ -17,9 +20,14 @@ export default function RewardsChart() {
 	// ID for the data series gradient
 	const fillId = useId()
 
+	// Deterine if we're still in IBD (we won't query for data in IBD)
+	const {data: syncStatus} = useSyncStatus()
+	const stage = syncStage(syncStatus)
+	const inIBD = stage !== 'synced' // 'pre-headers' | 'headers' | 'IBD'
+
 	// 144 blocks is exactly 24 hours at 1 block per 10 min.
 	// 200 blocks ensures we have 24 hours of data even at worst-case historical block times
-	const {data: raw = [], isLoading} = useBlockRewards(200)
+	const {data: raw = [], isLoading} = useBlockRewards(200, {enabled: !inIBD})
 
 	// slice the last 24 hours of data
 	const {slice} = sliceLast24h(raw)
@@ -46,7 +54,7 @@ export default function RewardsChart() {
 	)
 
 	return (
-		<ChartCard title='Block Rewards' legend={legend} loading={isLoading}>
+		<ChartCard title='Block Rewards' legend={legend} loading={isLoading} syncing={inIBD}>
 			<ChartContainer config={SERIES}>
 				<BarChart data={deferredData} margin={DEFAULT_CHART_MARGIN} barCategoryGap={1} barSize={6}>
 					{/* Gradient definitions */}
