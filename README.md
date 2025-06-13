@@ -8,13 +8,13 @@
 - [ ] Add new single-block animation for blocks
 - [ ] Hook blocks up to websocket once IBD is complete
 - [ ] responsiveness everywhere
-- [ ] add newly requested config options
+- [x] add newly requested config options
 - [ ] heavily test config logic and options
 - [x] add success and error toasts to settings page
 - [x] add log to settings page when error occurs
 - [ ] assumeutxo
 - [x] use rpcauth
-- [ ] bring in the rest of the env vars from app store exports.sh
+- [x] bring in the rest of the env vars from app store exports.sh
 - [ ] old bitcoin-config.json --> new settings.json migration
 - [ ] Address all TODOs in the codebase
 - [ ] one place for query keys

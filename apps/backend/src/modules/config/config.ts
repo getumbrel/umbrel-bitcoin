@@ -174,7 +174,7 @@ function appendPeerWhitelist(lines: string[]): string[] {
 
 function appendRpcAuth(lines: string[]): string[] {
 	lines.push(
-		`rpcauth=${process.env['RPC_AUTH'] || 'umbrel:5071d8b3ba93e53e414446ff9f1b7d7b$6d45cff9f3b500d78b543211f6bc74994448f1f35bfd313ddde834b42e7b5f73'}`,
+		`rpcauth=${process.env['RPC_AUTH'] || 'umbrel:5071d8b3ba93e53e414446ff9f1b7d7b$$375e9731abd2cd2c2c44d2327ec19f4f2644256fdeaf4fc5229bf98b778aafec'}`,
 	)
 	return lines
 }
