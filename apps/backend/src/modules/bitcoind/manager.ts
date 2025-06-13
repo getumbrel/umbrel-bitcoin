@@ -7,13 +7,6 @@ import type {ExitInfo} from '@umbrel-bitcoin/shared-types'
 
 import {BITCOIND_BIN, BITCOIN_DIR} from '../../lib/paths.js'
 
-export const RPC_PORT = process.env['RPC_PORT'] || '8332'
-export const RPC_USER = process.env['RPC_USER'] || 'umbrel'
-export const RPC_PASS = process.env['RPC_PASS'] || 'moneyprintergobrrr'
-const RPC_AUTH =
-	process.env['RPC_AUTH'] ||
-	'umbrel:5071d8b3ba93e53e414446ff9f1b7d7b$6d45cff9f3b500d78b543211f6bc74994448f1f35bfd313ddde834b42e7b5f73'
-
 type BitcoindProcess = ChildProcessWithoutNullStreams & {
 	stdout: Readable
 	stderr: Readable
@@ -65,15 +58,20 @@ export class BitcoindManager {
 	// flag to prevent emitting an exit event if we are purposefully stopping bitcoind (e.g., changing config via the UI)
 	private expectingExit = false
 
-	// TODO: finalize hardcoded args and allow extraArgs from env vars
 	constructor({binary = BITCOIND_BIN, datadir = BITCOIN_DIR, extraArgs = []}: BitcoindManagerOptions = {}) {
 		this.bin = binary
 		this.datadir = datadir
+
+		// Grab extra flags from env, if present
+		// This allows us to add extra flags in the app store compose file without changing this codebase
+		const envArgs = (process.env['BITCOIND_EXTRA_ARGS'] ?? '')
+			.trim()
+			.split(/\s+/) // splits on spaces, tabs, or newlines
+			.filter(Boolean) // removes empty strings
+
 		this.extraArgs = [
-			`-rpcauth=${RPC_AUTH}`,
-			`-rpcport=${RPC_PORT}`,
-			'-zmqpubhashblock=tcp://127.0.0.1:28332',
-			...extraArgs,
+			...extraArgs, // from caller
+			...envArgs, // from env var (e.g., in Docker Compose)
 		]
 
 		// We grab the implementation and version here once so the UI can query it without needing to wait for RPC to be available (e.g., if bitcoind is down or still starting up)

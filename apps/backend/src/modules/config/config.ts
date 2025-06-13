@@ -1,6 +1,4 @@
 // TODO: break out some config-helpers into a separate file
-// TODO: make sure we're error handling sanely and not over-try-catching.
-// TODO: handle bitcoind not starting after a settings change, logging error to user and reverting conf files
 
 import path from 'node:path'
 import fse from 'fs-extra'
@@ -71,7 +69,7 @@ function generateBaseConfLines(settings: SettingsSchema): string[] {
 		const value = settings[key]
 
 		switch (key) {
-			// “onlynet”: turn each named network into one or more “onlynet=…” lines
+			// "onlynet": turn each named network into one or more "onlynet=..." lines
 			case 'onlynet': {
 				const nets = value as string[]
 				const map: Record<string, string[]> = {
@@ -87,7 +85,7 @@ function generateBaseConfLines(settings: SettingsSchema): string[] {
 				break
 			}
 
-			// “listen”: turn on clearnet, tor, and i2p listeners
+			// "listen": turn on clearnet, tor, and i2p listeners
 			case 'listen': {
 				const nets = value as string[]
 				const flag = (enabled: boolean) => (enabled ? 1 : 0)
@@ -99,7 +97,7 @@ function generateBaseConfLines(settings: SettingsSchema): string[] {
 				break
 			}
 
-			// All other keys → default “key=value” (boolean→0|1, number/string as is)
+			// All other keys → default "key=value" (boolean→0|1, number/string as is)
 			default: {
 				if (typeof value === 'boolean') {
 					lines.push(`${key}=${value ? 1 : 0}`)
@@ -116,9 +114,9 @@ function generateBaseConfLines(settings: SettingsSchema): string[] {
 
 // HANDLERS FOR SPECIFIC SETTINGS
 
-// If “torProxyForClearnet” is true, set proxy=<tor-proxy-ip>:<tor-proxy-port>
+// If "torProxyForClearnet" is true, set proxy=<tor-proxy-ip>:<tor-proxy-port>
 function handleTorProxy(lines: string[], settings: SettingsSchema): string[] {
-	// Remove any existing “proxy=” lines first
+	// Remove any existing "proxy=" lines first
 	const withoutProxy = lines.filter((line) => !line.startsWith('proxy='))
 	if (settings['torProxyForClearnet']) {
 		withoutProxy.push(`proxy=${process.env['TOR_HOST']}:${process.env['TOR_SOCKS_PORT']}`)
@@ -126,12 +124,7 @@ function handleTorProxy(lines: string[], settings: SettingsSchema): string[] {
 	return withoutProxy
 }
 
-function appendPeerWhitelist(lines: string[]): string[] {
-	lines.push(`whitelist=${process.env['PEER_WHITELIST']}`)
-	return lines
-}
-
-function appendTor(lines: string[], settings: SettingsSchema): string[] {
+function handleTor(lines: string[], settings: SettingsSchema): string[] {
 	const torOut = settings['onlynet'].includes('tor')
 	const torIn = settings['listen'].includes('tor')
 
@@ -149,7 +142,7 @@ function appendTor(lines: string[], settings: SettingsSchema): string[] {
 	return lines
 }
 
-function appendI2p(lines: string[], settings: SettingsSchema): string[] {
+function handleI2P(lines: string[], settings: SettingsSchema): string[] {
 	const i2pOut = settings['onlynet'].includes('i2p')
 	const i2pIn = settings['listen'].includes('i2p')
 
@@ -160,27 +153,72 @@ function appendI2p(lines: string[], settings: SettingsSchema): string[] {
 	return lines
 }
 
-// Append the “[chain]” network stanza with bind addresses
+// HANDLERS FOR LINES WE ALWAYS ADD TO umbrel-bitcoin.conf
+
+function appendPeerWhitelist(lines: string[]): string[] {
+	if (process.env['APPS_SUBNET']) {
+		lines.push(`whitelist=${process.env['APPS_SUBNET']}`)
+	}
+	lines.push('whitelist=127.0.0.1')
+	return lines
+}
+
+function appendRpcAuth(lines: string[]): string[] {
+	lines.push(`rpcauth=${process.env['RPC_AUTH'] || 'umbrel:5071d8b3ba93e53e414446ff9f1b7d7b$6d45cff9f3b500d78b543211f6bc74994448f1f35bfd313ddde834b42e7b5f73'}`)
+	return lines
+}
+
+function appendRpcAllowIps(lines: string[]): string[] {
+	if (process.env['APPS_SUBNET']) {
+		lines.push(`rpcallowip=${process.env['APPS_SUBNET']}`)
+	}
+	lines.push('rpcallowip=127.0.0.1')
+	return lines
+}
+
+function appendZmqPubs(lines: string[]): string[] {
+	lines.push(`zmqpubrawblock=tcp://0.0.0.0:${process.env['ZMQ_RAWBLOCK_PORT'] || '28332'}`)
+	lines.push(`zmqpubrawtx=tcp://0.0.0.0:${process.env['ZMQ_RAWTX_PORT'] || '28333'}`)
+	lines.push(`zmqpubhashblock=tcp://0.0.0.0:${process.env['ZMQ_HASHBLOCK_PORT'] || '28334'}`)
+	lines.push(`zmqpubsequence=tcp://0.0.0.0:${process.env['ZMQ_SEQUENCE_PORT'] || '28335'}`)
+	return lines
+}
+
+// Append the "[chain]" network stanza with lines that must be present under a network stanza when not running on mainnet.
+// port, bind, rpcport, rpcbind
 function appendNetworkStanza(lines: string[], settings: SettingsSchema): string[] {
 	const net = settings['chain'] ?? 'main'
-	return lines.concat([
-		'', // blank spacer
-		`[${net}]`, // e.g. “[signet]” or “[main]”
-		'bind=0.0.0.0:8333', // clearnet
-		// TODO: look into whether this should be bound to just the IP of the container
-		'bind=0.0.0.0:8334', // onion
-	])
+	lines.push('') // blank spacer
+	lines.push(`[${net}]`) // e.g. "[signet]", "[main]", etc
+	
+	// p2p and tor binds
+	lines.push(`port=${process.env['P2P_PORT'] || '8333'}`)
+	lines.push(`bind=0.0.0.0:${process.env['P2P_PORT'] || '8333'}`)
+	lines.push(`bind=${process.env['BITCOIND_IP']}:${process.env['TOR_PORT'] || '8334'}=onion`)
+
+	// rpc binds
+	lines.push(`rpcport=${process.env['RPC_PORT'] || '8332'}`)
+	lines.push(`rpcbind=${process.env['BITCOIND_IP']}`)
+	lines.push('rpcbind=127.0.0.1')
+
+	return lines
 }
 
 function generateConfLines(settings: SettingsSchema): string[] {
 	let lines = generateBaseConfLines(settings)
 
-	// apply specific rules for certain settings
+	// apply specific rules for certain settings that depend on other settings
 	lines = handleTorProxy(lines, settings)
+	lines = handleTor(lines, settings)
+	lines = handleI2P(lines, settings)
+	
+	// append lines that we always want to be present
 	lines = appendPeerWhitelist(lines)
-	lines = appendTor(lines, settings)
-	lines = appendI2p(lines, settings)
+	lines = appendRpcAllowIps(lines)
+	lines = appendZmqPubs(lines)
+	lines = appendRpcAuth(lines)
 	lines = appendNetworkStanza(lines, settings)
+
 	return lines
 }
 
@@ -245,7 +283,7 @@ export async function updateSettings(patch: Partial<SettingsSchema>): Promise<Se
 	// Write and save the new umbrel-bitcoin.conf, derived from the new settings.json
 	await writeUmbrelConf(merged)
 
-	// Ensure bitcoin.conf has “includeconf=umbrel-bitcoin.conf”
+	// Ensure bitcoin.conf has "includeconf=umbrel-bitcoin.conf"
 	await ensureIncludeLine()
 
 	// Restart bitcoind so changes take effect

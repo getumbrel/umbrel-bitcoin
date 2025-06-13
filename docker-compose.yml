@@ -56,13 +56,15 @@ services:
       # RPC_USER: rpc-user-override
       # RPC_PASS: rpc-pass-override
       # RPC_AUTH: rpc-auth-override
+      # BITCOIND_EXTRA_ARGS: '-zmqpubhashblock=tcp://0.0.0.0:28332 bind=0.0.0.0:8333'
       TOR_HOST: 10.21.22.10
       TOR_SOCKS_PORT: 9050
       TOR_CONTROL_PORT: 9051
       TOR_CONTROL_PASSWORD: supersecretpassword
       I2P_HOST: 10.21.22.11
       I2P_SAM_PORT: 7656
-      PEER_WHITELIST: '10.21.0.0/16'
+      BITCOIND_IP: 10.21.21.8
+      APPS_SUBNET: '10.21.0.0/16'
       DEFAULT_CHAIN: regtest # dev override
     networks:
       devnet:

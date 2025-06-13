@@ -13,7 +13,7 @@
 - [x] add success and error toasts to settings page
 - [x] add log to settings page when error occurs
 - [ ] assumeutxo
-- [ ] use rpcauth
+- [x] use rpcauth
 - [ ] bring in the rest of the env vars from app store exports.sh
 - [ ] old bitcoin-config.json --> new settings.json migration
 - [ ] Address all TODOs in the codebase
