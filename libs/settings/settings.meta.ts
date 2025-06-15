@@ -268,6 +268,7 @@ export const settingsMetadata = {
 		// using GB and a step of 1 means users will never select between 1 MiB or <550 MiB behaviours described above
 		default: 0, // 0 disables pruning
 		step: 1,
+		min: 0,
 		unit: 'GB',
 	},
 
