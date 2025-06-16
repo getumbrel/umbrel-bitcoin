@@ -32,8 +32,8 @@ export default function InfoDialog({trigger, title, description, className}: Inf
 					</button>
 				</DialogClose>
 				<DialogHeader>
-					<DialogTitle className='text-white'>{title}</DialogTitle>
-					<DialogDescription className='text-white/60 whitespace-pre-line'>{description}</DialogDescription>
+					<DialogTitle className='text-white text-left'>{title}</DialogTitle>
+					<DialogDescription className='text-white/60 whitespace-pre-line text-left'>{description}</DialogDescription>
 				</DialogHeader>
 			</DialogContent>
 		</Dialog>
