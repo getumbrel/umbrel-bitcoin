@@ -64,11 +64,12 @@ export function ChartCard({title, legend, children, loading, syncing}: ChartCard
 	const placeholderText = syncing ? 'Your node is syncing… charts will appear once it is caught up.' : undefined
 	return (
 		<InsightCard>
-			<CardHeader className='flex justify-between items-center'>
+			<CardHeader className='flex justify-between items-center px-4 md:px-6'>
 				<CardTitle className='font-outfit text-white text-[20px] font-[400] pt-2'>{title}</CardTitle>
 				{legend}
 			</CardHeader>
-			<CardContent>
+			{/* No x padding on mobile. The recharts svg padding is enough to line up with card header px-4 above */}
+			<CardContent className='px-0 md:px-6'>
 				{loading || syncing ? <ChartLoadingPlaceholder title={title} text={placeholderText} /> : children}
 			</CardContent>
 			<CardFooter />
