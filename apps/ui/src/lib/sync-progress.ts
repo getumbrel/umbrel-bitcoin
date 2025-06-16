@@ -11,23 +11,17 @@ export function calcSyncPercent(syncStatus?: SyncStatus): number {
 	if (!syncStatus) return 0
 
 	// syncProgress is the value of `verificationprogress` from the getblockchaininfo RPC
-	const {blockHeight, validatedHeaderHeight, isInitialBlockDownload, syncProgress} = syncStatus
+	const {blockHeight, validatedHeaderHeight, syncProgress} = syncStatus
 
 	// If no headers yet, we show 0%
 	if (validatedHeaderHeight === 0) return 0
 
-	// While IBD is true, we use verificationprogress rounded down to two decimals,
-	// but never let it reach 100% so that we don't show 100% by rounding prematurely.
-	if (isInitialBlockDownload) {
-		const percent = Math.floor(syncProgress * 10000) / 100 // e.g. 87.23
-		return Math.min(99, percent)
-	}
-
 	// If we're synced to the tip, we show 100%
 	if (blockHeight === validatedHeaderHeight) return 100
 
-	// To keep typescript happy
-	return 0
+	// Otherwise use bitcoind's verificationprogress, rounded to 2 decimals
+	// We floor it to ensure we don't show 100% until we're actually at the tip
+	return Math.floor(syncProgress * 10000) / 100
 }
 
 export type SyncStage =
