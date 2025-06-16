@@ -433,9 +433,10 @@ export default function SettingsCard() {
 								{/* TabsContent for each category */}
 								<FadeScrollArea
 									className={clsx(
-										'h-[calc(100vh-375px)] [--fade-top:hsla(0,0%,6%,1)][--fade-bottom:hsla(0,0%,3%,1)]',
+										// The main header height increases at mobile, so we account for that here
+										'h-[calc(100vh-425px)] md:h-[calc(100vh-375px)] [--fade-top:hsla(0,0%,6%,1)][--fade-bottom:hsla(0,0%,3%,1)]',
 										// add the height of the tabs list when searching to prevent layout shift
-										isSearching && 'h-[calc(100vh-375px+44px)]',
+										isSearching && 'h-[calc(100vh-425px+44px)] md:h-[calc(100vh-375px+44px)]',
 									)}
 								>
 									{isSearching ? (
