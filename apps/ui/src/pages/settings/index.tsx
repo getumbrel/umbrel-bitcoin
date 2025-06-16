@@ -47,7 +47,7 @@ function SettingsTabTrigger({value, children}: {value: string; children: React.R
 	return (
 		<TabsTrigger
 			value={value}
-			className='text-[12px] bg-transparent border-b-[1.5px] border-transparent data-[state=active]:border-white data-[state=active]:text-white data-[state=active]:bg-transparent data-[state=active]:border-t-0 data-[state=active]:border-l-0 data-[state=active]:border-r-0 data-[state=inactive]:border-transparent focus-visible:outline-none focus:outline-none focus:ring-0 focus:border-transparent text-white/60 rounded-none hover:text-white/80 transition-none pb-3 mb-[-2px]'
+			className='relative text-[12px] bg-transparent border-none data-[state=active]:text-white data-[state=active]:bg-transparent data-[state=inactive]:text-white/60 focus-visible:outline-none focus:outline-none focus:ring-0 rounded-none hover:text-white/80 transition-none pb-3 after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[1.5px] after:bg-transparent data-[state=active]:after:bg-white'
 		>
 			{children}
 
@@ -413,32 +413,27 @@ export default function SettingsCard() {
 								}}
 							>
 								{/* TabsList */}
-								{/* TODO: this needs to be a horizontally scrollable fade area for mobile */}
 								<div
-									// hide the tabs list when searching
 									className={clsx(
-										'w-full border-b-[1.5px] border-white/20 flex items-end',
-										isSearching && 'hidden pointer-events-none select-none',
+										'relative w-full after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[1.5px] after:bg-white/20',
+										// hide the tabs list when searching without removing it from the DOM (prevents layout shift)
+										isSearching && 'opacity-0 pointer-events-none select-none',
 									)}
 								>
-									<TabsList className='flex bg-transparent rounded-none h-auto p-0 gap-1'>
-										<SettingsTabTrigger value='peers'>Peer Settings</SettingsTabTrigger>
-										<SettingsTabTrigger value='optimization'>Optimization</SettingsTabTrigger>
-										<SettingsTabTrigger value='rpc-rest'>RPC and REST</SettingsTabTrigger>
-										<SettingsTabTrigger value='network'>Network Selection</SettingsTabTrigger>
-										<SettingsTabTrigger value='advanced'>Advanced</SettingsTabTrigger>
-									</TabsList>
+									<FadeScrollArea className='w-full'>
+										<TabsList className='relative flex bg-transparent rounded-none h-auto p-0 gap-1 z-10 w-max'>
+											<SettingsTabTrigger value='peers'>Peer Settings</SettingsTabTrigger>
+											<SettingsTabTrigger value='optimization'>Optimization</SettingsTabTrigger>
+											<SettingsTabTrigger value='rpc-rest'>RPC and REST</SettingsTabTrigger>
+											<SettingsTabTrigger value='network'>Network Selection</SettingsTabTrigger>
+											<SettingsTabTrigger value='advanced'>Advanced</SettingsTabTrigger>
+										</TabsList>
+									</FadeScrollArea>
 								</div>
 
 								{/* TabsContent for each category */}
-								<FadeScrollArea
-									className={clsx(
-										// The main header height increases at mobile, so we account for that here
-										'h-[calc(100vh-425px)] md:h-[calc(100vh-375px)] [--fade-top:hsla(0,0%,6%,1)][--fade-bottom:hsla(0,0%,3%,1)]',
-										// add the height of the tabs list when searching to prevent layout shift
-										isSearching && 'h-[calc(100vh-425px+44px)] md:h-[calc(100vh-375px+44px)]',
-									)}
-								>
+								{/* The main header height increases below md breakpoint, so we account for that here to keep the main settings card above the Dock */}
+								<FadeScrollArea className='h-[calc(100vh-425px)] md:h-[calc(100vh-375px)] [--fade-top:hsla(0,0%,6%,1)][--fade-bottom:hsla(0,0%,3%,1)]'>
 									{isSearching ? (
 										matchingFields.length === 0 ? (
 											<p className='text-white/60 text-center text-[14px] font-[400]'>No results found for "{query}"</p>
