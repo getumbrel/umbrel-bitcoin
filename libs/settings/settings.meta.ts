@@ -88,7 +88,7 @@ export const settingsMetadata = {
 		tab: 'peers',
 		kind: 'multi',
 		label: 'Incoming Peer Connections',
-		bitcoinLabel: 'listen | listenonion | i2pacceptincoming',
+		bitcoinLabel: 'listen, listenonion, i2pacceptincoming',
 		// description:
 		// 	'Allow other nodes to connect to your node. If you disable this, your node will only connect to other nodes on the network.',
 		description:

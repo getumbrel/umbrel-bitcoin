@@ -22,14 +22,14 @@ export default function CustomConfigEditor() {
 	const canSave = !isLoading && !save.isPending && isDirty
 
 	return (
-		<div className='border border-white/20 rounded-lg p-4'>
+		<div className='border border-white/20 rounded-lg p-4 w-full'>
 			<label className='text-[14px] font-[400] text-white'>Custom bitcoin.conf overrides</label>
 			<p className='text-[13px] font-[400] text-white/60'>
 				Add custom bitcoin.conf options here. Any options here will override settings from the other tabs.
 			</p>
 
 			<Textarea
-				className='mt-2 h-40 w-full whitespace-pre !text-[13px] text-white border border-white/20 rounded-lg p-2 resize-none
+				className='mt-2 h-40 w-full whitespace-pre-wrap !text-[13px] text-white border border-white/20 rounded-lg p-2 resize-none
 					[&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar]:bg-transparent
 					[&::-webkit-scrollbar-thumb]:bg-[hsla(0,0%,100%,0.15)] [&::-webkit-scrollbar-thumb]:rounded-full
 					[&::-webkit-scrollbar-thumb]:hover:bg-[hsla(0,0%,100%,0.25)]

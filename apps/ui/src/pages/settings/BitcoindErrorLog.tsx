@@ -95,7 +95,8 @@ export default function BitcoindErrorLog() {
 								<div
 									key={i}
 									className={clsx(
-										'whitespace-pre-wrap',
+										// break-all to allow lines to wrap aggressively enough on mobile
+										'whitespace-pre-wrap break-all',
 										ERROR_REGEX.test(line) && 'text-red-400',
 										!ERROR_REGEX.test(line) && WARN_REGEX.test(line) && 'text-yellow-400',
 										!ERROR_REGEX.test(line) && !WARN_REGEX.test(line) && 'text-white',
