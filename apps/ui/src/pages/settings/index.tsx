@@ -316,6 +316,17 @@ export default function SettingsCard() {
 		if (initialSettings) form.reset(initialSettings)
 	}, [initialSettings, form])
 
+	// Clear search if navigated here with clearSearch parameter (e.g., from "View logs" button in bitcoind crash toast)
+	useEffect(() => {
+		if (searchParams.get('clearSearch') === 'true') {
+			setQuery('')
+			// Clean up the URL by removing the clearSearch parameter
+			const newParams = new URLSearchParams(searchParams)
+			newParams.delete('clearSearch')
+			setSearchParams(newParams, {replace: true})
+		}
+	}, [searchParams, setSearchParams])
+
 	const {isDirty, isValid, isSubmitting} = form.formState
 
 	// Disable all inputs when we're loading loading the initial settings or when the form is submitting

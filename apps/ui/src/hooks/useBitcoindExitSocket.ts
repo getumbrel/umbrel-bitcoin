@@ -25,7 +25,7 @@ export function useBitcoindExitSocket() {
 				closeButton: true,
 				action: {
 					label: 'View logs',
-					onClick: () => navigate('/settings?tab=advanced'),
+					onClick: () => navigate('/settings?tab=advanced&clearSearch=true'),
 				},
 			})
 		}
