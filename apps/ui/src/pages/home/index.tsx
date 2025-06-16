@@ -1,8 +1,10 @@
 import {formatDistanceToNowStrict} from 'date-fns'
 import {motion, AnimatePresence} from 'framer-motion'
+import {Info as InfoIcon} from 'lucide-react'
 
 import {Card, CardContent} from '@/components/ui/card'
 import {GradientBorderTopBottom, GradientBorderFromCorners} from '@/components/shared/GradientBorders'
+import InfoDialog from '@/components/shared/InfoDialog'
 import Globe from './Globe'
 import PeersChart from './PeersChart'
 import StatusDot from './StatusDot'
@@ -23,7 +25,11 @@ export default function HomePage() {
 	const stage = syncStage(syncStatus)
 
 	let syncSubtitle: React.ReactNode | null = null
+	let dialogContent: {title: string; description: string} | null = null
 
+	// Good explanations from Peter Wuille on sync stages:
+	// - https://bitcoin.stackexchange.com/questions/121292/how-does-block-synchronization-work-in-bitcoin-core-today
+	// - https://bitcoin.stackexchange.com/questions/76018/how-does-headers-first-prevent-disk-fill-attack/121235#121235
 	switch (stage) {
 		case 'pre-headers':
 			// TODO: break this out into a component
@@ -38,12 +44,27 @@ export default function HomePage() {
 					</span>
 				</span>
 			)
+			dialogContent = {
+				title: 'Pre-synchronizing Blockheaders',
+				description:
+					'Your node is undergoing the first stage of headers synchronization. It is downloading and verifying a complete list of blockheaders to be sure the chain that it will download is legitimate. These are being stored in memory only at this stage.',
+			}
 			break
 		case 'headers':
 			syncSubtitle = `${syncStatus?.blockHeight} of ${syncStatus?.validatedHeaderHeight} blocks`
+			dialogContent = {
+				title: 'Synchronizing Blockheaders',
+				description:
+					'Your node undergoing the last stage of headers synchronization. It is re-downloading and verifying all blockheaders that it now knows are, in fact, part of the chain with the most work.',
+			}
 			break
 		default:
 			syncSubtitle = `${syncStatus?.blockHeight} of ${syncStatus?.validatedHeaderHeight} blocks`
+			dialogContent = {
+				title: 'Synchronizing Blocks',
+				description:
+					'Your node is downloading blocks from connected peers, and fully verifying each one (e.g., checking consensus rules, script validity, subsidy, double-spends, etc). The sync percentage reflects how much total chain work has been verified, not the percentage of blocks that have been verified.',
+			}
 			break
 	}
 
@@ -103,7 +124,16 @@ export default function HomePage() {
 
 									{/* We only show the subtitle if the sync is not complete */}
 									{syncSubtitle && percentSynced < 100 && (
-										<span className='text-[14px] text-white/50 block'>{syncSubtitle}</span>
+										<div className='text-[14px] text-white/50 flex items-center gap-1'>
+											<span>{syncSubtitle}</span>
+											{dialogContent && (
+												<InfoDialog
+													trigger={<InfoIcon className='w-3 h-3 text-white/50 hover:text-white/80 transition-colors' />}
+													title={dialogContent.title}
+													description={dialogContent.description}
+												/>
+											)}
+										</div>
 									)}
 								</motion.h2>
 							)}
