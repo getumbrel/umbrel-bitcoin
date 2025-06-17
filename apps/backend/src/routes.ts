@@ -7,6 +7,7 @@ import * as peers from './modules/peers/peers.js'
 import * as blocks from './modules/blocks/blocks.js'
 import * as sync from './modules/sync/sync.js'
 import * as stats from './modules/stats/stats.js'
+import * as connect from './modules/connect/connect.js'
 import * as config from './modules/config/config.js'
 
 import {settingsSchema} from '@umbrel-bitcoin/settings'
@@ -40,6 +41,10 @@ export default fp(async (app: FastifyInstance) => {
 	app.get<{Querystring: {limit?: number}}>(`${rpcBase}/blocks/rewards`, (req) => blocks.rewards(req.query.limit))
 	app.get<{Querystring: {limit?: number}}>(`${rpcBase}/blocks/size`, (req) => blocks.blockSizes(req.query.limit))
 	app.get<{Querystring: {limit?: number}}>(`${rpcBase}/blocks/fees`, (req) => blocks.feeRates(req.query.limit))
+
+	// connect routes
+	const connectBase = `${BASE}/connect`
+	app.get(`${connectBase}/details`, connect.getConnectionDetails)
 
 	// config routes
 	const configBase = `${BASE}/config`

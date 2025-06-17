@@ -125,3 +125,34 @@ export type Stats = {
 	chainBytes: number // the estimated size of the block and undo files on disk in bytes
 	uptimeSec: number // seconds since bitcoind started (0 if down)
 }
+
+export type ConnectionDetails = {
+	p2p: {
+		tor: {
+			host: string
+			port: string
+			uri: string
+		}
+		local: {
+			host: string
+			port: string
+			uri: string
+		}
+	}
+	rpc: {
+		tor: {
+			host: string
+			port: string
+			username: string
+			password: string
+			uri: string
+		}
+		local: {
+			host: string
+			port: string
+			username: string
+			password: string
+			uri: string
+		}
+	}
+}

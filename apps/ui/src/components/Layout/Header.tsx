@@ -1,14 +1,13 @@
-import {Button} from '@/components/ui/button'
+import clsx from 'clsx'
+import {cn} from '@/lib/utils'
 
 // We import SVGs as React components via `?react` (SVGR):
-// This inlines the <svg>, so there’s no extra HTTP request.
+// This inlines the <svg>, so there's no extra HTTP request.
 // It also gives us the same behaviors as normal DOM elements—easy to size, recolor, and animate.
 import Logo from '@/assets/logo.svg?react'
-import WalletIcon from '@/assets/wallet.svg?react'
-import {GradientBorderFromTop} from '@/components/shared/GradientBorders'
+
+import ConnectionDetails from '@/components/ConnectionDetails'
 import {useBitcoindVersion} from '@/hooks/useBitcoind'
-import {cn} from '@/lib/utils'
-import clsx from 'clsx'
 
 export default function Header({className}: {className?: string}) {
 	const {data: version, isLoading, isError} = useBitcoindVersion()
@@ -43,11 +42,8 @@ export default function Header({className}: {className?: string}) {
 				</div>
 			</div>
 			<div>
-				<Button className='cursor-pointer rounded-full bg-button-gradient backdrop-blur-xl'>
-					<GradientBorderFromTop />
-					<WalletIcon />
-					<span className='text-[13px] text-white/80 font-[500]'>Connect</span>
-				</Button>
+				{/* Connect button + modal */}
+				<ConnectionDetails />
 			</div>
 		</header>
 	)

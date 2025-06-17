@@ -176,7 +176,6 @@ export default function PeersTable() {
 	const [globalFilter, setGlobalFilter] = useState('')
 
 	const {data: peers} = usePeerInfo()
-	console.log('peers', peers)
 
 	// Convert data to the row shape the table expects
 	const rows: PeerRow[] = useMemo(() => {

@@ -1,16 +1,17 @@
 ### TODO:
 - [ ] Address all TODOs in the codebase
+- [ ] Add a restore defaults button to settings page
 - [ ] Add background
-- [ ] responsiveness for every page (not yet implemented fully for mobile)
+- [x] responsiveness for every page (not yet implemented fully for mobile)
 - [ ] show indication of which chain network is being used (mainnet, testnet, etc)
-- [ ] Connect modal
+- [x] Connect modal
 - [ ] handle automated settings.json corruption detection/fix
 - [ ] Add block animations (loading, during-IBD, new block)
 - [ ] heavily test config logic and options
 - [ ] assumeutxo
 - [ ] old bitcoin-config.json --> new settings.json migration
 - [ ] one place for query keys
-- [ ] fix settings page not rendering sometimes
+- [ ] fix settings page not rendering sometimes (may be occuring when changing screen size on other pages)
 - [x] add a "syncing" state to the charts
 - [x] Add advanced tab for custom config
 - [x] Hook blocks up to websocket once IBD is complete
