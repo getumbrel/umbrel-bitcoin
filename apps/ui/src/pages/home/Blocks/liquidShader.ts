@@ -89,4 +89,4 @@ export const liquidFragmentShader = `
 		
 		gl_FragColor = vec4(color * 2.5, finalShape * uOpacity);
 	}
-` 
+`

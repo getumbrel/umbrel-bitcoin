@@ -5,47 +5,47 @@ import type {CubeAnimationState} from './types'
 export function useCubeAnimation(index: number, baseX: number) {
 	const [animationState, setAnimationState] = useState<CubeAnimationState>({
 		phase: 'idle',
-		startTime: 0
+		startTime: 0,
 	})
-	
+
 	const startEntering = useCallback((time: number) => {
 		setAnimationState({
 			phase: 'entering',
 			startTime: time,
-			enteringSubPhase: 'spinning-in'
+			enteringSubPhase: 'spinning-in',
 		})
 	}, [])
-	
+
 	const startSliding = useCallback((time: number, from: number, to: number) => {
 		setAnimationState({
 			phase: 'sliding',
 			startTime: time,
 			slideFrom: from,
-			slideTo: to
+			slideTo: to,
 		})
 	}, [])
-	
+
 	const startExiting = useCallback((time: number, from: number, to: number) => {
 		setAnimationState({
 			phase: 'exiting',
 			startTime: time,
 			slideFrom: from,
-			slideTo: to
+			slideTo: to,
 		})
 	}, [])
-	
+
 	const reset = useCallback(() => {
 		setAnimationState({
 			phase: 'idle',
-			startTime: 0
+			startTime: 0,
 		})
 	}, [])
-	
+
 	return {
 		animationState,
 		startEntering,
 		startSliding,
 		startExiting,
-		reset
+		reset,
 	}
-} 
+}

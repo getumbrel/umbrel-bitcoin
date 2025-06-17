@@ -18,23 +18,23 @@ type TetrisSquare = {
 function generateTetrisSquaresFromTiers(tiers: FeeTier[]): TetrisSquare[] {
 	const squares: TetrisSquare[] = []
 	const heightMap = Array(GRID_SIZE).fill(0) // Track the height of each column (start from top)
-	
+
 	// Sort tiers by square size (descending) to place larger squares first for better packing
 	const sortedTiers = [...tiers].sort((a, b) => b.squareSize - a.squareSize)
-	
+
 	for (const tier of sortedTiers) {
 		let placed = false
 		let attempts = 0
 		const maxAttempts = 100
-		
+
 		while (!placed && attempts < maxAttempts) {
 			attempts++
-			
+
 			// Try to find a suitable position from left to right
 			let bestX = -1
 			let bestY = -1
 			let lowestY = GRID_SIZE
-			
+
 			// Check each column from left to right
 			for (let x = 0; x <= GRID_SIZE - tier.squareSize; x++) {
 				// Find the highest occupied position in this column range
@@ -44,7 +44,7 @@ function generateTetrisSquaresFromTiers(tiers: FeeTier[]): TetrisSquare[] {
 						maxHeight = Math.max(maxHeight, heightMap[x + i])
 					}
 				}
-				
+
 				// Check if we can place the square here and if it's the lowest available position
 				if (maxHeight + tier.squareSize <= GRID_SIZE && maxHeight < lowestY) {
 					bestX = x
@@ -52,27 +52,27 @@ function generateTetrisSquaresFromTiers(tiers: FeeTier[]): TetrisSquare[] {
 					lowestY = maxHeight
 				}
 			}
-			
+
 			if (bestX !== -1 && bestY !== -1) {
 				// Place the square
 				squares.push({
 					x: bestX,
 					y: bestY,
-					size: tier.squareSize
+					size: tier.squareSize,
 				})
-				
+
 				// Update height map (mark these columns as occupied up to new height)
 				for (let i = 0; i < tier.squareSize; i++) {
 					if (bestX + i < GRID_SIZE) {
 						heightMap[bestX + i] = bestY + tier.squareSize
 					}
 				}
-				
+
 				placed = true
 			}
 		}
 	}
-	
+
 	return squares
 }
 
@@ -83,20 +83,20 @@ function generateRandomTetrisSquares(): TetrisSquare[] {
 	const MIN_SQUARES = 30
 	const MAX_SQUARES = 50
 	const numSquares = Math.floor(Math.random() * (MAX_SQUARES - MIN_SQUARES + 1)) + MIN_SQUARES
-	
+
 	let placedSquares = 0
 	let attempts = 0
 	const maxAttempts = 1000
-	
+
 	while (placedSquares < numSquares && attempts < maxAttempts) {
 		attempts++
-		
+
 		// Weighted size distribution
 		const sizeWeights = [40, 30, 20, 7, 3]
 		const totalWeight = sizeWeights.reduce((a, b) => a + b, 0)
 		let random = Math.random() * totalWeight
 		let size = 1
-		
+
 		for (let i = 0; i < sizeWeights.length; i++) {
 			random -= sizeWeights[i]
 			if (random <= 0) {
@@ -104,12 +104,12 @@ function generateRandomTetrisSquares(): TetrisSquare[] {
 				break
 			}
 		}
-		
+
 		// Try to find a suitable position
 		let bestX = -1
 		let bestY = -1
 		let lowestY = GRID_SIZE
-		
+
 		for (let x = 0; x <= GRID_SIZE - size; x++) {
 			let maxHeight = 0
 			for (let i = 0; i < size; i++) {
@@ -117,39 +117,39 @@ function generateRandomTetrisSquares(): TetrisSquare[] {
 					maxHeight = Math.max(maxHeight, heightMap[x + i])
 				}
 			}
-			
+
 			if (maxHeight + size <= GRID_SIZE && maxHeight < lowestY) {
 				bestX = x
 				bestY = maxHeight
 				lowestY = maxHeight
 			}
 		}
-		
+
 		if (bestX !== -1 && bestY !== -1) {
 			squares.push({
 				x: bestX,
 				y: bestY,
-				size
+				size,
 			})
-			
+
 			for (let i = 0; i < size; i++) {
 				if (bestX + i < GRID_SIZE) {
 					heightMap[bestX + i] = bestY + size
 				}
 			}
-			
+
 			placedSquares++
 		}
 	}
-	
+
 	return squares
 }
 
 // Custom shader material for golden gradient
 const goldenGradientMaterial = new THREE.ShaderMaterial({
 	uniforms: {
-		uTime: { value: 0 },
-		gradientInvert: { value: 0.0 } // 0 = normal, 1 = inverted
+		uTime: {value: 0},
+		gradientInvert: {value: 0.0}, // 0 = normal, 1 = inverted
 	},
 	vertexShader: `
 		varying vec2 vUv;
@@ -242,15 +242,15 @@ const goldenGradientMaterial = new THREE.ShaderMaterial({
 			gl_FragColor = vec4(color, alpha);
 		}
 	`,
-	transparent: true
+	transparent: true,
 })
 
 // Blur shader material - Horizontal pass
 const blurMaterialH = new THREE.ShaderMaterial({
 	uniforms: {
-		tDiffuse: { value: null },
-		resolution: { value: new THREE.Vector2(512, 512) },
-		blurSize: { value: 2.0 }
+		tDiffuse: {value: null},
+		resolution: {value: new THREE.Vector2(512, 512)},
+		blurSize: {value: 2.0},
 	},
 	vertexShader: `
 		varying vec2 vUv;
@@ -281,17 +281,17 @@ const blurMaterialH = new THREE.ShaderMaterial({
 			gl_FragColor = color / totalWeight;
 		}
 	`,
-	transparent: true
+	transparent: true,
 })
 
 // Blur shader material - Vertical pass
 const blurMaterialV = new THREE.ShaderMaterial({
 	uniforms: {
-		tDiffuse: { value: null },
-		resolution: { value: new THREE.Vector2(512, 512) },
-		blurSize: { value: 2.0 },
-		brightness: { value: 0.5 }, // 50% brightness
-		opacity: { value: 1.0 } // Add opacity uniform
+		tDiffuse: {value: null},
+		resolution: {value: new THREE.Vector2(512, 512)},
+		blurSize: {value: 2.0},
+		brightness: {value: 0.5}, // 50% brightness
+		opacity: {value: 1.0}, // Add opacity uniform
 	},
 	vertexShader: `
 		varying vec2 vUv;
@@ -333,16 +333,16 @@ const blurMaterialV = new THREE.ShaderMaterial({
 			gl_FragColor = color;
 		}
 	`,
-	transparent: true
+	transparent: true,
 })
 
 // Component to render the block transactions tetris grid
-export function Transactions({ 
-	faceSize, 
-	planeZ, 
-	isHovered = false, 
-	feeTiers 
-}: { 
+export function Transactions({
+	faceSize,
+	planeZ,
+	isHovered = false,
+	feeTiers,
+}: {
 	faceSize: number
 	planeZ: number
 	isHovered?: boolean
@@ -354,45 +354,43 @@ export function Transactions({
 		}
 		return generateRandomTetrisSquares()
 	}, [feeTiers])
-	
+
 	const cellSize = faceSize / GRID_SIZE
 	const margin = 2 // 2px margin in screen space
 	const marginInWorldSpace = margin * 0.001 // Convert to world space units
-	
+
 	const currentBlur = useRef(6.0)
 	const currentBrightness = useRef(0.5)
 	const currentGradientInvert = useRef(0.0)
-	
+
 	// Store material references
 	const squareMaterials = useRef<THREE.ShaderMaterial[]>([])
-	
+
 	// Create render targets for multi-pass blur
 	const renderTarget = useFBO(1024, 1024, {
 		minFilter: THREE.LinearFilter,
 		magFilter: THREE.LinearFilter,
 		format: THREE.RGBAFormat,
 		stencilBuffer: false,
-		depthBuffer: false
+		depthBuffer: false,
 	})
-	
+
 	const renderTargetBlurH = useFBO(1024, 1024, {
 		minFilter: THREE.LinearFilter,
 		magFilter: THREE.LinearFilter,
 		format: THREE.RGBAFormat,
 		stencilBuffer: false,
-		depthBuffer: false
+		depthBuffer: false,
 	})
-	
+
 	// Create separate scene for render target
 	const rtScene = useMemo(() => new THREE.Scene(), [])
 	const rtCamera = useMemo(() => {
-		const cam = new THREE.OrthographicCamera(
-			-faceSize/2, faceSize/2, faceSize/2, -faceSize/2, 0.1, 10
-		)
+		const cam = new THREE.OrthographicCamera(-faceSize / 2, faceSize / 2, faceSize / 2, -faceSize / 2, 0.1, 10)
 		cam.position.z = 5
 		return cam
 	}, [faceSize])
-	
+
 	// Create blur material instances
 	const blurMaterialHInstance = useMemo(() => {
 		const mat = blurMaterialH.clone()
@@ -400,7 +398,7 @@ export function Transactions({
 		mat.uniforms['blurSize'].value = 6.0
 		return mat
 	}, [])
-	
+
 	const blurMaterialVInstance = useMemo(() => {
 		const mat = blurMaterialV.clone()
 		mat.uniforms['resolution'].value = new THREE.Vector2(1024, 1024)
@@ -409,92 +407,87 @@ export function Transactions({
 		mat.uniforms['opacity'].value = 1.0
 		return mat
 	}, [])
-	
+
 	// Populate render target scene with tetris squares
 	useMemo(() => {
 		// Clear existing children
 		rtScene.clear()
 		squareMaterials.current = []
-		
+
 		// Add squares to render target scene
 		squares.forEach((square, index) => {
 			const posX = (square.x + square.size / 2) * cellSize - faceSize / 2
 			const posY = faceSize / 2 - (square.y + square.size / 2) * cellSize
 			const squareSize = square.size * cellSize - marginInWorldSpace * 2
-			
+
 			const geometry = new THREE.PlaneGeometry(squareSize, squareSize)
 			const material = goldenGradientMaterial.clone()
 			const mesh = new THREE.Mesh(geometry, material)
 			mesh.position.set(posX, posY, 0)
-			
+
 			// Store material reference
 			squareMaterials.current.push(material)
-			
+
 			rtScene.add(mesh)
 		})
 	}, [squares, cellSize, faceSize, marginInWorldSpace, rtScene])
-	
+
 	// Create blur scenes
 	const blurSceneH = useMemo(() => {
 		const scene = new THREE.Scene()
-		const plane = new THREE.Mesh(
-			new THREE.PlaneGeometry(faceSize, faceSize),
-			blurMaterialHInstance
-		)
+		const plane = new THREE.Mesh(new THREE.PlaneGeometry(faceSize, faceSize), blurMaterialHInstance)
 		scene.add(plane)
 		return scene
 	}, [faceSize, blurMaterialHInstance])
-	
+
 	// Render to texture before main render
 	useFrame((state, delta) => {
 		// Smooth transitions
 		const targetBlur = isHovered ? 3.0 : 10
 		const targetBrightness = isHovered ? 1 : 1
 		const targetGradientInvert = isHovered ? 1.0 : 0.0
-		
+
 		// Ease the values
 		const easeFactor = 1 - Math.pow(0.01, delta) // Smooth easing
 		currentBlur.current += (targetBlur - currentBlur.current) * easeFactor
 		currentBrightness.current += (targetBrightness - currentBrightness.current) * easeFactor
 		currentGradientInvert.current += (targetGradientInvert - currentGradientInvert.current) * easeFactor
-		
+
 		// Update shader uniforms
 		blurMaterialHInstance.uniforms['blurSize'].value = currentBlur.current
 		blurMaterialVInstance.uniforms['blurSize'].value = currentBlur.current
 		blurMaterialVInstance.uniforms['brightness'].value = currentBrightness.current
-		
+
 		// Update gradient inversion for all square materials
-		squareMaterials.current.forEach(material => {
+		squareMaterials.current.forEach((material) => {
 			material.uniforms['gradientInvert'].value = currentGradientInvert.current
 		})
-		
+
 		// Store current render target
 		const currentRenderTarget = state.gl.getRenderTarget()
-		
+
 		// Render tetris squares to first texture
 		state.gl.setRenderTarget(renderTarget)
 		state.gl.clear()
 		state.gl.render(rtScene, rtCamera)
-		
+
 		// Horizontal blur pass
 		blurMaterialHInstance.uniforms['tDiffuse'].value = renderTarget.texture
 		state.gl.setRenderTarget(renderTargetBlurH)
 		state.gl.clear()
 		state.gl.render(blurSceneH, rtCamera)
-		
+
 		// Update final material with horizontally blurred texture
 		blurMaterialVInstance.uniforms['tDiffuse'].value = renderTargetBlurH.texture
-		
+
 		// Restore render target
 		state.gl.setRenderTarget(currentRenderTarget)
 	})
-	
+
 	return (
-		<mesh 
-			position={[0, 0, planeZ + 0.01]}
-		>
+		<mesh position={[0, 0, planeZ + 0.01]}>
 			<planeGeometry args={[faceSize, faceSize]} />
-			<primitive object={blurMaterialVInstance} attach="material" />
+			<primitive object={blurMaterialVInstance} attach='material' />
 		</mesh>
 	)
 }

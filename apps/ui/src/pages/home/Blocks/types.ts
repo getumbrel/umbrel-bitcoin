@@ -22,7 +22,7 @@ export interface AnimatedCubeProps {
 	isLoading: boolean
 	animationState: CubeAnimationState
 	onAnimationComplete?: () => void
-	globalMouse: { x: number; y: number }
+	globalMouse: {x: number; y: number}
 	syncProgress?: {
 		currentHeightRef: React.MutableRefObject<number>
 		targetHeightRef: React.MutableRefObject<number>
@@ -37,4 +37,4 @@ export interface CubeData {
 	key: string
 	block?: BlockSummary
 	animationState: CubeAnimationState
-} 
+}

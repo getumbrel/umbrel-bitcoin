@@ -6,4 +6,4 @@ export const DISPLAY_CONFIG = {
 	BEVEL: 0.03,
 	FACE_GAP: 0.01,
 	PLANE_Z: 1.5 / 2 + 0.001,
-} as const 
+} as const

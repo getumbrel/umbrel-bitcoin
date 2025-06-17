@@ -50,14 +50,14 @@ const NUM_BLOCKS_PER_BATCH = 200
 
 // Fee tier boundaries in sat/vB
 const FEE_TIERS = [
-	{ min: 0, max: 2 },
-	{ min: 2, max: 5 },
-	{ min: 5, max: 10 },
-	{ min: 10, max: 25 },
-	{ min: 25, max: 50 },
-	{ min: 50, max: 100 },
-	{ min: 100, max: 250 },
-	{ min: 250, max: Infinity },
+	{min: 0, max: 2},
+	{min: 2, max: 5},
+	{min: 5, max: 10},
+	{min: 10, max: 25},
+	{min: 25, max: 50},
+	{min: 50, max: 100},
+	{min: 100, max: 250},
+	{min: 250, max: Infinity},
 ]
 
 // Cached getblockstats response
@@ -119,63 +119,63 @@ export async function list(limit = 20): Promise<BlocksResponse> {
 	// get each block's summary with transaction details (verbosity 2)
 	const raw: RawBlockWithTx[] = await rpcClient.command(hashes.map((h) => ({method: 'getblock', parameters: [h, 2]})))
 
-	const blocks: BlockSummary[] = await Promise.all(raw.map(async (b) => {
-		const summary: BlockSummary = {
-			hash: b.hash,
-			height: b.height,
-			time: b.time,
-			txs: b.nTx,
-			size: b.size,
-		}
-
-		// Calculate fee tiers
-		const tierCounts: Map<number, number> = new Map()
-
-		for (const tx of b.tx) {
-			// Skip coinbase transaction (no fee)
-			if (!tx.fee) continue
-
-			// Calculate fee rate in sat/vB
-			const feerateSatPerVB = (tx.fee * 100_000_000) / tx.vsize
-
-			// Find which tier this transaction belongs to
-			const tierIndex = FEE_TIERS.findIndex(
-				tier => feerateSatPerVB >= tier.min && feerateSatPerVB < tier.max
-			)
-
-			if (tierIndex !== -1) {
-				tierCounts.set(tierIndex, (tierCounts.get(tierIndex) || 0) + 1)
+	const blocks: BlockSummary[] = await Promise.all(
+		raw.map(async (b) => {
+			const summary: BlockSummary = {
+				hash: b.hash,
+				height: b.height,
+				time: b.time,
+				txs: b.nTx,
+				size: b.size,
 			}
-		}
 
-		// Convert to array of tiers with square sizes
-		const tiers: FeeTier[] = []
-		const counts = Array.from(tierCounts.values())
-		const maxCount = Math.max(...counts, 1)
+			// Calculate fee tiers
+			const tierCounts: Map<number, number> = new Map()
 
-		for (const [tierIndex, count] of tierCounts.entries()) {
-			const tier = FEE_TIERS[tierIndex]
-			if (!tier) continue
+			for (const tx of b.tx) {
+				// Skip coinbase transaction (no fee)
+				if (!tx.fee) continue
 
-			// Calculate square size (1-5) using logarithmic scaling
-			const normalizedCount = count / maxCount
-			const squareSize = Math.max(1, Math.ceil(normalizedCount * 5))
+				// Calculate fee rate in sat/vB
+				const feerateSatPerVB = (tx.fee * 100_000_000) / tx.vsize
 
-			tiers.push({
-				minFeerate: tier.min,
-				maxFeerate: tier.max,
-				txCount: count,
-				squareSize,
-			})
-		}
+				// Find which tier this transaction belongs to
+				const tierIndex = FEE_TIERS.findIndex((tier) => feerateSatPerVB >= tier.min && feerateSatPerVB < tier.max)
 
-		// Sort tiers by fee rate for consistent ordering
-		tiers.sort((a, b) => a.minFeerate - b.minFeerate)
-		
-		summary.feeTiers = tiers
+				if (tierIndex !== -1) {
+					tierCounts.set(tierIndex, (tierCounts.get(tierIndex) || 0) + 1)
+				}
+			}
 
-		return summary
-	}))
+			// Convert to array of tiers with square sizes
+			const tiers: FeeTier[] = []
+			const counts = Array.from(tierCounts.values())
+			const maxCount = Math.max(...counts, 1)
+
+			for (const [tierIndex, count] of tierCounts.entries()) {
+				const tier = FEE_TIERS[tierIndex]
+				if (!tier) continue
+
+				// Calculate square size (1-5) using logarithmic scaling
+				const normalizedCount = count / maxCount
+				const squareSize = Math.max(1, Math.ceil(normalizedCount * 5))
+
+				tiers.push({
+					minFeerate: tier.min,
+					maxFeerate: tier.max,
+					txCount: count,
+					squareSize,
+				})
+			}
+
+			// Sort tiers by fee rate for consistent ordering
+			tiers.sort((a, b) => a.minFeerate - b.minFeerate)
+
+			summary.feeTiers = tiers
+
+			return summary
+		}),
+	)
 
 	return {blocks}
 }
@@ -209,9 +209,7 @@ export async function feeTiers(blockHash?: string): Promise<BlockFeeTiers> {
 		const feerateSatPerVB = (tx.fee * 100_000_000) / tx.vsize
 
 		// Find which tier this transaction belongs to
-		const tierIndex = FEE_TIERS.findIndex(
-			tier => feerateSatPerVB >= tier.min && feerateSatPerVB < tier.max
-		)
+		const tierIndex = FEE_TIERS.findIndex((tier) => feerateSatPerVB >= tier.min && feerateSatPerVB < tier.max)
 
 		if (tierIndex !== -1) {
 			tierCounts.set(tierIndex, (tierCounts.get(tierIndex) || 0) + 1)

@@ -4,10 +4,10 @@ import {Scene} from './Scene'
 
 export default function Blocks() {
 	return (
-		<div className="w-[768px] h-[180px] overflow-hidden">
-			<Canvas orthographic camera={{ position: [0, 0, 8], zoom: 50 }}>
+		<div className='w-[768px] h-[180px] overflow-hidden'>
+			<Canvas orthographic camera={{position: [0, 0, 8], zoom: 50}}>
 				<Scene />
 			</Canvas>
 		</div>
 	)
-} 
+}
