@@ -7,6 +7,7 @@ import {writeWithBackup} from './fs-helpers.js'
 import {BITCOIN_DIR, APP_STATE_DIR} from '../../lib/paths.js'
 import {restart} from '../bitcoind/bitcoind.js'
 import {settingsSchema, defaultValues, type SettingsSchema} from '@umbrel-bitcoin/settings'
+import {migrateLegacyConfig} from './migration.js'
 
 // Paths to the config files
 const SETTINGS_JSON = path.join(APP_STATE_DIR, 'settings.json')
@@ -260,6 +261,9 @@ async function ensureIncludeLine() {
 // Called at server startup (before launching bitcoind):
 export async function ensureConfig(): Promise<SettingsSchema> {
 	await fse.ensureDir(BITCOIN_DIR)
+
+	// Migrate legacy app's bitcoin-config.json to this app's settings.json if it exists
+	await migrateLegacyConfig()
 
 	// Write out settings.json
 	const settings = applyDerivedSettings(await loadAndValidateSettings())
