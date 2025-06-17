@@ -6,8 +6,8 @@ import {api} from '@/lib/api'
 import type {BlockSummary} from '@umbrel-bitcoin/shared-types'
 import type {SyncStage} from '@/lib/sync-progress'
 
-// REST and WebSocket data source for the “latest 5 blocks” component on the home page
-// During IBD (`stage === 'IBD'`) bitcoind’s ZMQ is silent, so we poll the REST API
+// REST and WebSocket data source for the "latest 5 blocks" component on the home page
+// During IBD (`stage === 'IBD'`) bitcoind's ZMQ is silent, so we poll the REST API
 // every 3s to keep up with the rapidly increasing tip.
 // Once bitcoind is out of IBD (`stage === 'synced'`) we switch to a real-time
 // WebSocket fed by bitcoind's ZMQ, and fall back to a slow 60s REST poll just in

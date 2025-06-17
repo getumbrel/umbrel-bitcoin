@@ -41,6 +41,7 @@ export default fp(async (app: FastifyInstance) => {
 	app.get<{Querystring: {limit?: number}}>(`${rpcBase}/blocks/rewards`, (req) => blocks.rewards(req.query.limit))
 	app.get<{Querystring: {limit?: number}}>(`${rpcBase}/blocks/size`, (req) => blocks.blockSizes(req.query.limit))
 	app.get<{Querystring: {limit?: number}}>(`${rpcBase}/blocks/fees`, (req) => blocks.feeRates(req.query.limit))
+	app.get<{Querystring: {hash?: string}}>(`${rpcBase}/blocks/fee-tiers`, (req) => blocks.feeTiers(req.query.hash))
 
 	// connect routes
 	const connectBase = `${BASE}/connect`

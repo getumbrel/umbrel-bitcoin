@@ -73,6 +73,7 @@ export type BlockSummary = {
 	time: number
 	txs: number
 	size: number
+	feeTiers?: FeeTier[] // Optional fee tier data
 }
 
 export type BlocksResponse = {
@@ -155,4 +156,18 @@ export type ConnectionDetails = {
 			uri: string
 		}
 	}
+}
+
+// Fee tier for transaction visualization
+export type FeeTier = {
+	minFeerate: number // minimum fee rate in sat/vB
+	maxFeerate: number // maximum fee rate in sat/vB (exclusive)
+	txCount: number // number of transactions in this tier
+	squareSize: number // size of the square (1-5) for visualization
+}
+
+export type BlockFeeTiers = {
+	blockHash: string
+	height: number
+	tiers: FeeTier[]
 }
