@@ -1,11 +1,12 @@
 import {useState} from 'react'
 import QRCode from 'react-qr-code'
 import copy from 'copy-to-clipboard'
-import {Copy, AlertCircle} from 'lucide-react'
+import {Copy, AlertCircle, X as XIcon} from 'lucide-react'
 
 import {Alert, AlertDescription, AlertTitle} from '@/components/ui/alert'
 import {
 	Dialog,
+	DialogClose,
 	DialogContent,
 	DialogDescription,
 	DialogHeader,
@@ -44,7 +45,15 @@ export default function ConnectionDetails() {
 					<span className='text-[13px] text-white/80 font-[500]'>Connect</span>
 				</Button>
 			</DialogTrigger>
-			<DialogContent className='bg-card-gradient backdrop-blur-2xl border-white/10 border-[0.5px] rounded-2xl max-h-[90vh] flex flex-col'>
+			<DialogContent
+				className='bg-card-gradient backdrop-blur-2xl border-white/10 border-[0.5px] rounded-2xl max-h-[90vh] flex flex-col'
+				showCloseButton={false}
+			>
+				<DialogClose asChild>
+					<button className='absolute top-4 right-4 w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors'>
+						<XIcon className='w-3 h-3 text-white/70' />
+					</button>
+				</DialogClose>
 				<DialogHeader>
 					<DialogTitle className='font-outfit text-white text-[20px] font-[400] text-left'>
 						Connect to Bitcoin Node
