@@ -2,6 +2,7 @@ import {useState} from 'react'
 import QRCode from 'react-qr-code'
 import copy from 'copy-to-clipboard'
 import {Copy, AlertCircle, X as XIcon} from 'lucide-react'
+import {motion, AnimatePresence} from 'framer-motion'
 
 import {Alert, AlertDescription, AlertTitle} from '@/components/ui/alert'
 import {
@@ -153,24 +154,33 @@ export default function ConnectionDetails() {
 
 							{/* RPC tab */}
 							<TabsContent value='rpc' className='space-y-4 mt-0 min-h-[360px]'>
-								{net === 'local' && (
-									<Alert className='border-yellow-700/50 bg-yellow-600/10 text-yellow-100'>
-										<AlertCircle className='h-4 w-4 text-yellow-500' />
-										<AlertTitle className='text-yellow-100'>Warning</AlertTitle>
-										<AlertDescription className='text-yellow-200/80'>
-											Connecting a wallet over RPC with the Local network option is risky*: the wallet sends your RPC
-											username + password unencrypted on whatever network it's using (e.g., café Wi-Fi). If you still
-											want to use this method, you'll need to explicitly allow your wallet's IP address in the node's
-											RPC settings and avoid using it on untrusted networks.
-											<br />
-											<br />
-											<span className='italic'>
-												*Exception: apps running on the same Umbrel device communicate with the node entirely inside the
-												device, so the traffic never leaves the machine and is not exposed.
-											</span>
-										</AlertDescription>
-									</Alert>
-								)}
+								<AnimatePresence>
+									{net === 'local' && (
+										<motion.div
+											initial={{opacity: 0, y: 10}}
+											animate={{opacity: 1, y: 0}}
+											exit={{opacity: 0, y: -10}}
+											transition={{duration: 0.25}}
+										>
+											<Alert className='border-yellow-700/50 bg-yellow-600/10 text-yellow-100'>
+												<AlertCircle className='h-4 w-4 text-yellow-500' />
+												<AlertTitle className='text-yellow-100'>Warning</AlertTitle>
+												<AlertDescription className='text-yellow-200/80'>
+													Connecting a wallet over RPC with the Local network option is risky*: the wallet sends your
+													RPC username + password unencrypted on whatever network it's using (e.g., café Wi-Fi). If you
+													still want to use this method, you'll need to explicitly allow your wallet's IP address in the
+													node's RPC settings and avoid using it on untrusted networks.
+													<br />
+													<br />
+													<span className='italic'>
+														*Exception: apps running on the same Umbrel device communicate with the node entirely inside
+														the device, so the traffic never leaves the machine and is not exposed.
+													</span>
+												</AlertDescription>
+											</Alert>
+										</motion.div>
+									)}
+								</AnimatePresence>
 								<QR value={conn.uri} />
 								<div className='divide-y divide-white/6 overflow-hidden rounded-xl bg-white/6'>
 									<Field label='Username' value={conn.username} />
