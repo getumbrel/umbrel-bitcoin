@@ -489,7 +489,7 @@ export default function SettingsCard() {
 
 								{/* TabsContent for each category */}
 								{/* The main header height increases below md breakpoint, so we account for that here to keep the main settings card above the Dock */}
-								<FadeScrollArea className='h-[calc(100vh-425px)] md:h-[calc(100vh-375px)] [--fade-top:hsla(0,0%,6%,1)][--fade-bottom:hsla(0,0%,3%,1)]'>
+								<FadeScrollArea className='h-[calc(100vh-425px)] md:h-[calc(100vh-390px)] [--fade-top:hsla(0,0%,6%,1)][--fade-bottom:hsla(0,0%,3%,1)]'>
 									{isSearching ? (
 										matchingFields.length === 0 ? (
 											<p className='text-white/60 text-center text-[14px] font-[400]'>No results found for "{query}"</p>
