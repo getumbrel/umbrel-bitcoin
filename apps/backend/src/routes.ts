@@ -61,6 +61,8 @@ export default fp(async (app: FastifyInstance) => {
 		return config.updateSettings(settingsChanges)
 	})
 
+	app.post(`${configBase}/restore-defaults`, config.restoreDefaults)
+
 	app.get(`${configBase}/custom-options`, async () => ({
 		lines: await config.getCustomOptions(),
 	}))

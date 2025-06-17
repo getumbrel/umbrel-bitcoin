@@ -306,6 +306,32 @@ export async function updateSettings(patch: Partial<SettingsSchema>): Promise<Se
 	return merged
 }
 
+// Restore defaults for the settings.json and umbrel-bitcoin.conf files.
+// We do not touch any custom overrides the user has made to the bitcoin.conf file.
+export async function restoreDefaults(): Promise<SettingsSchema> {
+	const defaults = {...defaultValues}
+
+	// If we're in dev, use the DEFAULT_CHAIN override if set (allows us to default to regtest)
+	if (process.env['DEFAULT_CHAIN']) defaults.chain = process.env['DEFAULT_CHAIN']
+
+	// Write settings.json
+	const json = JSON.stringify(defaults, null, 2) + '\n'
+	await writeWithBackup(SETTINGS_JSON, json)
+
+	// Write umbrel-bitcoin.conf
+	await writeUmbrelConf(defaults)
+
+	// Ensure bitcoin.conf has "includeconf=umbrel-bitcoin.conf"
+	await ensureIncludeLine()
+
+	// Restart bitcoind so changes take effect
+	await restart()
+
+	// Update in‐memory settings cache if we were successful
+	cachedSettings = defaults
+	return defaults
+}
+
 // Get custom options from bitcoin.conf file
 // Return only the lines after the banner lines that includeconf=umbrel-bitcoin.conf
 export async function getCustomOptions(): Promise<string> {

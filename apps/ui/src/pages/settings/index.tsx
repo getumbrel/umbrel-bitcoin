@@ -14,6 +14,17 @@ import {Tabs, TabsList, TabsTrigger, TabsContent} from '@/components/ui/tabs'
 import {Button} from '@/components/ui/button'
 import {Input} from '@/components/ui/input'
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from '@/components/ui/select'
+import {
+	AlertDialog,
+	AlertDialogTrigger,
+	AlertDialogContent,
+	AlertDialogHeader,
+	AlertDialogTitle,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogCancel,
+	AlertDialogAction,
+} from '@/components/ui/alert-dialog'
 
 import {GradientBorderFromTop} from '@/components/shared/GradientBorders'
 import FadeScrollArea from '@/components/shared/FadeScrollArea'
@@ -34,7 +45,7 @@ import {
 	type Option,
 } from '@umbrel-bitcoin/settings'
 
-import {useSettings, useUpdateSettings} from '@/hooks/useSettings'
+import {useSettings, useUpdateSettings, useRestoreDefaults} from '@/hooks/useSettings'
 import {useBitcoindExitInfo} from '@/hooks/useBitcoindExitInfo'
 
 type SettingName = keyof typeof settingsMetadata
@@ -297,6 +308,7 @@ export default function SettingsCard() {
 	// Form data state
 	const {data: initialSettings, isLoading} = useSettings()
 	const updateSettings = useUpdateSettings()
+	const restoreDefaults = useRestoreDefaults()
 
 	const form = useForm<SettingsSchema>({
 		resolver: zodResolver(settingsSchema),
@@ -334,31 +346,28 @@ export default function SettingsCard() {
 
 	// These toast refs are used to clear / update the toast later without causing re-renders
 	// This is so we can show a loading toast if restarting bitcoind is taking longer than X seconds, and then update it to a success or error toast without re-rendering
-	const loadingToastId = useRef<string | number | null>(null)
-	const loadingTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+	const updateToastId = useRef<string | number | null>(null)
+	const updateTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-	const onSave = (data: SettingsSchema) => {
+	const onUpdateSettings = (data: SettingsSchema) => {
 		// If the mutation takes longer than 1 second, we show a loading toast
-		loadingTimer.current = setTimeout(() => {
-			loadingToastId.current = toast.loading('Hang tight, Bitcoin Core is restarting...', {duration: Infinity})
+		updateTimer.current = setTimeout(() => {
+			updateToastId.current = toast.loading('Hang tight, Bitcoin Core is restarting...', {duration: Infinity})
 		}, 1000)
 
 		updateSettings.mutate(data, {
-			onSuccess: (updated) => {
-				clearTimeout(loadingTimer.current!)
-				const id = loadingToastId.current
+			onSuccess: () => {
+				clearTimeout(updateTimer.current!)
+				const id = updateToastId.current
 				if (id != null) {
 					toast.success('Settings applied', {id, duration: 4000})
 				} else {
 					toast.success('Settings applied')
 				}
-
-				// reset "dirty" state with backend-confirmed values
-				form.reset(updated)
 			},
 			onError: (err) => {
-				clearTimeout(loadingTimer.current!)
-				const id = loadingToastId.current
+				clearTimeout(updateTimer.current!)
+				const id = updateToastId.current
 				const msg = err instanceof Error ? err.message : 'Unknown error'
 
 				if (id != null) {
@@ -369,7 +378,43 @@ export default function SettingsCard() {
 			},
 			onSettled: () => {
 				// Clear the toast refs for next time
-				loadingToastId.current = null
+				updateToastId.current = null
+			},
+		})
+	}
+
+	const restoreToastId = useRef<string | number | null>(null)
+	const restoreTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+	const onRestoreDefaults = () => {
+		// If the mutation takes longer than 1 second, we show a loading toast
+		restoreTimer.current = setTimeout(() => {
+			restoreToastId.current = toast.loading('Hang tight, Bitcoin Core is restarting...', {duration: Infinity})
+		}, 1000)
+
+		restoreDefaults.mutate(undefined, {
+			onSuccess: () => {
+				clearTimeout(restoreTimer.current!)
+				const id = restoreToastId.current
+				if (id != null) {
+					toast.success('Defaults restored', {id, duration: 4000})
+				} else {
+					toast.success('Defaults restored')
+				}
+			},
+			onError: (err) => {
+				clearTimeout(restoreTimer.current!)
+				const id = restoreToastId.current
+				const msg = err instanceof Error ? err.message : 'Unknown error'
+				if (id != null) {
+					toast.error(`Failed to restore defaults: ${msg}`, {id, duration: 4000})
+				} else {
+					toast.error(`Failed to restore defaults: ${msg}`)
+				}
+			},
+			onSettled: () => {
+				// Clear the toast refs for next time
+				restoreToastId.current = null
 			},
 		})
 	}
@@ -397,7 +442,7 @@ export default function SettingsCard() {
 	return (
 		<SettingsDisabledContext.Provider value={isInputsDisabled}>
 			<FormProvider {...form}>
-				<Form onSubmit={onSave}>
+				<Form onSubmit={onUpdateSettings}>
 					<Card className='bg-card-gradient backdrop-blur-2xl border-none rounded-3xl py-4'>
 						<GradientBorderFromTop />
 						<CardHeader>
@@ -492,10 +537,43 @@ export default function SettingsCard() {
 							</Tabs>
 							{/* )} */}
 						</CardContent>
-						<CardFooter className='justify-end'>
-							{/* We don't allow saving if the form is not dirty (meaning it is unchanged), is invalid, if we're still loading initial settings, if the form is submitting, or if the updated settings are pending */}
+						<CardFooter className='justify-end flex gap-2'>
+							{/* RESTORE DEFAULTS BUTTON */}
+							<AlertDialog>
+								<AlertDialogTrigger asChild>
+									<Button
+										type='button'
+										// We don't allow restoring defaults if the form is submitting, if the updated settings are pending, or if the restore defaults mutation is pending
+										disabled={isSubmitting || updateSettings.isPending || restoreDefaults.isPending}
+									>
+										Restore Defaults
+									</Button>
+								</AlertDialogTrigger>
+
+								<AlertDialogContent className='bg-card-gradient backdrop-blur-2xl border-white/10 border-[0.5px] rounded-2xl'>
+									<AlertDialogHeader>
+										<AlertDialogTitle className='font-outfit text-white text-[20px] font-[400] text-left'>
+											Restore default settings?
+										</AlertDialogTitle>
+										<AlertDialogDescription className='text-white/60 text-left text-[13px]'>
+											This will restore your current settings to the default values. You cannot undo this action. This
+											will not overwrite any custom overrides you've set under the "Advanced" tab on the Settings page.
+										</AlertDialogDescription>
+									</AlertDialogHeader>
+
+									<AlertDialogFooter>
+										<AlertDialogCancel className='bg-white/90 hover:bg-white'>Cancel</AlertDialogCancel>
+										<AlertDialogAction onClick={onRestoreDefaults} className='hover:bg-white/10'>
+											Yes
+										</AlertDialogAction>
+									</AlertDialogFooter>
+								</AlertDialogContent>
+							</AlertDialog>
+
+							{/* SAVE BUTTON */}
 							<Button
 								type='submit'
+								// We don't allow saving if the form is not dirty (meaning it is unchanged), is invalid, if we're still loading initial settings, if the form is submitting, or if the updated settings are pending
 								disabled={!isDirty || !isValid || isLoading || isSubmitting || updateSettings.isPending}
 							>
 								Save changes

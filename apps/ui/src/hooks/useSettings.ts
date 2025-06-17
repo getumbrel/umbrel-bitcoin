@@ -31,3 +31,19 @@ export function useUpdateSettings() {
 		},
 	})
 }
+
+export function useRestoreDefaults() {
+	const qc = useQueryClient()
+
+	return useMutation({
+		// No payload – just POST with empty body
+		mutationFn: () => api<SettingsSchema>('/config/restore-defaults', {method: 'POST', body: {}}),
+
+		onSuccess: (fresh) => {
+			qc.setQueryData(['settings'], fresh)
+			qc.setQueryData(['bitcoindExit'], null)
+			// Invalidate / refetch anything that's affected by a full restart
+			// qc.invalidateQueries({queryKey: ['peers/info']})
+		},
+	})
+}
