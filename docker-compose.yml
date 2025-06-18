@@ -22,8 +22,12 @@ services:
     working_dir: /repo
     volumes:
       - .:/repo # live source for hot reload
-      - ./__node_modules_linux__:/repo/node_modules # deps cache
+      - ./data/__node_modules_linux__:/repo/node_modules # deps cache shared with the ui container
       - ./data:/data # persistent app, bitcoin, i2pd dirs
+    tmpfs:
+      # writable stub dir owned by uid 1000
+      # in-memory so the host stays clean for unhoistable vite dependencies for ui container
+      - /repo/apps/ui/node_modules:uid=1000,gid=1000,mode=775
 
     # We install workspaces only when package-lock.json changes (uses hash guard).
     # TODO: handle changes to non-root package.json files.
@@ -105,7 +109,11 @@ services:
         condition: service_healthy
     volumes:
       - .:/repo
-      - ./__node_modules_linux__:/repo/node_modules # shares same deps cache as backend container
+      - ./data/__node_modules_linux__:/repo/node_modules # shares same deps cache as backend container
+    tmpfs:
+      # writable stub dir owned by uid 1000
+      # in-memory so the host stays clean for unhoistable vite dependencies for ui container
+      - /repo/apps/ui/node_modules:uid=1000,gid=1000,mode=775
     command: ['npm', 'run', 'dev', '--', '--host']
     ports:
       - '5173:5173' # localhost:5173 for ui

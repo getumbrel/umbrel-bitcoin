@@ -1,10 +1,7 @@
 node_modules
 dist
 .env*
-data
 
-# ─── Docker-dev artefacts ──────────────────────────────────────────
-# dependencies that the backend container installs for both backend and ui.
-# Safe to delete at any time; they’ll be re-created on the next
-# `docker compose up`.
-__node_modules_linux__/
+# App data during dev
+# includes __node_modules_linux__ deps cache
+data
