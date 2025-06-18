@@ -1,17 +1,21 @@
 ### TODO:
 - [ ] Address all TODOs in the codebase
-- [ ] Add a restore defaults button to settings page
-- [ ] Add background
-- [x] responsiveness for every page (not yet implemented fully for mobile)
-- [ ] show indication of which chain network is being used (mainnet, testnet, etc)
-- [x] Connect modal
-- [ ] handle automated settings.json corruption detection/fix
-- [ ] Add block animations (loading, during-IBD, new block)
 - [ ] heavily test config logic and options
+- [ ] heavily test previous app to new app migration
+- [ ] Go through settings descriptions and make sure they are clear and correct
+- [ ] clear ui cached data on node restart from settings page (both restore defaults and node)
+- [ ] related to above cache clearing -> have one place for query keys so they are easily re-used across the hooks
+- [ ] Add moving-gradient background
+- [ ] Add user location to peers globe and connection arcs
+- [ ] show indication of which chain network is being used (mainnet, testnet, etc)
+- [ ] handle automated settings.json corruption detection/fix
 - [ ] assumeutxo
-- [ ] old bitcoin-config.json --> new settings.json migration
-- [ ] one place for query keys
 - [ ] fix settings page not rendering sometimes (may be occuring when changing screen size on other pages)
+- [x] Add a restore defaults button to settings page
+- [x] responsiveness for every page (not yet implemented fully for mobile)
+- [x] Connect modal
+- [x] Add block animations (loading, during-IBD, new block)
+- [x] old bitcoin-config.json --> new settings.json migration
 - [x] add a "syncing" state to the charts
 - [x] Add advanced tab for custom config
 - [x] Hook blocks up to websocket once IBD is complete
