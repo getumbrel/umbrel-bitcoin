@@ -96,8 +96,8 @@ export default function HomePage() {
 
 								{running ? (
 									<>
-										<span className='text-[#0BC39E] text-[14px] font-[500] ml-1'>Running&nbsp;</span>
-										{uptime && <span className='text-white/60 text-[14px] font-[400]'>for {uptime}</span>}
+										<span className='text-[#0BC39E] text-[14px] font-[500] ml-1'>Running</span>
+										{uptime && <span className='text-white/60 text-[14px] font-[400]'>since {uptime}</span>}
 									</>
 								) : (
 									<span className='text-[#EF4444] text-[14px] font-[500] ml-1'>Not running</span>
@@ -148,7 +148,8 @@ export default function HomePage() {
 			</Card>
 
 			{/* Blocks page — hidden on mobile */}
-			<div className='hidden md:block w-full'>
+			<div className='hidden md:block w-full mt-4'>
+				<span className='text-white/50 text-[14px] font-[400] ml-4'>Blockchain</span>
 				<Blocks />
 			</div>
 		</>

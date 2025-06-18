@@ -57,7 +57,13 @@ export type PeerLocation = {
 	location: [number, number]
 }
 
-// subset of getblock (verbosity 1) that we care about
+export type RawTransaction = {
+	txid: string
+	fee?: number // fee in BTC (not available for coinbase)
+	vsize: number
+}
+
+// subset of getblock (verbosity 2) that we care about
 export type RawBlock = {
 	hash: string
 	height: number
@@ -65,7 +71,9 @@ export type RawBlock = {
 	nTx: number
 	size: number
 	weight: number
+	tx: RawTransaction[]
 }
+
 
 export type BlockSummary = {
 	hash: string
