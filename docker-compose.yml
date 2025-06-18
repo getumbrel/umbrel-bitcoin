@@ -49,30 +49,43 @@ services:
       interval: 5s
       retries: 20
     environment:
-      # BITCOIND_BIN: bitcoind-binary-path-override
+      # DATA DIRECTORY SETTINGS
       # BITCOIN_DIR: bitcoin-dir-override
       # APP_STATE_DIR: app-state-dir-override
-      # RPC_HOST: rpc-host-override
-      RPC_USER: umbrel
-      RPC_PASS: moneyprintergobrrr
-      RPC_AUTH: umbrel:5071d8b3ba93e53e414446ff9f1b7d7b$$375e9731abd2cd2c2c44d2327ec19f4f2644256fdeaf4fc5229bf98b778aafec
-      # BITCOIND_EXTRA_ARGS: '-zmqpubhashblock=tcp://0.0.0.0:28332 bind=0.0.0.0:8333'
-      BITCOIND_IP: 10.21.21.8
-      APPS_SUBNET: '10.21.0.0/16'
-      P2P_PORT: 8333
-      RPC_PORT: 8332
-      TOR_PORT: 8334
-      ZMQ_RAWBLOCK_PORT: 28332
-      ZMQ_RAWTX_PORT: 28333
-      ZMQ_HASHBLOCK_PORT: 28334
-      ZMQ_SEQUENCE_PORT: 28335
-      TOR_HOST: 10.21.22.10
-      TOR_SOCKS_PORT: 9050
-      TOR_CONTROL_PORT: 9051
-      TOR_CONTROL_PASSWORD: supersecretpassword
-      I2P_HOST: 10.21.22.11
-      I2P_SAM_PORT: 7656
-      DEFAULT_CHAIN: regtest # dev override, not needed in production
+
+      # BITCOIND BINARY SETTINGS
+      # BITCOIND_BIN: bitcoind-binary-path-override
+      BITCOIND_EXTRA_ARGS: '-deprecatedrpc=create_bdb' # used to pass extra startup flags to bitcoind
+
+      # BITCOIND CONF FILE SETTINGS
+      RPC_AUTH: umbrel:5071d8b3ba93e53e414446ff9f1b7d7b$$375e9731abd2cd2c2c44d2327ec19f4f2644256fdeaf4fc5229bf98b778aafec # rpcauth
+      APPS_SUBNET: '10.21.0.0/16' # used to whitelist local apps as both peers (whitelist) and rpc connections (rpcallowip)
+      P2P_PORT: 8333 # port, bind (also used for connect details)
+      RPC_PORT: 8332 # rpcport (also used for rpc client and connect details)
+      TOR_PORT: 8334 # bind=onion
+      ZMQ_RAWBLOCK_PORT: 28332 # zmqpubrawblock
+      ZMQ_RAWTX_PORT: 28333 # zmqpubrawtx
+      ZMQ_HASHBLOCK_PORT: 28334 # zmqpubhashblock
+      ZMQ_SEQUENCE_PORT: 28335 # zmqpubsequence
+      TOR_HOST: 10.21.22.10 # proxy, onion, torcontrol
+      TOR_SOCKS_PORT: 9050 # proxy, onion
+      TOR_CONTROL_PORT: 9051 # torcontrol
+      TOR_CONTROL_PASSWORD: supersecretpassword # torpassword
+      I2P_HOST: 10.21.22.11 # i2psam
+      I2P_SAM_PORT: 7656 # i2psam
+
+      # RPC CLIENT SETTINGS
+      BITCOIND_IP: 10.21.21.8 # host for the rpc client. Also used for bitcoind conf file rpcbind & bind.
+      RPC_USER: umbrel # also shown in the connect modal
+      RPC_PASS: moneyprintergobrrr # also shown in the connect modal
+
+      # CONNECTION DETAILS (shown to user in the connect modal)
+      DEVICE_DOMAIN_NAME: 127.0.0.1
+      P2P_HIDDEN_SERVICE: somehiddenservice
+      RPC_HIDDEN_SERVICE: someotherhiddenservice
+
+      # DEV ONLY SETTINGS (not needed in production)
+      DEFAULT_CHAIN: regtest # dev override to set the chain on first start to non-mainnet.
     networks:
       devnet:
         ipv4_address: 10.21.21.8 # matches existing APP_BITCOIN_NODE_IP on umbrelOS app store
