@@ -226,6 +226,7 @@ function Field({label, value}: {label: string; value?: string}) {
 // @wojtekmaj/react-qr-svg component
 // We could use the more popularreact-qr-code instead, but we can't do borders on the individual qr cells with that library
 // Note: If you are tweaking this, make sure that the code is readable afterwards. Cell borders and the logo overlay both reduce readability.
+// Increasing the `level` (error correction) can help.
 function QR({value}: {value?: string}) {
 	if (!value) {
 		return <div className='flex h-[196px] w-[196px] m-auto mb-4 items-center rounded-md bg-white/5' />
@@ -238,7 +239,7 @@ function QR({value}: {value?: string}) {
 					value={value}
 					width={200}
 					height={200}
-					level='Q' // M = 15% error correction
+					level='Q' // Q = 25% error correction
 					fgColor='#9C4C00' // solid orange fill
 					bgColor='transparent' // transparent background
 					cellClassPrefix='qrPx' // produces .qrPx & .qrPx-filled that we can target with CSS
