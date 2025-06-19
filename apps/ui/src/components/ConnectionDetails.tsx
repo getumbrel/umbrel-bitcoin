@@ -4,6 +4,8 @@ import copy from 'copy-to-clipboard'
 import {Copy, TriangleAlert, LockKeyhole, X as XIcon} from 'lucide-react'
 import {motion, AnimatePresence} from 'framer-motion'
 
+import UmbrelLogo from '@/assets/umbrel-logo.svg?react'
+
 import {Alert, AlertDescription, AlertTitle} from '@/components/ui/alert'
 import {
 	Dialog,
@@ -223,19 +225,20 @@ function Field({label, value}: {label: string; value?: string}) {
 
 // @wojtekmaj/react-qr-svg component
 // We could use the more popularreact-qr-code instead, but we can't do borders on the individual qr cells with that library
+// Note: If you are tweaking this, make sure that the code is readable afterwards. Cell borders and the logo overlay both reduce readability.
 function QR({value}: {value?: string}) {
 	if (!value) {
 		return <div className='flex h-[196px] w-[196px] m-auto mb-4 items-center rounded-md bg-white/5' />
 	}
 
 	return (
-		<div className='flex justify-center'>
+		<div className='relative flex justify-center'>
 			<div className='p-2 rounded-md'>
 				<QrSvg
 					value={value}
-					width={180}
-					height={180}
-					level='M' // M = 15% error correction
+					width={200}
+					height={200}
+					level='Q' // M = 15% error correction
 					fgColor='#9C4C00' // solid orange fill
 					bgColor='transparent' // transparent background
 					cellClassPrefix='qrPx' // produces .qrPx & .qrPx-filled that we can target with CSS
@@ -243,12 +246,19 @@ function QR({value}: {value?: string}) {
 				/>
 			</div>
 
+			{/* Umbrel logo overlay */}
+			<div className='absolute inset-1/2 -translate-x-1/2 -translate-y-1/2 w-14 h-14 p-2 shadow-md pointer-events-none select-none bg-[#1C1C1C]'>
+				<div className='w-full h-full flex items-center justify-center bg-white/10 rounded-md p-1.5'>
+					<UmbrelLogo className='w-full h-full text-white' />
+				</div>
+			</div>
+
 			{/* Correct selector: path.qrPx-filled */}
 			<style>{`
         /* add a lighter-orange outline to each "filled" cell */
         .qrPx-filled {
           stroke: #FF7E05 !important;
-          stroke-width: 1px !important;
+          stroke-width: 0.5px !important;
           stroke-linejoin: miter;
           vector-effect: non-scaling-stroke;
         }
@@ -269,7 +279,7 @@ function ConnectionTypeAndQrCard({
 	return (
 		<div className='bg-gradient-to-b from-[#1C1C1C] to-[#0D0D0D] p-5 rounded-xl'>
 			<h3 className='text-white/60 text-[12px] font-[400] mb-2 text-center'>Connection Type</h3>
-			<Tabs value={net} onValueChange={(v: string) => setNet(v as 'tor' | 'local')} className='w-[180px] mx-auto mb-3'>
+			<Tabs value={net} onValueChange={(v: string) => setNet(v as 'tor' | 'local')} className='w-[200px] mx-auto mb-3'>
 				<TabsList className='relative flex w-full rounded-md bg-[#121212] backdrop-blur-xl p-1 ring-white/10'>
 					<GradientBorderFromTop />
 
