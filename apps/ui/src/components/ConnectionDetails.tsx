@@ -1,7 +1,7 @@
 import {useState} from 'react'
-import QRCode from 'react-qr-code'
+import QrSvg from '@wojtekmaj/react-qr-svg'
 import copy from 'copy-to-clipboard'
-import {Copy, AlertCircle, X as XIcon} from 'lucide-react'
+import {Copy, TriangleAlert, LockKeyhole, X as XIcon} from 'lucide-react'
 import {motion, AnimatePresence} from 'framer-motion'
 
 import {Alert, AlertDescription, AlertTitle} from '@/components/ui/alert'
@@ -15,7 +15,6 @@ import {
 	DialogTrigger,
 } from '@/components/ui/dialog'
 import {Tabs, TabsList, TabsTrigger, TabsContent} from '@/components/ui/tabs'
-import {RadioGroup, RadioGroupItem} from '@/components/ui/radio-group'
 import {Button} from '@/components/ui/button'
 import {Popover, PopoverContent, PopoverTrigger} from '@/components/ui/popover'
 
@@ -42,14 +41,15 @@ export default function ConnectionDetails() {
 			<DialogTrigger asChild>
 				<Button className='cursor-pointer rounded-full bg-button-gradient backdrop-blur-xl'>
 					<GradientBorderFromTop />
-					<WalletIcon />
+					<WalletIcon className='w-5 h-5 text-[#969696]' />
 					<span className='text-[13px] text-white/80 font-[500]'>Connect Wallet</span>
 				</Button>
 			</DialogTrigger>
 			<DialogContent
-				className='bg-card-gradient backdrop-blur-2xl border-white/10 border-[0.5px] rounded-2xl max-h-[90vh] flex flex-col'
+				className='bg-card-gradient backdrop-blur-2xl border-white/10 border-[0.5px] rounded-2xl max-h-[90vh] flex flex-col sm:max-w-[768px]'
 				showCloseButton={false}
 			>
+				<GradientBorderFromTop />
 				<DialogClose asChild>
 					<button className='absolute top-4 right-4 w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors'>
 						<XIcon className='w-3 h-3 text-white/70' />
@@ -57,7 +57,10 @@ export default function ConnectionDetails() {
 				</DialogClose>
 				<DialogHeader>
 					<DialogTitle className='font-outfit text-white text-[20px] font-[400] text-left'>
-						Connect to Bitcoin Node
+						<div className='flex items-center gap-2'>
+							<WalletIcon className='w-5 h-5 text-white' />
+							Connect to Bitcoin Node
+						</div>
 					</DialogTitle>
 					<DialogDescription className='text-white/60 text-left text-[13px]'>
 						Choose how your wallet talks to your own node—for full privacy and trustless verification without relying on
@@ -65,7 +68,7 @@ export default function ConnectionDetails() {
 					</DialogDescription>
 				</DialogHeader>
 
-				<Tabs value={tab} onValueChange={(v) => setTab(v as any)}>
+				<Tabs value={tab} onValueChange={(v: string) => setTab(v as 'p2p' | 'rpc' | 'electrum')}>
 					<div className='relative w-full after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[1.5px] after:bg-white/20'>
 						<TabsList className='relative flex bg-transparent rounded-none h-auto p-0 gap-1 z-10 w-max'>
 							<TabsTrigger
@@ -90,34 +93,7 @@ export default function ConnectionDetails() {
 					</div>
 
 					<FadeScrollArea className='h-[min(480px,calc(90vh-200px))]'>
-						<div className='space-y-4 mt-4'>
-							{/* No connection type radio buttons for Electrum tab */}
-							{tab !== 'electrum' && (
-								<div>
-									<h3 className='text-white text-[14px] font-[500] mb-2 text-center'>Connection Type</h3>
-									<RadioGroup value={net} onValueChange={(v) => setNet(v as any)} className='flex gap-4 justify-center'>
-										<label className='flex items-center gap-2 cursor-pointer group text-[13px]'>
-											<RadioGroupItem
-												value='local'
-												className='[&_[data-slot=radio-group-indicator]_svg]:fill-white border-white/20'
-											/>
-											<span className='text-[12px] font-[400] text-white/60 group-hover:text-white/80 transition-colors'>
-												Local
-											</span>
-										</label>
-										<label className='flex items-center gap-2 cursor-pointer group text-[13px]'>
-											<RadioGroupItem
-												value='tor'
-												className='[&_[data-slot=radio-group-indicator]_svg]:fill-white/80 border-white/20'
-											/>
-											<span className='text-[12px] font-[400] text-white/60 group-hover:text-white/80 transition-colors'>
-												Tor
-											</span>
-										</label>
-									</RadioGroup>
-								</div>
-							)}
-
+						<div className='space-y-4 mt-4 flex'>
 							{/* Electrum tab with app install instructions */}
 							<TabsContent value='electrum' className='space-y-4 mt-0 min-h-[360px]'>
 								<div className='space-y-4'>
@@ -153,49 +129,36 @@ export default function ConnectionDetails() {
 							</TabsContent>
 
 							{/* RPC tab */}
-							<TabsContent value='rpc' className='space-y-4 mt-0 min-h-[360px]'>
-								<AnimatePresence>
+							<TabsContent value='rpc' className='mt-0 min-h-[360px]'>
+								<div className='flex flex-col sm:flex-row gap-4'>
+									<ConnectionTypeAndQrCard net={net} setNet={setNet} conn={conn} />
 									{net === 'local' && (
-										<motion.div
-											initial={{opacity: 0, y: 10}}
-											animate={{opacity: 1, y: 0}}
-											exit={{opacity: 0, y: -10}}
-											transition={{duration: 0.25}}
-										>
-											<Alert className='border-yellow-700/50 bg-yellow-600/10 text-yellow-100'>
-												<AlertCircle className='h-4 w-4 text-yellow-500' />
-												<AlertTitle className='text-yellow-100'>Warning</AlertTitle>
-												<AlertDescription className='text-yellow-200/80'>
-													Connecting a wallet over RPC with the Local network option is risky*: the wallet sends your
-													RPC username + password unencrypted on whatever network it's using (e.g., café Wi-Fi). If you
-													still want to use this method, you'll need to explicitly allow your wallet's IP address in the
-													node's RPC settings and avoid using it on untrusted networks.
-													<br />
-													<br />
-													<span className='italic'>
-														*Exception: apps running on the same Umbrel device communicate with the node entirely inside
-														the device, so the traffic never leaves the machine and is not exposed.
-													</span>
-												</AlertDescription>
-											</Alert>
-										</motion.div>
+										<div className='sm:hidden'>
+											<LocalRPCAlert net={net} />
+										</div>
 									)}
-								</AnimatePresence>
-								<QR value={conn.uri} />
-								<div className='divide-y divide-white/6 overflow-hidden rounded-xl bg-white/6'>
-									<Field label='Username' value={conn.username} />
-									<Field label='Password' value={conn.password} />
-									<Field label='Host' value={conn.host} />
-									<Field label='Port' value={conn.port?.toString()} />
+									<div className='divide-y divide-white/6 overflow-hidden rounded-xl w-full h-fit bg-gradient-to-b from-[#1C1C1C] to-[#0D0D0D]'>
+										<Field label='Username' value={conn.username} />
+										<Field label='Password' value={conn.password} />
+										<Field label='Host' value={conn.host} />
+										<Field label='Port' value={conn.port?.toString()} />
+									</div>
 								</div>
+								{net === 'local' && (
+									<div className='hidden sm:block mt-4'>
+										<LocalRPCAlert net={net} />
+									</div>
+								)}
 							</TabsContent>
 
 							{/* P2P tab */}
-							<TabsContent value='p2p' className='space-y-4 mt-0 min-h-[360px]'>
-								<QR value={conn.uri} />
-								<div className='divide-y divide-white/6 overflow-hidden rounded-xl bg-white/6'>
-									<Field label='Host' value={conn.host} />
-									<Field label='Port' value={conn.port?.toString()} />
+							<TabsContent value='p2p' className='mt-0 min-h-[360px]'>
+								<div className='flex flex-col sm:flex-row gap-4'>
+									<ConnectionTypeAndQrCard net={net} setNet={setNet} conn={conn} />
+									<div className='divide-y divide-white/6 overflow-hidden rounded-xl w-full h-fit bg-gradient-to-b from-[#1C1C1C] to-[#0D0D0D]'>
+										<Field label='Host' value={conn.host} />
+										<Field label='Port' value={conn.port?.toString()} />
+									</div>
 								</div>
 							</TabsContent>
 						</div>
@@ -221,12 +184,12 @@ function Field({label, value}: {label: string; value?: string}) {
 
 	return (
 		<div className='h-[42px] grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3 px-4 text-sm'>
-			<span className='shrink-0 text-white/80'>{label}</span>
+			<span className='shrink-0 text-white'>{label}</span>
 
 			<div className='flex min-w-0 items-center justify-end gap-2'>
 				{/* show an em-dash when no data */}
 				<span
-					className='min-w-0 overflow-hidden text-ellipsis whitespace-nowrap font-normal text-white/70'
+					className='min-w-0 overflow-hidden text-ellipsis whitespace-nowrap font-normal text-white/60'
 					title={value}
 				>
 					{value}
@@ -258,16 +221,124 @@ function Field({label, value}: {label: string; value?: string}) {
 	)
 }
 
-function QR({value}: {value: string | undefined}) {
+// @wojtekmaj/react-qr-svg component
+// We could use the more popularreact-qr-code instead, but we can't do borders on the individual qr cells with that library
+function QR({value}: {value?: string}) {
 	if (!value) {
-		// placeholder block keeps the layout identical while loading / on error
-		return <div className='flex h-[196px] w-[196px] m-auto mb-4 items-center rounded-md bg-white/5 text-white/40'></div>
+		return <div className='flex h-[196px] w-[196px] m-auto mb-4 items-center rounded-md bg-white/5' />
 	}
+
 	return (
 		<div className='flex justify-center'>
-			<div className='bg-white p-2 rounded-md'>
-				<QRCode value={value} size={180} />
+			<div className='p-2 rounded-md'>
+				<QrSvg
+					value={value}
+					width={180}
+					height={180}
+					level='M' // M = 15% error correction
+					fgColor='#9C4C00' // solid orange fill
+					bgColor='transparent' // transparent background
+					cellClassPrefix='qrPx' // produces .qrPx & .qrPx-filled that we can target with CSS
+					style={{display: 'block', shapeRendering: 'crispEdges'}}
+				/>
 			</div>
+
+			{/* Correct selector: path.qrPx-filled */}
+			<style>{`
+        /* add a lighter-orange outline to each "filled" cell */
+        .qrPx-filled {
+          stroke: #FF7E05 !important;
+          stroke-width: 1px !important;
+          stroke-linejoin: miter;
+          vector-effect: non-scaling-stroke;
+        }
+      `}</style>
 		</div>
+	)
+}
+
+function ConnectionTypeAndQrCard({
+	net,
+	setNet,
+	conn,
+}: {
+	net: string
+	setNet: (v: 'tor' | 'local') => void
+	conn: ConnectionDetailsType['rpc']['tor']
+}) {
+	return (
+		<div className='bg-gradient-to-b from-[#1C1C1C] to-[#0D0D0D] p-5 rounded-xl'>
+			<h3 className='text-white/60 text-[12px] font-[400] mb-2 text-center'>Connection Type</h3>
+			<Tabs value={net} onValueChange={(v: string) => setNet(v as 'tor' | 'local')} className='w-[180px] mx-auto mb-3'>
+				<TabsList className='relative flex w-full rounded-md bg-[#121212] backdrop-blur-xl p-1 ring-white/10'>
+					<GradientBorderFromTop />
+
+					<TabsTrigger
+						value='local'
+						className='relative cursor-pointer rounded-md py-2 px-4 text-[12px] font-[400] text-white/60 data-[state=active]:text-white transition-colors data-[state=active]:bg-transparent'
+					>
+						{net === 'local' && (
+							<motion.span
+								layoutId='connection-pill'
+								className='absolute inset-0 -z-10 rounded-sm bg-[#252525]'
+								transition={{type: 'tween', ease: 'easeInOut', duration: 0.2}}
+							>
+								<GradientBorderFromTop />
+							</motion.span>
+						)}
+						Local
+					</TabsTrigger>
+
+					<TabsTrigger
+						value='tor'
+						className='relative cursor-pointer rounded-md py-2 px-4 text-[12px] font-[400] text-white/60 data-[state=active]:text-white transition-colors data-[state=active]:bg-transparent'
+					>
+						{net === 'tor' && (
+							<motion.span
+								layoutId='connection-pill'
+								className='absolute inset-0 -z-10 rounded-sm bg-[#252525]'
+								transition={{type: 'tween', ease: 'easeInOut', duration: 0.2}}
+							>
+								<GradientBorderFromTop />
+							</motion.span>
+						)}
+						Tor
+					</TabsTrigger>
+				</TabsList>
+			</Tabs>
+			<QR value={conn.uri} />
+		</div>
+	)
+}
+
+function LocalRPCAlert({net}: {net: string}) {
+	return (
+		<AnimatePresence>
+			{net === 'local' && (
+				<motion.div
+					initial={{opacity: 0, y: 10}}
+					animate={{opacity: 1, y: 0}}
+					exit={{opacity: 0, y: -10}}
+					transition={{duration: 0.25}}
+					className='flex flex-col gap-3'
+				>
+					<Alert className='bg-[#EDCE0017] text-[#EDCE00] border-none'>
+						<TriangleAlert className='h-4 w-4' />
+						<AlertDescription className='text-[#EDCE00]'>
+							Using the Local network option sends your RPC username & password unencrypted over the network (e.g., café
+							Wi-Fi). To proceed, you must manually allow your wallet’s IP in the node’s RPC settings, and avoid
+							untrusted networks.
+						</AlertDescription>
+					</Alert>
+
+					<Alert className='bg-[#00BFA317] text-[#00BFA3] border-none'>
+						<LockKeyhole className='h-4 w-4' />
+						<AlertDescription className='text-[#00BFA3]'>
+							Apps on the same Umbrel device are safe—traffic stays local and never leaves the machine.
+						</AlertDescription>
+					</Alert>
+				</motion.div>
+			)}
+		</AnimatePresence>
 	)
 }
