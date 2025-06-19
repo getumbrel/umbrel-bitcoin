@@ -6,7 +6,7 @@ import {writeWithBackup} from './fs-helpers.js'
 
 import {BITCOIN_DIR, APP_STATE_DIR} from '../../lib/paths.js'
 import {restart} from '../bitcoind/bitcoind.js'
-import {settingsSchema, defaultValues, type SettingsSchema} from '@umbrel-bitcoin/settings'
+import {settingsSchema, defaultValues, type SettingsSchema} from '#settings'
 import {migrateLegacyConfig} from './migration.js'
 
 // Paths to the config files

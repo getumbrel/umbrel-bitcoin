@@ -10,7 +10,7 @@ import * as stats from './modules/stats/stats.js'
 import * as connect from './modules/connect/connect.js'
 import * as config from './modules/config/config.js'
 
-import {settingsSchema} from '@umbrel-bitcoin/settings'
+import {settingsSchema} from '#settings'
 
 // We attach a global error handler for all routes (see bottom of this file)
 export default fp(async (app: FastifyInstance) => {

@@ -38,7 +38,7 @@ export default function BlockSizeChart() {
 	const {data: raw = [], isLoading} = useBlockSize(200, {enabled: !inIBD})
 
 	// slice the last 24 hours of data
-	const {slice, minBlock, maxBlock} = sliceLast24h(raw)
+	const {slice} = sliceLast24h(raw)
 
 	const chartData = slice.map((p) => ({
 		block: p.height,

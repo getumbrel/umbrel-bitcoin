@@ -1,6 +1,6 @@
 import {useQuery} from '@tanstack/react-query'
 import {api} from '@/lib/api'
-import type {Stats} from '@umbrel-bitcoin/shared-types'
+import type {Stats} from '#types'
 
 // TODO: settle on cache times
 export function useStats() {

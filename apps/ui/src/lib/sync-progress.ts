@@ -1,4 +1,4 @@
-import type {SyncStatus} from '@umbrel-bitcoin/shared-types'
+import type {SyncStatus} from '#types'
 
 // bitcoind's `verificationprogress` from the getblockchaininfo RPC can't reach 1 when the most recent block is in the past,
 // so it will never be 1 in practice.

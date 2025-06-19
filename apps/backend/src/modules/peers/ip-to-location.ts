@@ -1,8 +1,11 @@
 import {createHash} from 'node:crypto'
 import geoip from 'geoip-lite'
-import rawCities from 'cities.json' assert {type: 'json'}
+import rawCities from 'cities.json' with {type: 'json'}
 
-const cities = rawCities as Array<{lat: number; lng: number}>
+const cities = (rawCities as Array<{lat: string; lng: string}>).map((city) => ({
+	lat: parseFloat(city.lat),
+	lng: parseFloat(city.lng),
+}))
 
 type LatLng = [number, number]
 

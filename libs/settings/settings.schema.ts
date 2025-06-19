@@ -2,8 +2,8 @@
 // TODO: Consider adding a `superRefine` to handle cross-field validation.
 
 import {z} from 'zod'
-import {settingsMetadata} from './settings.meta'
-import type {Option} from './settings.meta'
+import {settingsMetadata} from './settings.meta.js'
+import type {Option} from './settings.meta.js'
 
 // We prepare an (initially empty) map that will hold one Zod schema per setting key.
 const schemaMap: Partial<Record<keyof typeof settingsMetadata, z.ZodTypeAny>> = {}
@@ -43,7 +43,7 @@ for (const key of Object.keys(settingsMetadata) as Array<keyof typeof settingsMe
 
 		// multi-select (array of enums) (e.g., onlynet)
 		case 'multi': {
-			const values = meta.options.map((o) => o.value) as [string, ...string[]]
+			const values = meta.options.map((o: {value: string}) => o.value) as [string, ...string[]]
 			const base = z.array(z.enum(values))
 			schemaMap[key] = (meta.requireAtLeastOne ?? true) ? base.nonempty({message: 'Select at least one'}) : base
 			break
@@ -51,7 +51,7 @@ for (const key of Object.keys(settingsMetadata) as Array<keyof typeof settingsMe
 
 		// single select (e.g., network)
 		case 'select':
-			schemaMap[key] = z.enum(meta.options.map((o) => o.value) as [string, ...string[]])
+			schemaMap[key] = z.enum(meta.options.map((o: {value: string}) => o.value) as [string, ...string[]])
 			break
 	}
 }

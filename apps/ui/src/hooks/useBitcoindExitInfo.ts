@@ -4,7 +4,7 @@
 import {useQuery, useQueryClient} from '@tanstack/react-query'
 
 import {api} from '@/lib/api'
-import type {ExitInfo} from '@umbrel-bitcoin/shared-types'
+import type {ExitInfo} from '#types'
 
 export function useBitcoindExitInfo() {
 	const qc = useQueryClient()

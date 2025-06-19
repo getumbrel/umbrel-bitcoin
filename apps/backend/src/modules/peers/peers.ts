@@ -1,6 +1,6 @@
 import {rpcClient} from '../bitcoind/rpc-client.js'
 
-import type {PeerInfo, PeerCount, PeerLocation} from '@umbrel-bitcoin/shared-types'
+import type {PeerInfo, PeerCount, PeerLocation} from '#types'
 import {ipToLatLng} from './ip-to-location.js'
 import {cache} from '../../lib/cache.js'
 

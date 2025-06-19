@@ -3,7 +3,7 @@ import {EventEmitter} from 'node:events'
 import {Readable} from 'node:stream'
 import readline from 'node:readline'
 
-import type {ExitInfo} from '@umbrel-bitcoin/shared-types'
+import type {ExitInfo} from '#types'
 
 import {BITCOIND_BIN, BITCOIN_DIR} from '../../lib/paths.js'
 

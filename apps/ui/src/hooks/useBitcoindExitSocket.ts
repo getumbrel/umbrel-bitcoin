@@ -6,7 +6,7 @@ import {useNavigate} from 'react-router-dom'
 import {useQueryClient} from '@tanstack/react-query'
 import {toast} from 'sonner'
 
-import type {ExitInfo} from '@umbrel-bitcoin/shared-types'
+import type {ExitInfo} from '#types'
 
 // Fixed ID for the toast notification so we can make sure not to show it multiple times
 const TOAST_ID = 'bitcoind-exit'

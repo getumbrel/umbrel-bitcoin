@@ -1,6 +1,6 @@
 import {api} from '@/lib/api'
 import {useQuery} from '@tanstack/react-query'
-import type {FeeRatePoint} from '@umbrel-bitcoin/shared-types'
+import type {FeeRatePoint} from '#types'
 
 // TODO: settle on cache times
 export function useFeeRates(limit = 144, opts?: {enabled?: boolean}) {

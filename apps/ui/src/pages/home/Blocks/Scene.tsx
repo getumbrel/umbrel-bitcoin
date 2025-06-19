@@ -11,7 +11,7 @@ import {useSyncProgress} from './useSyncProgress'
 import {DISPLAY_CONFIG} from './display.config'
 import {ANIMATION_CONFIG} from './animation.config'
 
-import type {BlockSummary} from '@umbrel-bitcoin/shared-types'
+import type {BlockSummary} from '#types'
 import type {CubeData} from './types'
 
 export function Scene() {

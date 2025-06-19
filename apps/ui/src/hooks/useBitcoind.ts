@@ -1,6 +1,6 @@
 import {useQuery} from '@tanstack/react-query'
 import {api} from '@/lib/api'
-import type {BitcoindStatus, BitcoindVersion} from '@umbrel-bitcoin/shared-types'
+import type {BitcoindStatus, BitcoindVersion} from '#types'
 
 // TODO: settle on cache times
 export function useBitcoindVersion() {

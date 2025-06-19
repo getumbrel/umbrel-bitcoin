@@ -74,7 +74,6 @@ export type RawBlock = {
 	tx: RawTransaction[]
 }
 
-
 export type BlockSummary = {
 	hash: string
 	height: number

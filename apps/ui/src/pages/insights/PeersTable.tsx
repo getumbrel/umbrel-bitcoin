@@ -206,7 +206,7 @@ export default function PeersTable() {
 		getFilteredRowModel: getFilteredRowModel(),
 		onRowSelectionChange: setRowSelection,
 		onGlobalFilterChange: setGlobalFilter,
-		globalFilterFn: (row, columnId, filterValue) => {
+		globalFilterFn: (row, _columnId, filterValue) => {
 			const searchValue = filterValue.toLowerCase()
 			const peer = row.original
 

@@ -31,7 +31,7 @@ const renderActiveSlice: PieProps['activeShape'] = (props: any) => {
 }
 
 export default function PeersChart() {
-	const {data, isLoading} = usePeerCount()
+	const {data} = usePeerCount()
 
 	// Active slice when hovering over the chart
 	const [activeIndex, setActiveIndex] = useState<number | null>(null)

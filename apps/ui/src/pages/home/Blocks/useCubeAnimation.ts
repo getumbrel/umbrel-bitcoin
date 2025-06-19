@@ -2,7 +2,7 @@ import {useState, useCallback} from 'react'
 import type {CubeAnimationState} from './types'
 
 // Hook to manage cube animation state
-export function useCubeAnimation(index: number, baseX: number) {
+export function useCubeAnimation(_index: number, _baseX: number) {
 	const [animationState, setAnimationState] = useState<CubeAnimationState>({
 		phase: 'idle',
 		startTime: 0,

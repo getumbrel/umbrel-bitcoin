@@ -1,8 +1,8 @@
 import {useEffect} from 'react'
 import {useQueryClient} from '@tanstack/react-query'
 
-import type {BlockReward, BlockSizeSample, FeeRatePoint, Stats} from '@umbrel-bitcoin/shared-types'
-import type {PeerInfo} from '@umbrel-bitcoin/shared-types'
+import type {BlockReward, BlockSizeSample, FeeRatePoint, Stats} from '#types'
+import type {PeerInfo} from '#types'
 
 import {api} from '@/lib/api'
 

@@ -2,7 +2,7 @@ import {useQuery} from '@tanstack/react-query'
 
 import {api} from '@/lib/api'
 
-import type {ConnectionDetails} from '@umbrel-bitcoin/shared-types'
+import type {ConnectionDetails} from '#types'
 
 // TODO: decide on cache times
 export function useConnectionDetails() {

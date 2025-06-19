@@ -1,4 +1,4 @@
-import type {ConnectionDetails} from '@umbrel-bitcoin/shared-types'
+import type {ConnectionDetails} from '#types'
 
 export async function getConnectionDetails(): Promise<ConnectionDetails> {
 	// P2P

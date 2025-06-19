@@ -1,6 +1,6 @@
 import {useQuery} from '@tanstack/react-query'
 import {api} from '@/lib/api'
-import type {PeerInfo, PeerCount, PeerLocation} from '@umbrel-bitcoin/shared-types'
+import type {PeerInfo, PeerCount, PeerLocation} from '#types'
 
 // TODO: settle on cache times
 export function usePeerCount() {

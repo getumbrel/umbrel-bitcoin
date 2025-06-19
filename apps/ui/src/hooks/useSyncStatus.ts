@@ -1,6 +1,6 @@
 import {useQuery} from '@tanstack/react-query'
 import {api} from '@/lib/api'
-import type {SyncStatus} from '@umbrel-bitcoin/shared-types'
+import type {SyncStatus} from '#types'
 
 export function useSyncStatus() {
 	return useQuery({

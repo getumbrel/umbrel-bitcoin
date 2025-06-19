@@ -42,7 +42,7 @@ function Stat({
 }
 
 export default function StatSummary() {
-	const {data, isLoading, isError} = useStats()
+	const {data} = useStats()
 
 	const peers = data?.peers ?? 0
 	const {num: memVal, unit: memUnit} = prettyBytesSplit(data?.mempoolBytes)

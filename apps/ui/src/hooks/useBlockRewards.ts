@@ -1,6 +1,6 @@
 import {useQuery} from '@tanstack/react-query'
 import {api} from '@/lib/api'
-import type {BlockReward} from '@umbrel-bitcoin/shared-types'
+import type {BlockReward} from '#types'
 
 // TODO: settle on cache times
 export function useBlockRewards(limit = 144, opts?: {enabled?: boolean}) {

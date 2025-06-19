@@ -1,6 +1,6 @@
 import {useQuery, useMutation, useQueryClient} from '@tanstack/react-query'
 import {api} from '@/lib/api'
-import type {SettingsSchema} from '@umbrel-bitcoin/settings'
+import type {SettingsSchema} from '#settings'
 
 // TODO: set actual cache times. We don't expect settings to change until the user updates them.
 export function useSettings() {

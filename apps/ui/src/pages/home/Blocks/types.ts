@@ -1,4 +1,4 @@
-import type {BlockSummary, SyncStatus} from '@umbrel-bitcoin/shared-types'
+import type {BlockSummary, SyncStatus} from '#types'
 import type {SyncStage} from '@/lib/sync-progress'
 
 // Animation phases

@@ -23,7 +23,7 @@ import WalletIcon from '@/assets/wallet.svg?react'
 import {GradientBorderFromTop} from '@/components/shared/GradientBorders'
 import FadeScrollArea from '@/components/shared/FadeScrollArea'
 
-import type {ConnectionDetails as ConnectionDetailsType} from '@umbrel-bitcoin/shared-types'
+import type {ConnectionDetails as ConnectionDetailsType} from '#types'
 import {useConnectionDetails} from '@/hooks/useConnectionDetails'
 
 export default function ConnectionDetails() {

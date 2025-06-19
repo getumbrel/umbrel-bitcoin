@@ -1,9 +1,14 @@
+import path from 'node:path'
+import {fileURLToPath} from 'node:url'
 import Fastify from 'fastify'
 import fastifyWs from '@fastify/websocket'
+import fastifyStatic from '@fastify/static'
 
 import {bootBitcoind, bitcoind} from './modules/bitcoind/boot.js'
 import {ensureDirs} from './lib/paths.js'
 import routes from './routes.js'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 // Ensure that the required data directories exist before we start
 await ensureDirs()
@@ -17,7 +22,17 @@ bootBitcoind().catch((err) => {
 // Create the HTTP server and register the routes
 const app = Fastify({logger: true})
 await app.register(fastifyWs)
+
+// serve ui static files from dist/public in production
+app.register(fastifyStatic, {
+	root: path.join(__dirname, 'public'),
+	wildcard: false, // do not serve index.html for all routes
+})
+
 await app.register(routes)
+
+// SPA fallback is last to serve the UI routes
+app.get('/*', (_, reply) => reply.sendFile('index.html'))
 
 // Start the server
 app

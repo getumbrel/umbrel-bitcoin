@@ -3,7 +3,7 @@ import {useEffect} from 'react'
 
 import {api} from '@/lib/api'
 
-import type {BlockSummary} from '@umbrel-bitcoin/shared-types'
+import type {BlockSummary} from '#types'
 import type {SyncStage} from '@/lib/sync-progress'
 
 // REST and WebSocket data source for the "latest 5 blocks" component on the home page

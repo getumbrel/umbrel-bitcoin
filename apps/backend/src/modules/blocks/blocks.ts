@@ -13,7 +13,7 @@ import type {
 	FeeRatePoint,
 	BlockFeeTiers,
 	RawBlock,
-} from '@umbrel-bitcoin/shared-types'
+} from '#types'
 
 // Partial type of bitcoind's getblockstats RPC
 type BlockStatsLite = {
@@ -26,8 +26,6 @@ type BlockStatsLite = {
 	feerate_percentiles: number[]
 	time: number
 }
-
-
 
 // Number of blocks to fetch per batch rpc.
 // Individual methods then slice the response to the desired limit.

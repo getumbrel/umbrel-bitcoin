@@ -1,6 +1,6 @@
 import {rpcClient} from '../bitcoind/rpc-client.js'
 
-import type {SyncStatus} from '@umbrel-bitcoin/shared-types'
+import type {SyncStatus} from '#types'
 
 export async function syncStatus(): Promise<SyncStatus> {
 	const info = await rpcClient.command('getblockchaininfo')

@@ -1,6 +1,6 @@
 import {useQuery} from '@tanstack/react-query'
 import {api} from '@/lib/api'
-import type {BlockSizeSample} from '@umbrel-bitcoin/shared-types'
+import type {BlockSizeSample} from '#types'
 
 // TODO: settle on cache times
 export function useBlockSize(limit = 144, opts?: {enabled?: boolean}) {

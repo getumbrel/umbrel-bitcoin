@@ -23,6 +23,8 @@ export default defineConfig({
 	resolve: {
 		alias: {
 			'@': path.resolve(__dirname, './src'),
+			'#settings': path.resolve(__dirname, '../../libs/settings/index.ts'),
+			'#types': path.resolve(__dirname, '../../libs/shared-types/index.d.ts'),
 		},
 	},
 })

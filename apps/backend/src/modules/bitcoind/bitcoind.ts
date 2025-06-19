@@ -1,7 +1,7 @@
 // Public façade for the singleton BitcoindManager.
 // Gives routes a one-liner API: `app.post('/restart', bitcoind.restart)`.
 
-import type {BitcoindVersion, BitcoindStatus, BitcoindLifecycleResponse, ExitInfo} from '@umbrel-bitcoin/shared-types'
+import type {BitcoindVersion, BitcoindStatus, BitcoindLifecycleResponse, ExitInfo} from '#types'
 import type WebSocket from 'ws'
 
 // This is the BitcoindManager instance created in boot.js

@@ -4,7 +4,7 @@ import fse from 'fs-extra'
 
 import {writeWithBackup} from './fs-helpers.js'
 import {APP_STATE_DIR} from '../../lib/paths.js'
-import {settingsSchema, defaultValues, type SettingsSchema} from '@umbrel-bitcoin/settings'
+import {settingsSchema, defaultValues, type SettingsSchema} from '#settings'
 
 const LEGACY_CONFIG_PATH = path.join(APP_STATE_DIR, 'bitcoin-config.json')
 const NEW_CONFIG_PATH = path.join(APP_STATE_DIR, 'settings.json')

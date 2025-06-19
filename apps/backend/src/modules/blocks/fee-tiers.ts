@@ -1,4 +1,4 @@
-import type {FeeTier, RawTransaction} from '@umbrel-bitcoin/shared-types'
+import type {FeeTier, RawTransaction} from '#types'
 
 // Total fee tier boundaries in satoshis
 const TOTAL_FEE_TIERS = [
@@ -22,16 +22,16 @@ const TOTAL_FEE_TIERS = [
 // Map fee tiers to square sizes
 // Lower total fees = smaller squares, higher total fees = larger squares
 const tierToSize: Map<number, number> = new Map([
-	[0, 1],  // < 0.000005 BTC = size 1
-	[1, 1],  // < 0.00001 BTC = size 1
-	[2, 2],  // < 0.000025 BTC = size 2
-	[3, 2],  // < 0.00005 BTC = size 2
-	[4, 3],  // < 0.0001 BTC = size 3
-	[5, 3],  // < 0.00025 BTC = size 3
-	[6, 4],  // < 0.0005 BTC = size 4
-	[7, 4],  // < 0.001 BTC = size 4
-	[8, 5],  // < 0.0025 BTC = size 5
-	[9, 6],  // < 0.005 BTC = size 6
+	[0, 1], // < 0.000005 BTC = size 1
+	[1, 1], // < 0.00001 BTC = size 1
+	[2, 2], // < 0.000025 BTC = size 2
+	[3, 2], // < 0.00005 BTC = size 2
+	[4, 3], // < 0.0001 BTC = size 3
+	[5, 3], // < 0.00025 BTC = size 3
+	[6, 4], // < 0.0005 BTC = size 4
+	[7, 4], // < 0.001 BTC = size 4
+	[8, 5], // < 0.0025 BTC = size 5
+	[9, 6], // < 0.005 BTC = size 6
 	[10, 7], // < 0.01 BTC = size 7
 	[11, 8], // < 0.025 BTC = size 8
 	[12, 9], // < 0.05 BTC = size 9
@@ -45,10 +45,7 @@ const tierToSize: Map<number, number> = new Map([
  * @param blockWeight - Total weight of the block
  * @returns Array of fee tiers for visualization
  */
-export function getFeeTiers(
-	transactions: RawTransaction[],
-	blockWeight: number
-): FeeTier[] {
+export function getFeeTiers(transactions: RawTransaction[], blockWeight: number): FeeTier[] {
 	// Calculate fee tiers
 	const tierCounts: Map<number, number> = new Map()
 
@@ -70,7 +67,7 @@ export function getFeeTiers(
 	// Calculate block fullness (0-1) based on weight
 	// Bitcoin blocks have a max weight of 4,000,000
 	const blockFullness = Math.min(blockWeight / 4_000_000, 1)
-	
+
 	// Calculate total grid area to fill (20x20 grid = 400 squares)
 	const TOTAL_GRID_AREA = 400
 	const targetArea = Math.floor(TOTAL_GRID_AREA * blockFullness * 0.9) // 90% max to leave some breathing room
@@ -83,7 +80,7 @@ export function getFeeTiers(
 
 	// Convert to array of tiers
 	const tiers: FeeTier[] = []
-	
+
 	if (totalFeeTxs === 0) {
 		// Empty block or only coinbase
 		return tiers
@@ -92,16 +89,16 @@ export function getFeeTiers(
 	// First pass: calculate how many squares each tier should get based on tx proportion
 	const squaresPerTier: Map<number, number> = new Map()
 	let totalPlannedArea = 0
-	
+
 	for (const [tierIndex, txCount] of tierCounts.entries()) {
 		const squareSize = tierToSize.get(tierIndex) || 1
 		const squareArea = squareSize * squareSize
-		
+
 		// Calculate ideal number of squares for this tier
 		const proportion = txCount / totalFeeTxs
 		const idealArea = targetArea * proportion
 		const idealSquares = Math.max(1, Math.round(idealArea / squareArea))
-		
+
 		squaresPerTier.set(tierIndex, idealSquares)
 		totalPlannedArea += idealSquares * squareArea
 	}
@@ -119,10 +116,10 @@ export function getFeeTiers(
 	for (const [tierIndex, numSquares] of squaresPerTier.entries()) {
 		const tier = TOTAL_FEE_TIERS[tierIndex]
 		if (!tier) continue
-		
+
 		const squareSize = tierToSize.get(tierIndex) || 1
 		const txCount = tierCounts.get(tierIndex) || 0
-		
+
 		// Create multiple entries for this tier
 		for (let i = 0; i < numSquares; i++) {
 			tiers.push({

@@ -3,8 +3,7 @@
 	"version": "1.0.0",
 	"private": true,
 	"workspaces": [
-		"apps/*",
-		"libs/*"
+		"apps/*"
 	],
 	"type": "module",
 	"scripts": {
@@ -24,5 +23,12 @@
 		"eslint-plugin-react-hooks": "^5.2.0",
 		"prettier": "^3.5.3",
 		"typescript": "^5.8.3"
+	},
+	"dependencies": {
+		"zod": "^3.25.67"
+	},
+	"imports": {
+		"#settings": "./libs/settings/dist/index.js",
+		"#types": "./libs/shared-types/dist/index.d.ts"
 	}
 }

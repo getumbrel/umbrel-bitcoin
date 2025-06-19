@@ -15,6 +15,7 @@
 		"tsx": "^4.19.4"
 	},
 	"dependencies": {
+		"@fastify/static": "^8.2.0",
 		"@fastify/websocket": "^11.0.2",
 		"bitcoin-core": "^5.0.0",
 		"cities.json": "^1.1.50",

@@ -36,14 +36,7 @@ import DangerZoneAlert from './DangerZoneAlert'
 import BitcoindErrorLog from './BitcoindErrorLog'
 import CustomConfigEditor from './CustomConfigEditor'
 
-import {
-	settingsSchema,
-	defaultValues,
-	settingsMetadata,
-	type SettingsSchema,
-	type Tab,
-	type Option,
-} from '@umbrel-bitcoin/settings'
+import {settingsSchema, defaultValues, settingsMetadata, type SettingsSchema, type Tab, type Option} from '#settings'
 
 import {useSettings, useUpdateSettings, useRestoreDefaults} from '@/hooks/useSettings'
 import {useBitcoindExitInfo} from '@/hooks/useBitcoindExitInfo'
