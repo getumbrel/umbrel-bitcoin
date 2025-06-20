@@ -101,14 +101,14 @@ export default function ConnectionDetails() {
 								<div className='space-y-4'>
 									<div className=''>
 										<p className='text-white/60 text-[13px] font-[400]'>
-											An Electrum server is the easiest and most widely supported way to connect a wallet to your node.
+											An Electrum server is the most widely supported way to connect a wallet to your own node.
 										</p>
 									</div>
 
 									<div className='divide-y divide-white/6 overflow-hidden rounded-xl bg-white/6'>
 										<div className='px-4 py-6 space-y-4'>
 											<div>
-												<h5 className='text-white/80 text-[14px] font-[500] mb-2'>Simplest way to connect:</h5>
+												<h5 className='text-white/80 text-[14px] font-[500] mb-2'>To get up and running:</h5>
 												<ol className='text-white/70 text-[13px] font-[400] space-y-2 list-decimal list-inside'>
 													<li>
 														Install an Electrum server app (e.g., Electrs) on your Umbrel device from the umbrelOS App
