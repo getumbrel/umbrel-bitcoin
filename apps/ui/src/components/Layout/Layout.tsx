@@ -1,4 +1,5 @@
 import {Outlet, useLocation} from 'react-router-dom'
+import {useEffect, useRef} from 'react'
 
 import Header from './Header'
 import Dock from './Dock'
@@ -9,15 +10,25 @@ import {useBitcoindExitSocket} from '@/hooks/useBitcoindExitSocket'
 
 // React Router injects the routed page in <Outlet/>.
 export function Layout() {
+	const mainRef = useRef<HTMLElement>(null)
+
+	const {pathname} = useLocation()
+	const isSettingsPage = pathname.startsWith('/settings')
+
+	// Reset scroll position on page change
+	// Prevents unwanted scroll position on Settings page when Insights page has been scrolled
+	useEffect(() => {
+		if (mainRef.current) {
+			mainRef.current.scrollTop = 0
+		}
+	}, [pathname])
+
 	// Prefetch data for the insights page on first mount
 	// Fires after the first paint, so it never delays a page's render or its own fetches
 	usePrefetchInsights()
 
 	// Listen for bitcoind exit events so we can show a toast notification if it crashes / has crashed
 	useBitcoindExitSocket()
-
-	const {pathname} = useLocation()
-	const isSettingsPage = pathname.startsWith('/settings')
 
 	return (
 		<>
@@ -38,6 +49,7 @@ export function Layout() {
 				{/* The outer scroll container is the full width of the viewport so that scrolling can be triggered outside of the inner floating column */}
 				{/* TODO: implement a scroll fade */}
 				<main
+					ref={mainRef}
 					className={`flex-1 min-h-0 overscroll-contain pb-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${
 						isSettingsPage ? 'overflow-hidden' : 'overflow-y-auto'
 					}`}
