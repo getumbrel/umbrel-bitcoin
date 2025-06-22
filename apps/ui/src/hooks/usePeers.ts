@@ -1,6 +1,6 @@
 import {useQuery} from '@tanstack/react-query'
 import {api} from '@/lib/api'
-import type {PeerInfo, PeerCount, PeerLocation} from '#types'
+import type {PeerInfo, PeerCount, PeerLocationsResponse} from '#types'
 
 // TODO: settle on cache times
 export function usePeerCount() {
@@ -24,30 +24,8 @@ export function usePeerInfo() {
 export function usePeerLocations() {
 	return useQuery({
 		queryKey: ['peers/locations'],
-		queryFn: () => api<PeerLocation[]>('/rpc/peers/locations'),
+		queryFn: () => api<PeerLocationsResponse>('/rpc/peers/locations'),
 		staleTime: 30_000,
 		refetchInterval: 5_000,
 	})
 }
-
-// MOCKED DATA
-
-// export function usePeers() {
-// 	return useQuery({
-// 		queryKey: ['peers'],
-// 		queryFn: async () =>
-// 			({
-// 				total: 11,
-// 				byNetwork: {
-// 					ipv4: {inbound: 1, outbound: 2},
-// 					ipv6: {inbound: 1, outbound: 2},
-// 					onion: {inbound: 0, outbound: 2},
-// 					i2p: {inbound: 0, outbound: 1},
-// 					cjdns: {inbound: 0, outbound: 1},
-// 					not_publicly_routable: {inbound: 1, outbound: 0},
-// 				},
-// 			}) as PeerTally,
-// 		refetchInterval: 30_000,
-// 		staleTime: 5_000,
-// 	})
-// }

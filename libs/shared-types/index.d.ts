@@ -37,6 +37,7 @@ export type PeerCount = {
 export type PeerInfo = {
 	id: number
 	addr: string
+	addrlocal?: string
 	network: string
 	relaytxes: boolean
 	lastsend: number
@@ -55,6 +56,11 @@ export type PeerLocation = {
 	addr: string
 	network: string
 	location: [number, number]
+}
+
+export type PeerLocationsResponse = {
+	userLocation: [number, number]
+	peers: PeerLocation[]
 }
 
 export type RawTransaction = {

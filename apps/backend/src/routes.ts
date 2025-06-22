@@ -5,6 +5,7 @@ import {ZodError} from 'zod'
 import * as bitcoind from './modules/bitcoind/bitcoind.js'
 import * as peers from './modules/peers/peers.js'
 import * as blocks from './modules/blocks/blocks.js'
+import * as transactions from './modules/transactions/transactions.js'
 import * as sync from './modules/sync/sync.js'
 import * as stats from './modules/stats/stats.js'
 import * as connect from './modules/connect/connect.js'
@@ -80,6 +81,9 @@ export default fp(async (app: FastifyInstance) => {
 
 	// new blocks from bitcoind via zmq
 	app.get(`${wsBase}/blocks`, {websocket: true}, blocks.wsStream)
+
+	// new transactions from bitcoind via zmq
+	app.get(`${wsBase}/transactions`, {websocket: true}, transactions.wsStream)
 
 	// bitcoind exit events
 	app.get(`${wsBase}/bitcoind/exit`, {websocket: true}, bitcoind.wsExitStream)

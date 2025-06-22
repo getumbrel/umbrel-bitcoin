@@ -1,8 +1,9 @@
 import {rpcClient} from '../bitcoind/rpc-client.js'
 
-import type {PeerInfo, PeerCount, PeerLocation} from '#types'
 import {ipToLatLng} from './ip-to-location.js'
 import {cache} from '../../lib/cache.js'
+
+import type {PeerInfo, PeerCount, PeerLocation, PeerLocationsResponse} from '#types'
 
 // Cached getpeerinfo response
 const getPeerInfoRPC = () => cache('peerinfo', 5_000, () => rpcClient.command<PeerInfo[]>('getpeerinfo'))
@@ -31,15 +32,57 @@ export async function peerCount(): Promise<PeerCount> {
 	return summary
 }
 
-// Geolocated (or faked) latitude and longitude for each peer
-export async function peerLocations(): Promise<PeerLocation[]> {
-	const peers = await getPeerInfoRPC()
-	return peers.map((p) => {
-		const ip = p.addr.replace(/^\[?([^\]]+)]?:\d+$/, '$1')
+// Extracts the host part of an address (e.g. `"10.0.0.2:52344"` → `"10.0.0.2" or `"[2001:db8::1]:8333"` → `"2001:db8::1"`)
+function hostFromAddr(addr: string): string {
+	// 1. optional leading '[' for IPv6
+	// 2. capture everything up to the final ':' (the port delimiter)
+	// 3. optional closing ']'
+	return addr.replace(/^\[?([^\]]+?)]?:\d+$/, '$1')
+}
+
+// Geolocated (or faked) latitude and longitude for each peer and the user
+export async function peerLocations(): Promise<PeerLocationsResponse> {
+	const peerInfo = await getPeerInfoRPC()
+
+	// peer locations
+	const peers: PeerLocation[] = peerInfo.map((p) => {
+		const host = hostFromAddr(p.addr)
 		return {
-			addr: ip,
+			addr: host,
 			network: p.network,
-			location: ipToLatLng(ip, p.network),
+			location: ipToLatLng(host, p.network),
 		}
 	})
+
+	// user location
+	const hostTally = new Map<string, number>()
+
+	for (const peer of peerInfo) {
+		const {addrlocal, network} = peer
+
+		// `addrlocal` appears only on clearnet connections
+		if (!addrlocal) continue
+		if (network !== 'ipv4' && network !== 'ipv6') continue // sanity check even though it should't exist on non-clearnet networks
+
+		const host = hostFromAddr(addrlocal)
+		hostTally.set(host, (hostTally.get(host) ?? 0) + 1)
+	}
+
+	// We pick the most-frequent host, if any (just in case there are other IPs listed somehow, like internal IPs for apps)
+	let topHost = ''
+	let topCount = 0
+
+	for (const [host, count] of hostTally) {
+		if (count > topCount) {
+			topHost = host
+			topCount = count
+		}
+	}
+
+	// convert to latitude/longitude
+	const userLocation: [number, number] = topHost
+		? ipToLatLng(topHost, 'ipv4') // real clearnet IP
+		: ipToLatLng('0.0.0.0', 'ipv4') // with current list of fallback cities, this ends up being in Southern France.
+
+	return {userLocation, peers}
 }

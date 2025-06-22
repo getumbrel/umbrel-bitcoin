@@ -78,7 +78,9 @@ export default function HomePage() {
 						<div className='absolute top-[-50%] left-[-40%] w-[500%] h-[500%] rounded-full bg-black pointer-events-none' />
 						<GradientBorderFromCorners />
 
-						<Globe />
+						<div className='w-full h-full relative right-[20%] top-[-60%]'>
+							<Globe />
+						</div>
 
 						{/* Running status */}
 						{/* TODO: don't quickly flash not running to running on refresh */}

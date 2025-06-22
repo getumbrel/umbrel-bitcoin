@@ -1,4 +1,4 @@
-// Bitcoin Core’s ZMQ notifiers are silent until the node finishes Initial Block Download
+// Bitcoin Core’s ZMQ block notifiers are silent until the node finishes Initial Block Download
 // https://github.com/bitcoin/bitcoin/blob/31d3eebfb92ae0521e18225d69be95e78fb02672/src/zmq/zmqnotificationinterface.cpp#L150-L158
 
 import {EventEmitter} from 'node:events'

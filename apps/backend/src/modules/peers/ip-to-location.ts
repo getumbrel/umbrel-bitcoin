@@ -110,10 +110,10 @@ const fallbackCityKeys: string[] = [
 	'Warsaw|PL',
 ]
 
-export const fallbackCityCoordinates: CityRecord[] = fallbackCityKeys.map((key) => {
-	const rec = cityIndex.get(key)
-	if (!rec) throw new Error(`Anchor ${key} missing in cities.json`)
-	return rec
+const fallbackCityRecords: CityRecord[] = fallbackCityKeys.map((key) => {
+	const city = cityIndex.get(key)
+	if (!city) throw new Error(`Anchor ${key} missing in cities.json`)
+	return city
 })
 
 // Returns a latitude and longitude for a given IP address and network
@@ -128,7 +128,7 @@ export function ipToLatLng(ip: string, network: string): LatLng {
 	}
 	// deterministic fallback
 	const idx = createHash('md5').update(ip).digest()[0] & 63 // 0-63
-	const {lat, lng} = fallbackCityCoordinates[idx]
+	const {lat, lng} = fallbackCityRecords[idx]
 	return [Number(lat), Number(lng)]
 }
 

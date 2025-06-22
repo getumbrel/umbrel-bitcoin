@@ -1,159 +1,181 @@
 import {useEffect, useMemo, useRef} from 'react'
-import createGlobe from 'cobe'
+import * as THREE from 'three'
+import Globe from 'three-globe'
+import {TrackballControls} from 'three/examples/jsm/controls/TrackballControls.js'
+import {EffectComposer} from 'three/examples/jsm/postprocessing/EffectComposer.js'
+import {RenderPass} from 'three/examples/jsm/postprocessing/RenderPass.js'
+import {UnrealBloomPass} from 'three/examples/jsm/postprocessing/UnrealBloomPass.js'
+import {latLngToCell, cellToLatLng} from 'h3-js'
 
 import {usePeerLocations} from '@/hooks/usePeers'
+import {useTransactionSocket} from '@/hooks/useTransactionSocket'
 
-type Marker = {location: [number, number]; size: number}
+import type {PeerLocation} from '#types'
 
-export default function Globe() {
-	const {data: peers = []} = usePeerLocations()
+/* ─ visuals ─ */
+const SIZE = 1000
+const ROT = 0.0005
+const HEX = 3
+const LAND = '#444'
+const GCLR = '#0d0d0d'
+const PEER = 'hsl(29,100%,60%)'
+const TOR = 'hsl(29,100%,50%)'
+const I2P = 'hsl(29,100%,30%)'
+const USER = '#FFF'
+const COMET = 'hsl(29,100%,50%)'
+const COMET_SPEED = 2000 // duration in ms for comet to travel
+const COMET_LENGTH = 0.05 // length of the comet (0-1)
+const COMET_FADE_TIME = 500 // additional time for fade out
+const COMET_COMPLETE_TIME = COMET_SPEED / (1 - COMET_LENGTH) // time for comet to fully exit
+const COMET_STROKE = 1 // thickness of the comet tube (try values like 0.5, 1, 2, 3)
+const COMET_ARC_HEIGHT = 0.5 // arc height multiplier (0.1 = low, 0.5 = medium, 1 = high)
 
-	// Create location markers for each peer
-	const peerMarkers = useMemo<Marker[]>(() => peers.map((p) => ({location: p.location, size: 0.02})), [peers])
+/* helper */
+const snap = ([lat, lng]: [number, number]) => cellToLatLng(latLngToCell(lat, lng, HEX)) as [number, number]
 
-	// Cobe’s renderer keeps an internal pointer to the same array object for the lifetime of the globe.
-	// We store that array in a ref so its identity never changes.
-	// Whenever the peer list refreshes we mutate the array in-place (splice / push) instead of replacing it.
-	// This lets dots appear/disappear without destroying or re-creating the WebGL context, so the user’s rotation stays intact and there’s no visual snap back to initial position.
-	const markersRef = useRef<Marker[]>([])
-	useEffect(() => {
-		markersRef.current.splice(0, markersRef.current.length, ...peerMarkers)
-	}, [peerMarkers])
+/* ─ component ─ */
+export default function PeersGlobe() {
+	const mount = useRef<HTMLDivElement>(null)
+	const globe = useRef<any>(null)
+	const booted = useRef(false)
 
-	// Ref for canvas context
-	const canvasRef = useRef<HTMLCanvasElement>(null)
-
-	// Refs for user interaction
-	// Pointer-down position; becomes null on release/leave.
-	const dragStart = useRef<{x: number; y: number} | null>(null)
-	// Yaw (left/right) offset set by user
-	const userPhi = useRef(0)
-	// Pitch (up/down) offset set by user
-	const userTheta = useRef(0)
-
-	// How many screen-pixels correspond to one radian of globe rotation.
-	// Bigger  = slower drag; smaller = faster.
-	const DRAG_SENSITIVITY = 200
-
-	// We create globe exactly once (never re-runs)
-	useEffect(() => {
-		if (!canvasRef.current) return
-
-		let autoPhi = 0
-		let width = canvasRef.current.offsetWidth
-		const onResize = () => (width = canvasRef.current!.offsetWidth)
-		window.addEventListener('resize', onResize)
-
-		const globe = createGlobe(canvasRef.current, {
-			devicePixelRatio: 2,
-			width: width * 2,
-			height: width * 2,
-
-			// Initial orientation; user offsets are added each frame below
-			phi: 0,
-			theta: 0.3,
-
-			dark: 1,
-			diffuse: 3,
-			mapSamples: 16000,
-			mapBrightness: 5,
-			baseColor: [0.15, 0.15, 0.15],
-			markerColor: [255 / 255, 126 / 255, 5 / 255],
-			glowColor: [0.1, 0.1, 0.1],
-
-			// peer location markers (stable array ref)
-			markers: markersRef.current,
-			scale: 1.1,
-
-			// onRender is called every animation frame
-			onRender(state) {
-				// live peer locations
-				state['markers'] = markersRef.current
-
-				// idle spin only when not dragging
-				if (!dragStart.current) autoPhi += 0.0005
-
-				// yaw - combined auto + user drag
-				state['phi'] = autoPhi + userPhi.current
-
-				// pitch - combined base + user drag
-				state['theta'] = 0.3 + userTheta.current
-
-				// resize canvas to maintain aspect ratio
-				state['width'] = width * 2
-				state['height'] = width * 2
-			},
+	/* ─ dots ─ */
+	const {data} = usePeerLocations()
+	const dots = useMemo(() => {
+		if (!data) return []
+		const peers = data.peers.map((p: PeerLocation) => {
+			const [lat, lng] = snap(p.location)
+			const col = p.network === 'onion' ? TOR : p.network === 'i2p' ? I2P : PEER
+			return {lat, lng, r: 0.4, col}
 		})
+		const user = Array.isArray(data.userLocation)
+			? (() => {
+					const [lat, lng] = snap(data.userLocation)
+					return {lat, lng, r: 0.6, col: USER, isUser: 1}
+				})()
+			: null
+		return user ? [user, ...peers] : peers
+	}, [data])
 
-		// fade-in after first frame so we avoid a flash of un-styled content
+	/* ─ store comets in a ref (mutable) ─ */
+	const comets = useRef<any[]>([])
+	const refreshArcs = () => globe.current?.arcsData(comets.current)
+
+	/* ─ tx → push comet ─ */
+	const ping = useTransactionSocket()
+	const last = useRef(ping)
+	useEffect(() => {
+		if (ping === last.current) return
+		last.current = ping
+		if (!globe.current || !dots.length) return
+
+		const src = dots.find((d) => (d as any).isUser) || dots[0]
+		const tgt = dots.filter((d) => !(d as any).isUser)[(Math.random() * (dots.length - 1)) | 0]
+		if (!tgt) return
+
+		console.log('Creating comet from', src, 'to', tgt) // Debug log
+
+		const comet = {
+			startLat: src.lat,
+			startLng: src.lng,
+			endLat: tgt.lat,
+			endLng: tgt.lng,
+			color: COMET,
+			stroke: COMET_STROKE,
+			dashLength: COMET_LENGTH,
+			dashGap: 1 - COMET_LENGTH,
+			dashAnimateTime: COMET_SPEED,
+		}
+		comets.current.push(comet)
+		refreshArcs()
+
+		// Remove comet after animation completes plus fade time
 		setTimeout(() => {
-			if (canvasRef.current) canvasRef.current.style.opacity = '1'
-		}, 0)
-
-		let destroyed = false
-		const safeDestroy = () => {
-			if (!destroyed) {
-				destroyed = true
-				globe.destroy()
+			const idx = comets.current.indexOf(comet)
+			if (idx > -1) {
+				comets.current.splice(idx, 1)
+				refreshArcs()
 			}
-		}
+		}, COMET_COMPLETE_TIME + COMET_FADE_TIME)
+	}, [ping, dots])
 
-		// keep WebGL alive until the tab actually unloads → no white flash
-		window.addEventListener('beforeunload', safeDestroy, {once: true})
+	/* ─ once: create globe ─ */
+	useEffect(() => {
+		if (booted.current || !mount.current) return
+		booted.current = true
 
-		// component-level clean-up for client-side route changes
-		return () => {
-			safeDestroy()
-			window.removeEventListener('beforeunload', safeDestroy)
-		}
+		const r = new THREE.WebGLRenderer({antialias: true})
+		r.setSize(SIZE, SIZE)
+		mount.current.appendChild(r.domElement)
+
+		const scene = new THREE.Scene()
+		const cam = new THREE.PerspectiveCamera(undefined, 1, 0.1, 1000)
+		cam.position.set(0, 300, 400)
+
+		const comp = new EffectComposer(r)
+		comp.addPass(new RenderPass(scene, cam))
+		comp.addPass(new UnrealBloomPass(new THREE.Vector2(SIZE, SIZE), 1.5, 0.4, 0.1))
+
+		scene.add(new THREE.AmbientLight(0xcccccc, Math.PI))
+
+		globe.current = new (Globe as any)()
+		globe.current.globeMaterial().color.set(GCLR)
+		globe.current.atmosphereColor('#666').atmosphereAltitude(0.1)
+
+		// Configure arc rendering for comets
+		globe.current
+			.arcColor('color')
+			.arcStroke('stroke')
+			.arcAltitudeAutoScale(COMET_ARC_HEIGHT)
+			.arcDashLength('dashLength')
+			.arcDashGap('dashGap')
+			.arcDashAnimateTime('dashAnimateTime')
+			.arcDashInitialGap(1)
+			.arcsTransitionDuration(0)
+
+		scene.add(globe.current)
+
+		fetch('/datasets/ne_110m_admin_0_countries.geojson')
+			.then((r) => r.json())
+			.then((g) =>
+				globe.current
+					.hexPolygonsData(g.features)
+					.hexPolygonResolution(HEX)
+					.hexPolygonMargin(0.35)
+					.hexPolygonUseDots(true)
+					.hexPolygonDotResolution(10)
+					.hexPolygonColor(() => LAND),
+			)
+
+		const ctl = new TrackballControls(cam, r.domElement)
+		ctl.noZoom = true
+		ctl.noPan = true
+		ctl.rotateSpeed = 5
+		;(function loop() {
+			globe.current.rotation.y += ROT
+			ctl.update()
+			comp.render()
+			requestAnimationFrame(loop)
+		})()
 	}, [])
 
-	return (
-		<div className='absolute top-0 left-[50px] md:left-[120px] w-[120%] md:w-full aspect-square m-auto'>
-			<canvas
-				ref={canvasRef}
-				style={{
-					width: '100%',
-					height: '100%',
-					cursor: 'grab',
-					contain: 'layout paint size',
-					opacity: 0,
-					transition: 'opacity 1s ease',
-				}}
-				// User pointer interaction for the globe
-				onPointerDown={(e) => {
-					dragStart.current = {
-						x: e.clientX - userPhi.current * DRAG_SENSITIVITY,
-						y: e.clientY - userTheta.current * DRAG_SENSITIVITY,
-					}
-					canvasRef.current!.style.cursor = 'grabbing'
-				}}
-				onPointerUp={() => {
-					dragStart.current = null
-					canvasRef.current!.style.cursor = 'grab'
-				}}
-				onPointerOut={() => {
-					dragStart.current = null
-					canvasRef.current!.style.cursor = 'grab'
-				}}
-				onMouseMove={(e) => {
-					if (dragStart.current) {
-						userPhi.current = (e.clientX - dragStart.current.x) / DRAG_SENSITIVITY
-						userTheta.current = (e.clientY - dragStart.current.y) / DRAG_SENSITIVITY
+	/* update dots whenever changed */
+	useEffect(() => {
+		if (!globe.current) return
+		globe.current
+			.pointsData(dots)
+			.pointLat('lat')
+			.pointLng('lng')
+			.pointAltitude(0.01)
+			.pointRadius((d: any) => d.r * 1.5)
+			.pointColor((d: any) => d.col)
+			.pointsMerge(true)
+	}, [dots])
 
-						// We clamp pitch so the globe can only flip 180 degrees vertically
-						userTheta.current = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, userTheta.current))
-					}
-				}}
-				onTouchMove={(e) => {
-					if (dragStart.current && e.touches[0]) {
-						const t = e.touches[0]
-						userPhi.current = (t.clientX - dragStart.current.x) / DRAG_SENSITIVITY
-						userTheta.current = (t.clientY - dragStart.current.y) / DRAG_SENSITIVITY
-						userTheta.current = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, userTheta.current))
-					}
-				}}
-			/>
-		</div>
-	)
+	/* initial empty arc list */
+	useEffect(() => {
+		if (globe.current) refreshArcs()
+	}, [])
+
+	return <div ref={mount} style={{width: SIZE, height: SIZE, margin: '0 auto'}} />
 }
