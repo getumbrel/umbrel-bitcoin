@@ -67,6 +67,7 @@ services:
       ZMQ_RAWTX_PORT: 28333 # zmqpubrawtx
       ZMQ_HASHBLOCK_PORT: 28334 # zmqpubhashblock
       ZMQ_SEQUENCE_PORT: 28335 # zmqpubsequence
+      ZMQ_HASHTX_PORT: 28336 # zmqpubhashtx
       TOR_HOST: 10.21.22.10 # proxy, onion, torcontrol
       TOR_SOCKS_PORT: 9050 # proxy, onion
       TOR_CONTROL_PORT: 9051 # torcontrol

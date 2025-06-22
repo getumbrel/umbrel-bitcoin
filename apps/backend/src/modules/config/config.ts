@@ -193,6 +193,7 @@ function appendZmqPubs(lines: string[]): string[] {
 	lines.push(`zmqpubrawtx=tcp://0.0.0.0:${process.env['ZMQ_RAWTX_PORT'] || '28333'}`)
 	lines.push(`zmqpubhashblock=tcp://0.0.0.0:${process.env['ZMQ_HASHBLOCK_PORT'] || '28334'}`)
 	lines.push(`zmqpubsequence=tcp://0.0.0.0:${process.env['ZMQ_SEQUENCE_PORT'] || '28335'}`)
+	lines.push(`zmqpubhashtx=tcp://0.0.0.0:${process.env['ZMQ_HASHTX_PORT'] || '28336'}`)
 	return lines
 }
 
