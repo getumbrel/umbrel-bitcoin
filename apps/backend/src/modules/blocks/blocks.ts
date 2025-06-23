@@ -120,7 +120,7 @@ export async function list(limit = 20): Promise<BlocksResponse> {
 		}
 	})
 
-	return {blocks}
+	return {blocks: blocks.reverse()}
 }
 
 // WebSocket push for new blocks
