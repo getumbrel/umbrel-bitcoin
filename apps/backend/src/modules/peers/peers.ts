@@ -1,12 +1,11 @@
 import {rpcClient} from '../bitcoind/rpc-client.js'
 
 import {ipToLatLng} from './ip-to-location.js'
-import {cache} from '../../lib/cache.js'
 
 import type {PeerInfo, PeerCount, PeerLocation, PeerLocationsResponse} from '#types'
 
 // Cached getpeerinfo response
-const getPeerInfoRPC = () => cache('peerinfo', 5_000, () => rpcClient.command<PeerInfo[]>('getpeerinfo'))
+const getPeerInfoRPC = () => rpcClient.command<PeerInfo[]>('getpeerinfo')
 
 // Raw bitcoind getpeerinfo response
 export async function peerInfo(): Promise<PeerInfo[]> {

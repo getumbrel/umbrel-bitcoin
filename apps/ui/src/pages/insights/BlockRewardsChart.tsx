@@ -120,7 +120,6 @@ export default function RewardsChart() {
 						interval='preserveStartEnd'
 						minTickGap={60}
 						tickFormatter={(v) => Number(v).toLocaleString()}
-						reversed
 					/>
 
 					<Bar
