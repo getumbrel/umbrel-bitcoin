@@ -6,7 +6,15 @@ import {rpcClient} from '../bitcoind/rpc-client.js'
 import {blockStream} from './zmq-subscriber.js'
 import {getFeeTiers} from './fee-tiers.js'
 
-import type {BlocksResponse, BlockReward, BlockSizeSample, FeeRatePoint, BlockFeeTiers, RawBlock} from '#types'
+import type {
+	BlocksResponse,
+	BlockSummary,
+	BlockReward,
+	BlockSizeSample,
+	FeeRatePoint,
+	BlockFeeTiers,
+	RawBlock,
+} from '#types'
 
 // Partial type of bitcoind's getblockstats RPC
 type BlockStatsLite = {
@@ -107,20 +115,42 @@ export async function feeRates(limit = 144): Promise<FeeRatePoint[]> {
 }
 
 // Latest N block summaries
+// TODO: abstract this to use the block cache, we should have a single common get block function that
+// formats a block stats type suitable for all endpoints. Then we can simplify a lot of code and share cache
+// between the list and stats endpoints without needing to cache entire raw block data.
 export async function list(limit = 20): Promise<BlocksResponse> {
-	const stats = await getLatestBlocks(limit)
+	// get the current tip height to use as the starting point
+	const tipHeight = await rpcClient.command<number>('getblockcount')
 
-	const blocks = stats.map((s) => {
-		return {
-			height: s.height,
-			time: s.time,
-			hash: s.blockhash,
-			txs: s.txs,
-			size: s.total_size,
-		}
-	})
+	// fetch hashes then summaries in batch RPC style
+	const hashes: string[] = await rpcClient.command(
+		Array.from({length: limit}, (_, i) => ({
+			method: 'getblockhash',
+			parameters: [tipHeight - i],
+		})),
+	)
 
-	return {blocks: blocks.reverse()}
+	// get each block's summary with transaction details (verbosity 2)
+	const raw: RawBlock[] = await rpcClient.command(hashes.map((h) => ({method: 'getblock', parameters: [h, 2]})))
+
+	const blocks: BlockSummary[] = await Promise.all(
+		raw.map(async (b) => {
+			const summary: BlockSummary = {
+				hash: b.hash,
+				height: b.height,
+				time: b.time,
+				txs: b.nTx,
+				size: b.size,
+			}
+
+			// Get fee tiers using the external function
+			summary.feeTiers = getFeeTiers(b.tx, b.weight)
+
+			return summary
+		}),
+	)
+
+	return {blocks}
 }
 
 // WebSocket push for new blocks
