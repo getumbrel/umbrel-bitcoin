@@ -123,7 +123,6 @@ const fallbackCityRecords: CityRecord[] = fallbackCityKeys.map((key) => {
 export function ipToLatLng(ip: string, network: string): LatLng {
 	if (network === 'ipv4' || network === 'ipv6') {
 		const geo = geoip.lookup(ip)
-		if (geo?.ll) console.log(`geoip hit for ${ip} in ${geo.country}`)
 		if (geo?.ll) return [geo.ll[0], geo.ll[1]]
 	}
 	// deterministic fallback

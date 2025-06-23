@@ -25,7 +25,6 @@ transactionStream.on('hashtx', () => {
 	if (txBucket >= TXS_PER_PING && now - lastPing >= MIN_INTERVAL_MS) {
 		txBucket = 0
 		lastPing = now
-		console.log('TRANSACTIONNNNNNNNNNNNNNNNNN')
 		broadcastPing()
 	}
 })
