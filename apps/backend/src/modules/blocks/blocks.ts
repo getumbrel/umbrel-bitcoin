@@ -1,6 +1,7 @@
 import {setTimeout} from 'timers/promises'
 
 import type WebSocket from 'ws'
+import PQueue from 'p-queue'
 
 import {rpcClient} from '../bitcoind/rpc-client.js'
 import {blockStream} from './zmq-subscriber.js'
@@ -30,9 +31,11 @@ type BlockStatsLite = {
 	txs: number
 }
 
+const rpcQueue = new PQueue({concurrency: 10})
+
 // Get block stats for height
-// caches the CACHE_DEPTH most recent blocks
-const CACHE_DEPTH = 200
+// caches the BLOCK_STATS_CACHE_DEPTH most recent blocks
+const BLOCK_STATS_CACHE_DEPTH = 200
 const blockStatsCache = new Map<number, BlockStatsLite>()
 async function getBlockStats(height: number) {
 	// Check if we have a cached value and return early if so
@@ -40,30 +43,20 @@ async function getBlockStats(height: number) {
 	if (cached) return cached
 
 	// If not, fetch the block stats over RPC and cache the result
+	console.log(`fetching stats for block ${height}`)
 	const blockStats = await rpcClient.command<BlockStatsLite>('getblockstats', height)
 	blockStatsCache.set(height, blockStats)
 
 	// If we've exceeded the cache depth, delete the oldest entries
-	if (blockStatsCache.size > CACHE_DEPTH) {
+	if (blockStatsCache.size > BLOCK_STATS_CACHE_DEPTH) {
 		const keys = Array.from(blockStatsCache.keys())
 		const sortedKeys = keys.sort((a, b) => a - b)
-		const keysToDelete = sortedKeys.slice(0, blockStatsCache.size - CACHE_DEPTH)
+		const keysToDelete = sortedKeys.slice(0, blockStatsCache.size - BLOCK_STATS_CACHE_DEPTH)
 		keysToDelete.forEach((key) => blockStatsCache.delete(key))
 	}
 
 	return blockStats
 }
-
-// Long running task to keep the cache primed
-const CACHE_LOADER_INTERVAL = 1000 * 60 // 1 minute
-async function cacheLoader() {
-	while (true) {
-		await getBlockStats(CACHE_DEPTH).catch(() => {})
-		await setTimeout(CACHE_LOADER_INTERVAL)
-	}
-}
-// Fire immediately and then every minute
-cacheLoader().catch(() => {})
 
 // Get stats for the latest N blocks
 async function getLatestBlocks(limit: number) {
@@ -75,13 +68,13 @@ async function getLatestBlocks(limit: number) {
 	for (let i = 0; i < limit; i++) {
 		const height = tip - i
 		if (height < 0) break
-		blocks.push(await getBlockStats(height))
+		blocks.push(rpcQueue.add(() => getBlockStats(height)))
 	}
 
 	// Reverse the blocks to get them in chronological order
 	blocks.reverse()
 
-	return blocks
+	return Promise.all(blocks) as Promise<BlockStatsLite[]>
 }
 
 // Block rewards (subsidy + fee totals)
@@ -114,41 +107,53 @@ export async function feeRates(limit = 144): Promise<FeeRatePoint[]> {
 	})
 }
 
+const BLOCK_CACHE_DEPTH = 5
+const blockCache = new Map<number, BlockSummary>()
+async function getBlock(height: number) {
+	// Check if we have a cached value and return early if so
+	const cached = blockCache.get(height)
+	if (cached) return cached
+
+	// If not, fetch the raw block over RPC and cache the result
+	console.log(`fetching raw block ${height}`)
+	const blockHash = await rpcClient.command<string>('getblockhash', height)
+	const raw = await rpcClient.command<RawBlock>('getblock', blockHash, 2)
+
+	// Format the raw block into a summary
+	const summary: BlockSummary = {
+		hash: raw.hash,
+		height: raw.height,
+		time: raw.time,
+		txs: raw.nTx,
+		size: raw.size,
+	}
+
+	// Get fee tiers using the external function
+	summary.feeTiers = getFeeTiers(raw.tx, raw.weight)
+
+	// Save in cache
+	blockCache.set(height, summary)
+
+	// If we've exceeded the cache depth, delete the oldest entries
+	if (blockCache.size > BLOCK_CACHE_DEPTH) {
+		const keys = Array.from(blockCache.keys())
+		const sortedKeys = keys.sort((a, b) => a - b)
+		const keysToDelete = sortedKeys.slice(0, blockCache.size - BLOCK_CACHE_DEPTH)
+		keysToDelete.forEach((key) => blockCache.delete(key))
+	}
+
+	return summary
+}
+
 // Latest N block summaries
-// TODO: abstract this to use the block cache, we should have a single common get block function that
-// formats a block stats type suitable for all endpoints. Then we can simplify a lot of code and share cache
-// between the list and stats endpoints without needing to cache entire raw block data.
 export async function list(limit = 20): Promise<BlocksResponse> {
 	// get the current tip height to use as the starting point
 	const tipHeight = await rpcClient.command<number>('getblockcount')
 
 	// fetch hashes then summaries in batch RPC style
-	const hashes: string[] = await rpcClient.command(
-		Array.from({length: limit}, (_, i) => ({
-			method: 'getblockhash',
-			parameters: [tipHeight - i],
-		})),
-	)
-
-	// get each block's summary with transaction details (verbosity 2)
-	const raw: RawBlock[] = await rpcClient.command(hashes.map((h) => ({method: 'getblock', parameters: [h, 2]})))
-
-	const blocks: BlockSummary[] = await Promise.all(
-		raw.map(async (b) => {
-			const summary: BlockSummary = {
-				hash: b.hash,
-				height: b.height,
-				time: b.time,
-				txs: b.nTx,
-				size: b.size,
-			}
-
-			// Get fee tiers using the external function
-			summary.feeTiers = getFeeTiers(b.tx, b.weight)
-
-			return summary
-		}),
-	)
+	const blocks = (await Promise.all(
+		Array.from({length: limit}, (_, i) => rpcQueue.add(() => getBlock(tipHeight - i))),
+	)) as BlockSummary[]
 
 	return {blocks}
 }
@@ -180,3 +185,16 @@ export async function feeTiers(blockHash?: string): Promise<BlockFeeTiers> {
 		tiers,
 	}
 }
+
+// Long running task to keep the cache primed
+const CACHE_LOADER_INTERVAL = 1000 * 30 // 30 seconds
+async function cacheLoader() {
+	await setTimeout(5000)
+	while (true) {
+		await list(BLOCK_CACHE_DEPTH).catch(() => {})
+		await getLatestBlocks(BLOCK_STATS_CACHE_DEPTH).catch(() => {})
+		await setTimeout(CACHE_LOADER_INTERVAL)
+	}
+}
+// Fire immediately and then every minute
+cacheLoader().catch(() => {})
