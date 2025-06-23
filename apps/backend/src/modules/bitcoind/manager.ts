@@ -13,15 +13,24 @@ type BitcoindManagerOptions = {
 	extraArgs?: string[]
 }
 
-type LogFn = Console['log']
+// Stream helper that turns the chunked `Readable` into complete, trimmed lines
+// and passes each non-empty line to a callback.
+function onLine(src: Readable, callback: (line: string) => void) {
+	// Prevent an unhandled error from the raw pipe from crashing the process
+	src.on('error', (err) => console.error('[bitcoind-manager] stream error:', err))
 
-// Pipe each complete line from `src` to `logFn`, prefixed with [bitcoind].
-// Readable stream emits a data event for every chunk it receives.
-function pipeBitcoindLines(src: Readable, logFn: LogFn) {
 	const rl = readline.createInterface({input: src})
-	rl.on('line', (line) => {
-		const trimmed = line.trim()
-		if (trimmed) logFn('[bitcoind]', trimmed)
+	rl.on('line', (raw) => {
+		// In event-callback land now; any throw would bubble up uncaught and kill the process
+		try {
+			const line = raw.trim()
+			if (line) callback(line)
+		} catch (err) {
+			console.error('[bitcoind-manager] onLine callback error:', err)
+		}
+
+		// Prevent an unhandled error from the readline from crashing the process
+		rl.on('error', (err) => console.error('[bitcoind-manager] readline error:', err))
 	})
 }
 
@@ -41,6 +50,13 @@ export class BitcoindManager {
 	private readonly RING_MAX = 200
 	private recordLine = (line: string) => {
 		if (this.logRing.push(line) > this.RING_MAX) this.logRing.shift()
+	}
+
+	// Logs out and also saves to ring buffer
+	private handleLine(line: string, isStderr: boolean) {
+		const prefix = '[bitcoind]'
+		void (isStderr ? console.error(prefix, line) : console.log(prefix, line))
+		this.recordLine(line)
 	}
 
 	// EventEmitter that fires `"exit"` with an `ExitInfo` payload
@@ -117,17 +133,9 @@ export class BitcoindManager {
 		this.lastError = null
 		console.log('[bitcoind-manager] spawned PID', this.child.pid)
 
-		// Capture stdout and log + record to ring buffer
-		pipeBitcoindLines(this.child.stdout, (prefix, line) => {
-			console.log(prefix, line)
-			this.recordLine(line)
-		})
-
-		// Capture stderr and log + record to ring buffer
-		pipeBitcoindLines(this.child.stderr, (prefix, line) => {
-			console.error(prefix, line)
-			this.recordLine(line)
-		})
+		// Handle stdout and stderr
+		onLine(this.child.stdout, (line) => this.handleLine(line, false))
+		onLine(this.child.stderr, (line) => this.handleLine(line, true))
 
 		this.child.on('exit', (code, sig) => {
 			console.error(`[bitcoind] exited (code=${code}, sig=${sig})`)
