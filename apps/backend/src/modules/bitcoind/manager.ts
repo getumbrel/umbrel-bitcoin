@@ -21,11 +21,7 @@ type BitcoindManagerOptions = {
 type LogFn = Console['log']
 
 // Pipe each complete line from `src` to `logFn`, prefixed with [bitcoind].
-// NOTE: Readable stream emits a data event for every chunk it receives.
-// Each chunk wakes the event-loop and runs the callback below.
-// I need to check if bitcoind is chatty enough in IBD that this could be a problem.
-// The callback below is tiny, so shouldn't be a problem. But need to double check that
-// we don't starve other work on the event loop.
+// Readable stream emits a data event for every chunk it receives.
 function pipeBitcoindLines(src: Readable, logFn: LogFn) {
 	const rl = readline.createInterface({input: src})
 	rl.on('line', (line) => {
