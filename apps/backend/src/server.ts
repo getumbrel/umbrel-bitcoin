@@ -4,7 +4,7 @@ import Fastify from 'fastify'
 import fastifyWs from '@fastify/websocket'
 import fastifyStatic from '@fastify/static'
 
-import {bootBitcoind, bitcoind} from './modules/bitcoind/boot.js'
+import {bootBitcoind, bitcoind} from './modules/bitcoind/bitcoind.js'
 import {ensureDirs} from './lib/paths.js'
 import routes from './routes.js'
 

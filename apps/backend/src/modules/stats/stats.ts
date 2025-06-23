@@ -1,6 +1,6 @@
 import {peerCount} from '../peers/peers.js'
 import {rpcClient} from '../bitcoind/rpc-client.js'
-import {bitcoind} from '../bitcoind/boot.js'
+import {bitcoind} from '../bitcoind/bitcoind.js'
 import type {Stats} from '#types'
 
 export async function summary(): Promise<Stats> {
