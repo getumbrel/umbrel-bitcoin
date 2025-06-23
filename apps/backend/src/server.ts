@@ -3,6 +3,7 @@ import {fileURLToPath} from 'node:url'
 import Fastify from 'fastify'
 import fastifyWs from '@fastify/websocket'
 import fastifyStatic from '@fastify/static'
+import helmet from '@fastify/helmet'
 
 import {bootBitcoind, bitcoind} from './modules/bitcoind/bitcoind.js'
 import {ensureDirs} from './lib/paths.js'
@@ -21,6 +22,30 @@ bootBitcoind().catch((err) => {
 
 // Create the HTTP server and register the routes
 const app = Fastify({logger: true})
+
+// CSP
+await app.register(helmet, {
+	contentSecurityPolicy: {
+		// We keep Helmet’s defaults and only add what's missing
+		directives: {
+			// Upgrade-insecure-requests is ignored on HTTP, so we omit it entirely
+			upgradeInsecureRequests: null,
+
+			// Our 3-D text renderer for the blockchain component (via @react-three/drei → troika-three-text)
+			// spawns Web Workers from blob: URLs.
+			workerSrc: ["'self'", 'blob:'],
+
+			// Those workers load their module chunks with importScripts(blob: …),
+			// so we allow blob in script-src
+			scriptSrc: ["'self'", 'blob:'],
+
+			// The font resolver inside the worker fetches tiny JSON/WOFF files from
+			// jsDelivr. Everything else stays same-origin only.
+			connectSrc: ["'self'", 'ws:', 'https://cdn.jsdelivr.net'],
+		},
+	},
+})
+
 await app.register(fastifyWs)
 
 // serve ui static files from dist/public in production
