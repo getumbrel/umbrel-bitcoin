@@ -78,7 +78,7 @@ export default function HomePage() {
 						<div className='absolute top-[-50%] left-[-40%] w-[500%] h-[500%] rounded-full bg-black pointer-events-none' />
 						<GradientBorderFromCorners />
 
-						<div className='w-full h-full relative right-[20%] top-[-60%]'>
+						<div className='md:w-full md:h-full relative md:right-[30%] md:top-[-70%] sm:right-[30%] sm:top-[-90%] right-[80%] top-[-90%]'>
 							<Globe />
 						</div>
 
