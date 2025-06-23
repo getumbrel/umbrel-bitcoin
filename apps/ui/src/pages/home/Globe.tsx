@@ -273,7 +273,8 @@ export default function PeersGlobe() {
 					.hexPolygonMargin(0.35)
 					.hexPolygonUseDots(true)
 					.hexPolygonDotResolution(10)
-					.hexPolygonColor(() => HEX_MAP_COLOR),
+					.hexPolygonColor(() => HEX_MAP_COLOR)
+					.hexPolygonAltitude(0.005),
 			)
 
 		const ctl = new TrackballControls(cam, renderer.domElement)
