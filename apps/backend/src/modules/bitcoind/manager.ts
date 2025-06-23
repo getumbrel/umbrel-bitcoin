@@ -7,11 +7,6 @@ import type {ExitInfo} from '#types'
 
 import {BITCOIND_BIN, BITCOIN_DIR} from '../../lib/paths.js'
 
-type BitcoindProcess = ChildProcessWithoutNullStreams & {
-	stdout: Readable
-	stderr: Readable
-}
-
 type BitcoindManagerOptions = {
 	binary?: string
 	datadir?: string
@@ -31,7 +26,7 @@ function pipeBitcoindLines(src: Readable, logFn: LogFn) {
 }
 
 export class BitcoindManager {
-	private child: BitcoindProcess | null = null
+	private child: ChildProcessWithoutNullStreams | null = null
 	private readonly bin: string
 	private readonly datadir: string
 	private readonly extraArgs: string[]
