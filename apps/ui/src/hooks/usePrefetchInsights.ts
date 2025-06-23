@@ -8,30 +8,29 @@ import {api} from '@/lib/api'
 
 const NUM_BLOCKS = 200
 
-// TODO: consider exporting queryKey's from a shared file so they don't get out of sync with other hooks
 export function usePrefetchInsights() {
 	const queryClient = useQueryClient()
 
 	useEffect(() => {
 		const prefetch = () => {
 			queryClient.prefetchQuery({
-				queryKey: ['stats', 'summary'],
+				queryKey: ['rpc', 'stats'],
 				queryFn: () => api<Stats>('/rpc/stats'),
 			})
 			queryClient.prefetchQuery({
-				queryKey: ['rewards', NUM_BLOCKS],
+				queryKey: ['rpc', 'blocks', 'rewards', NUM_BLOCKS],
 				queryFn: () => api<BlockReward[]>(`/rpc/blocks/rewards?limit=${NUM_BLOCKS}`),
 			})
 			queryClient.prefetchQuery({
-				queryKey: ['block-size', NUM_BLOCKS],
+				queryKey: ['rpc', 'blocks', 'size', NUM_BLOCKS],
 				queryFn: () => api<BlockSizeSample[]>(`/rpc/blocks/size?limit=${NUM_BLOCKS}`),
 			})
 			queryClient.prefetchQuery({
-				queryKey: ['fee-rates', NUM_BLOCKS],
+				queryKey: ['rpc', 'blocks', 'fees', NUM_BLOCKS],
 				queryFn: () => api<FeeRatePoint[]>(`/rpc/blocks/fees?limit=${NUM_BLOCKS}`),
 			})
 			queryClient.prefetchQuery({
-				queryKey: ['peers/info'],
+				queryKey: ['rpc', 'peers', 'info'],
 				queryFn: () => api<PeerInfo[]>('/rpc/peers/info'),
 			})
 		}

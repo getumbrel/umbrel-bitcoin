@@ -5,7 +5,7 @@ import type {SettingsSchema} from '#settings'
 // TODO: set actual cache times. We don't expect settings to change until the user updates them.
 export function useSettings() {
 	return useQuery({
-		queryKey: ['settings'],
+		queryKey: ['config', 'settings'],
 		queryFn: () => api<SettingsSchema>('/config/settings'),
 		// Tune these to taste
 		staleTime: 30_000,
@@ -23,11 +23,14 @@ export function useUpdateSettings() {
 
 		// Update/invalidate the cache so all components see the new values
 		onSuccess: (fresh) => {
-			qc.setQueryData(['settings'], fresh)
-			qc.setQueryData(['bitcoindExit'], null) // clear bticoind crash state
+			qc.setQueryData(['config', 'settings'], fresh)
 
-			// TODO: refetch / invalidate other queries that will change due to bitcoind restart
-			// qc.invalidateQueries({ queryKey: ['peers/info'] })
+			// clear crash UI
+			qc.setQueryData(['bitcoind', 'exit'], null)
+
+			// Purge and kickoff background refetches for rpc data
+			qc.removeQueries({queryKey: ['rpc']})
+			qc.invalidateQueries({queryKey: ['rpc']})
 		},
 	})
 }
@@ -40,10 +43,14 @@ export function useRestoreDefaults() {
 		mutationFn: () => api<SettingsSchema>('/config/restore-defaults', {method: 'POST', body: {}}),
 
 		onSuccess: (fresh) => {
-			qc.setQueryData(['settings'], fresh)
-			qc.setQueryData(['bitcoindExit'], null)
-			// Invalidate / refetch anything that's affected by a full restart
-			// qc.invalidateQueries({queryKey: ['peers/info']})
+			qc.setQueryData(['config', 'settings'], fresh)
+
+			// clear crash UI
+			qc.setQueryData(['bitcoind', 'exit'], null)
+
+			// Purge and kickoff background refetches for rpc data
+			qc.removeQueries({queryKey: ['rpc']})
+			qc.invalidateQueries({queryKey: ['rpc']})
 		},
 	})
 }

@@ -7,7 +7,7 @@ export function useFeeRates(limit = 144, opts?: {enabled?: boolean}) {
 	const {enabled = true} = opts ?? {}
 
 	return useQuery({
-		queryKey: ['fee-rates', limit],
+		queryKey: ['rpc', 'blocks', 'fees', limit],
 		queryFn: () => api<FeeRatePoint[]>(`/rpc/blocks/fees?limit=${limit}`),
 		staleTime: 60_000,
 		refetchInterval: 120_000,

@@ -10,11 +10,11 @@ export function useBitcoindExitInfo() {
 	const qc = useQueryClient()
 
 	return useQuery<ExitInfo | null>({
-		queryKey: ['bitcoindExit'],
-		initialData: () => qc.getQueryData(['bitcoindExit']) as ExitInfo | null,
+		queryKey: ['bitcoind', 'exit'],
+		initialData: () => qc.getQueryData(['bitcoind', 'exit']) as ExitInfo | null,
 
 		// Will fetch only if the cache hasn't been filled by the WebSocket yet
-		enabled: qc.getQueryData(['bitcoindExit']) === undefined,
+		enabled: qc.getQueryData(['bitcoind', 'exit']) === undefined,
 		queryFn: () => api<ExitInfo | null>('/bitcoind/exit-info'),
 		staleTime: 30_000,
 	})

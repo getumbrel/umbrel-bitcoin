@@ -29,7 +29,7 @@ export function useLatestBlocks({limit = 5, stage}: {limit?: number; stage: Sync
 				: false // no fetch during pre-headers / headers
 
 	const query = useQuery<BlockSummary[]>({
-		queryKey: ['latest-blocks', limit],
+		queryKey: ['rpc', 'blocks', 'latest', limit],
 		queryFn: () => api<{blocks: BlockSummary[]}>(`/rpc/blocks?limit=${limit}`).then((r) => r.blocks),
 		enabled: stage === 'IBD' || stage === 'synced', // skip during pre-headers / headers
 		refetchInterval: pollMs,
@@ -50,7 +50,7 @@ export function useLatestBlocks({limit = 5, stage}: {limit?: number; stage: Sync
 			ws.onmessage = (ev) => {
 				try {
 					const block: BlockSummary = JSON.parse(ev.data)
-					qc.setQueryData<BlockSummary[]>(['latest-blocks', limit], (old) => {
+					qc.setQueryData<BlockSummary[]>(['rpc', 'blocks', 'latest', limit], (old) => {
 						const list = old ?? []
 						if (list.some((b) => b.hash === block.hash)) return list
 						return [block, ...list].sort((a, b) => b.height - a.height).slice(0, limit)

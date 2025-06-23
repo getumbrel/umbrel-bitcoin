@@ -7,7 +7,7 @@ export function useBlockSize(limit = 144, opts?: {enabled?: boolean}) {
 	const {enabled = true} = opts ?? {}
 
 	return useQuery({
-		queryKey: ['block-size', limit],
+		queryKey: ['rpc', 'blocks', 'size', limit],
 		queryFn: () => api<BlockSizeSample[]>(`/rpc/blocks/size?limit=${limit}`),
 		staleTime: 60_000,
 		refetchInterval: 120_000,

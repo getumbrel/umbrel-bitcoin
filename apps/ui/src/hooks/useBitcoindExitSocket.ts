@@ -36,7 +36,7 @@ export function useBitcoindExitSocket() {
 			// The backend sends a snapshot immediately after the client connects
 			// If the snapshot shows that bitcoind is running -> clear state & dismiss toast
 			if (msg.type === 'snapshot' && msg.running) {
-				qc.setQueryData(['bitcoindExit'], null)
+				qc.setQueryData(['bitcoind', 'exit'], null)
 				toast.dismiss(TOAST_ID)
 				return
 			}
@@ -44,7 +44,7 @@ export function useBitcoindExitSocket() {
 			// If the snapshot shows that bitcoind is not running -> cache the exit info & show toast
 			if (msg.type === 'snapshot' && !msg.running && msg.exit) {
 				const info = msg.exit as ExitInfo
-				qc.setQueryData(['bitcoindExit'], info)
+				qc.setQueryData(['bitcoind', 'exit'], info)
 				showToast()
 				return
 			}
@@ -52,7 +52,7 @@ export function useBitcoindExitSocket() {
 			// If we get a live "exit" event (bitcoind just crashed while the socket is open) -> cache the exit info & show toast
 			if (msg.type === 'exit') {
 				const info = msg as ExitInfo
-				qc.setQueryData(['bitcoindExit'], info)
+				qc.setQueryData(['bitcoind', 'exit'], info)
 				showToast()
 				return
 			}
