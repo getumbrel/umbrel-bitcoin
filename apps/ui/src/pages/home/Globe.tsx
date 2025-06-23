@@ -96,10 +96,12 @@ export default function PeersGlobe() {
 	const dots = useMemo(() => {
 		if (!data) return []
 
+		// We track the occupied map cells and deduplicate peers to not plot multiple on the same cell
 		const occupied = new Set<string>()
 		const peers: any[] = []
 		let userDot: any = null
 
+		// We plot the user first so they never get deduplicated
 		if (Array.isArray(data.userLocation)) {
 			const [lat, lng] = snapToMap(data.userLocation)
 			occupied.add(`${lat},${lng}`)
