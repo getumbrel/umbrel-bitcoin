@@ -44,7 +44,7 @@ export default function ConnectionDetails() {
 				<Button className='cursor-pointer rounded-full bg-button-gradient backdrop-blur-xl'>
 					<GradientBorderFromTop />
 					<WalletIcon className='w-5 h-5 text-[#969696]' />
-					<span className='text-[13px] text-white/80 font-[500]'>Connect Wallet</span>
+					<span className='text-[13px] text-white/80 font-[500]'>Connect</span>
 				</Button>
 			</DialogTrigger>
 			<DialogContent
