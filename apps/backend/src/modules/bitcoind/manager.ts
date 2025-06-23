@@ -112,7 +112,7 @@ export class BitcoindManager {
 
 		this.child = spawn(this.bin, [`-datadir=${this.datadir}`, ...this.extraArgs], {
 			stdio: ['pipe', 'pipe', 'pipe'],
-		}) as BitcoindProcess
+		}) as ChildProcessWithoutNullStreams
 
 		this.lastError = null
 		console.log('[bitcoind-manager] spawned PID', this.child.pid)
