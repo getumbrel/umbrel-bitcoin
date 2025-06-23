@@ -1,4 +1,5 @@
 import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query'
+import {toast} from 'sonner'
 import {api} from '@/lib/api'
 
 type CustomConfigResponse = {lines: string}
@@ -25,6 +26,9 @@ export function useSaveCustomConfig() {
 
 			// clear crash UI
 			qc.setQueryData(['bitcoind', 'exit'], null)
+
+			// clear bitcoin crash toast if it is still showing
+			toast.dismiss('bitcoind-exit')
 
 			// Purge and kickoff background refetches for rpc data
 			qc.removeQueries({queryKey: ['rpc']})

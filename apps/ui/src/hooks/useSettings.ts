@@ -1,4 +1,5 @@
 import {useQuery, useMutation, useQueryClient} from '@tanstack/react-query'
+import {toast} from 'sonner'
 import {api} from '@/lib/api'
 import type {SettingsSchema} from '#settings'
 
@@ -28,6 +29,9 @@ export function useUpdateSettings() {
 			// clear crash UI
 			qc.setQueryData(['bitcoind', 'exit'], null)
 
+			// clear bitcoin crash toast if it is still showing
+			toast.dismiss('bitcoind-exit')
+
 			// Purge and kickoff background refetches for rpc data
 			qc.removeQueries({queryKey: ['rpc']})
 			qc.invalidateQueries({queryKey: ['rpc']})
@@ -47,6 +51,9 @@ export function useRestoreDefaults() {
 
 			// clear crash UI
 			qc.setQueryData(['bitcoind', 'exit'], null)
+
+			// clear bitcoin crash toast if it is still showing
+			toast.dismiss('bitcoind-exit')
 
 			// Purge and kickoff background refetches for rpc data
 			qc.removeQueries({queryKey: ['rpc']})
