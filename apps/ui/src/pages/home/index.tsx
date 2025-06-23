@@ -15,7 +15,7 @@ import {useSyncStatus} from '@/hooks/useSyncStatus'
 import {calcSyncPercent, syncStage} from '@/lib/sync-progress'
 
 export default function HomePage() {
-	const {data: status, isError} = useBitcoindStatus()
+	const {data: status, isError, isLoading: isStatusLoading} = useBitcoindStatus()
 	const {data: syncStatus, isLoading} = useSyncStatus()
 
 	const running = !isError && status?.running === true
@@ -83,28 +83,30 @@ export default function HomePage() {
 						</div>
 
 						{/* Running status */}
-						{/* TODO: don't quickly flash not running to running on refresh */}
 						<AnimatePresence mode='wait'>
-							<motion.h3
-								// the key prop tells Motion when state flips
-								key={running ? 'running' : 'stopped'}
-								initial={{opacity: 0}}
-								animate={{opacity: 1}}
-								exit={{opacity: 0}}
-								transition={{duration: 0.25}}
-								className='absolute top-[7%] left-[5%] flex items-center gap-1 justify-center'
-							>
-								<StatusDot running={running} />
+							{/* Only show status when we have data (not loading) */}
+							{!isStatusLoading && (
+								<motion.h3
+									// the key prop tells Motion when state flips
+									key={running ? 'running' : 'stopped'}
+									initial={{opacity: 0}}
+									animate={{opacity: 1}}
+									exit={{opacity: 0}}
+									transition={{duration: 0.25}}
+									className='absolute top-[7%] left-[5%] flex items-center gap-1 justify-center'
+								>
+									<StatusDot running={running} />
 
-								{running ? (
-									<>
-										<span className='text-[#0BC39E] text-[14px] font-[500] ml-1'>Running</span>
-										{uptime && <span className='text-white/60 text-[14px] font-[400]'>since {uptime}</span>}
-									</>
-								) : (
-									<span className='text-[#EF4444] text-[14px] font-[500] ml-1'>Not running</span>
-								)}
-							</motion.h3>
+									{running ? (
+										<>
+											<span className='text-[#0BC39E] text-[14px] font-[500] ml-1'>Running</span>
+											{uptime && <span className='text-white/60 text-[14px] font-[400]'>since {uptime}</span>}
+										</>
+									) : (
+										<span className='text-[#EF4444] text-[14px] font-[500] ml-1'>Not running</span>
+									)}
+								</motion.h3>
+							)}
 						</AnimatePresence>
 
 						{/* Sync status */}
