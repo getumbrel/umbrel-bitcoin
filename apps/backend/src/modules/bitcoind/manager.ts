@@ -39,10 +39,10 @@ export class BitcoindManager {
 	private readonly bin: string
 	private readonly datadir: string
 	private readonly extraArgs: string[]
-	private readonly _versionInfo: {implementation: string; version: string}
+	public readonly versionInfo: {implementation: string; version: string}
 	private startedAt: number | null = null
 	private lastError: Error | null = null
-	private _exitInfo: ExitInfo | null = null
+	public exitInfo: ExitInfo | null = null
 
 	// Ring buffer for the last N log lines (stderr+stdout)
 	// We use this to show the last N log lines in the UI when bitcoind crashes
@@ -87,7 +87,7 @@ export class BitcoindManager {
 			// e.g., "Bitcoin Core daemon version v29.0.0"
 			const firstLine = execFileSync(this.bin, ['--version']).toString().split('\n')[0]
 
-			// implementation = everything before the word “version …”
+			// implementation = everything before the word "version …"
 			// e.g., "Bitcoin Core"
 			const implementation = firstLine.replace(/(?:daemon|RPC client)?\s*version.*$/i, '').trim()
 
@@ -95,20 +95,11 @@ export class BitcoindManager {
 			// e.g., "v29.0.0"
 			const version = (firstLine.match(/v\d+\.\d+\.\d+/) ?? ['unknown'])[0]
 
-			this._versionInfo = {implementation, version}
+			this.versionInfo = {implementation, version}
 		} catch (error) {
-			this._versionInfo = {implementation: 'unknown', version: 'unknown'}
+			this.versionInfo = {implementation: 'unknown', version: 'unknown'}
 			console.error('[bitcoind-manager] failed to get static version:', error)
 		}
-	}
-
-	public get versionInfo() {
-		return this._versionInfo
-	}
-
-	// Returns latest bitcoind crash snapshot, or `null` if the node is running / never crashed
-	public get exitInfo(): ExitInfo | null {
-		return this._exitInfo
 	}
 
 	setLastError(err: Error): void {
@@ -143,14 +134,14 @@ export class BitcoindManager {
 			// Skip emitting crash info if we expected this exit
 			if (this.expectingExit) return
 
-			this._exitInfo = {
+			this.exitInfo = {
 				code,
 				sig,
 				logTail: [...this.logRing],
 				message: `Bitcoin Core stopped (code ${code ?? 'null'})`,
 			}
 
-			this.events.emit('exit', this._exitInfo)
+			this.events.emit('exit', this.exitInfo)
 			this.child = null
 		})
 
