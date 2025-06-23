@@ -1,3 +1,6 @@
+// TODO: Add lightning to the globe
+// TODO: check what comets look like when peers are close to user
+
 // This globe plots the postions of peers and the user
 // It also animates transactions being heard:
 // - One 'comet' per transaction, plays once, then fades and is disposed.
