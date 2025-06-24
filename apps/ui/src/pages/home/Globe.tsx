@@ -119,120 +119,122 @@ export default function PeersGlobe() {
 	}, [data])
 
 	/* ─ transaction socket triggers comet ─ */
-	const ping = useTransactionSocket()
-	const lastPing = useRef(ping)
+	const txCount = useTransactionSocket()
+	const lastTxCount = useRef(txCount)
+
+	// NOTE - Burst handling for tx animation:
+	// The backend collapses every 33 ms slice of transactions into one websocket
+	// message that carries  `count = #txs` .
+	// `txCount` is the total of all counts we’ve received while the ws is open.
+	// We derive `needed = txCount - lastTxCount` and spawn that many comets
+	// in one render pass, so every transaction is visualised once while message
+	// traffic stays capped at ≤30 frames / sec.
 	useEffect(() => {
-		if (ping === lastPing.current) return
-		lastPing.current = ping
+		const needed = txCount - lastTxCount.current // how many comets this slice
+		if (needed <= 0) return
+		lastTxCount.current = txCount
+
 		if (!globe.current || !dots.length || !scene.current) return
 
 		const user = dots.find((d) => (d as any).isUser) || dots[0]
 		const peerDots = dots.filter((d) => !(d as any).isUser)
 		if (!peerDots.length) return
-		const randomPeer = peerDots[(Math.random() * peerDots.length) | 0]
 
-		// Our calculation
-		const startVec = latLngToVec3(randomPeer.lat, randomPeer.lng, 0.01)
-		const endVec = latLngToVec3(user.lat, user.lng, 0.01)
+		for (let k = 0; k < needed; k++) {
+			const randomPeer = peerDots[(Math.random() * peerDots.length) | 0]
 
-		// build tail geometry (great‑circle points)
-		// Use same altitude as dots (0.01)
-		const tailPts: THREE.Vector3[] = []
-		for (let i = 0; i <= TAIL_SEGMENTS; i++) tailPts.push(slerpOnSphere(startVec, endVec, i / TAIL_SEGMENTS, 0.01))
+			// --- build vectors ------------------------------------------------------
+			const startVec = latLngToVec3(randomPeer.lat, randomPeer.lng, 0.01)
+			const endVec = latLngToVec3(user.lat, user.lng, 0.01)
 
-		// Create a glowing tail effect using particles
-		const particleCount = 30
-		const particleGeometry = new THREE.BufferGeometry()
+			// --- pre-compute path points (tail) -------------------------------------
+			const tailPts: THREE.Vector3[] = []
+			for (let i = 0; i <= TAIL_SEGMENTS; i++) {
+				tailPts.push(slerpOnSphere(startVec, endVec, i / TAIL_SEGMENTS, 0.01))
+			}
 
-		// Initialize particle positions, sizes, and opacities
-		const particlePositions = new Float32Array(particleCount * 3)
-		const particleSizes = new Float32Array(particleCount)
-		const particleOpacities = new Float32Array(particleCount)
+			// --- glowing particle tail ---------------------------------------------
+			const particleCount = 30
+			const particlePos = new Float32Array(particleCount * 3)
+			const particleSizes = new Float32Array(particleCount)
+			const particleOpac = new Float32Array(particleCount)
 
-		for (let i = 0; i < particleCount; i++) {
-			// All particles start at the same position
-			particlePositions[i * 3] = startVec.x
-			particlePositions[i * 3 + 1] = startVec.y
-			particlePositions[i * 3 + 2] = startVec.z
+			for (let i = 0; i < particleCount; i++) {
+				particlePos[i * 3] = startVec.x
+				particlePos[i * 3 + 1] = startVec.y
+				particlePos[i * 3 + 2] = startVec.z
 
-			// Sizes decrease along the tail
-			// Start at size matching sphere diameter and taper down moderately
-			const t = i / particleCount
-			particleSizes[i] = Math.pow(1 - t, 2.5) * 6 + 0.5
+				const t = i / particleCount
+				particleSizes[i] = Math.pow(1 - t, 2.5) * 6 + 0.5
+				particleOpac[i] = Math.pow(1 - t, 1.5)
+			}
 
-			// Opacity fades along the tail
-			particleOpacities[i] = Math.pow(1 - t, 1.5)
+			const particleGeom = new THREE.BufferGeometry()
+			particleGeom.setAttribute('position', new THREE.BufferAttribute(particlePos, 3))
+			particleGeom.setAttribute('size', new THREE.BufferAttribute(particleSizes, 1))
+			particleGeom.setAttribute('opacity', new THREE.BufferAttribute(particleOpac, 1))
+
+			const particleMat = new THREE.ShaderMaterial({
+				uniforms: {
+					color: {value: new THREE.Color(COMET_TAIL_COLOR)},
+					globalOpacity: {value: 1.0},
+				},
+				vertexShader: `
+					attribute float size;
+					attribute float opacity;
+					varying float vOpacity;
+					uniform float globalOpacity;
+					void main() {
+						vOpacity = opacity * globalOpacity;
+						vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+						gl_PointSize = size * (500.0 / -mvPosition.z);
+						gl_Position  = projectionMatrix * mvPosition;
+					}
+				`,
+				fragmentShader: `
+					uniform  vec3  color;
+					varying  float vOpacity;
+					void main() {
+						vec2  c   = gl_PointCoord - 0.5;
+						float d   = length(c);
+						float a   = 1.0 - smoothstep(0.0, 0.5, d);
+						a         = pow(a, 2.0);
+						gl_FragColor = vec4(color, a * vOpacity);
+					}
+				`,
+				transparent: true,
+				depthWrite: false,
+				blending: THREE.AdditiveBlending,
+			})
+
+			const tailParticles = new THREE.Points(particleGeom, particleMat)
+
+			// --- head sphere --------------------------------------------------------
+			const headGeo = new THREE.SphereGeometry(1.5, 16, 16)
+			const headMat = new THREE.MeshBasicMaterial({
+				color: COMET_HEAD_COLOR,
+				transparent: true,
+				opacity: 1,
+			})
+			const head = new THREE.Mesh(headGeo, headMat)
+			head.position.copy(startVec)
+
+			// --- group & add to globe ----------------------------------------------
+			const group = new THREE.Group()
+			group.add(tailParticles)
+			group.add(head)
+			globe.current.add(group)
+
+			comets.current.push({
+				group,
+				start: performance.now(),
+				startVec,
+				endVec,
+				pathPoints: tailPts,
+				trailPositions: [],
+			})
 		}
-
-		particleGeometry.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3))
-		particleGeometry.setAttribute('size', new THREE.BufferAttribute(particleSizes, 1))
-		particleGeometry.setAttribute('opacity', new THREE.BufferAttribute(particleOpacities, 1))
-
-		// Custom shader for glowing particles
-		const particleMaterial = new THREE.ShaderMaterial({
-			uniforms: {
-				color: {value: new THREE.Color(COMET_TAIL_COLOR)},
-				globalOpacity: {value: 1.0},
-			},
-			vertexShader: `
-        attribute float size;
-        attribute float opacity;
-        varying float vOpacity;
-        uniform float globalOpacity;
-        
-        void main() {
-          vOpacity = opacity * globalOpacity;
-          vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-          gl_PointSize = size * (500.0 / -mvPosition.z);
-          gl_Position = projectionMatrix * mvPosition;
-        }
-      `,
-			fragmentShader: `
-        uniform vec3 color;
-        varying float vOpacity;
-        
-        void main() {
-          vec2 center = gl_PointCoord - 0.5;
-          float dist = length(center);
-          
-          // Create a soft glowing circle
-          float alpha = 1.0 - smoothstep(0.0, 0.5, dist);
-          alpha = pow(alpha, 2.0); // Make the glow more intense in the center
-          
-          gl_FragColor = vec4(color, alpha * vOpacity);
-        }
-      `,
-			transparent: true,
-			depthWrite: false,
-			blending: THREE.AdditiveBlending,
-		})
-
-		const tailParticles = new THREE.Points(particleGeometry, particleMaterial)
-
-		// head mesh
-		const headGeo = new THREE.SphereGeometry(1.5, 16, 16)
-		const headMat = new THREE.MeshBasicMaterial({
-			color: COMET_HEAD_COLOR,
-			transparent: true,
-			opacity: 1,
-		})
-		const head = new THREE.Mesh(headGeo, headMat)
-		head.position.copy(startVec)
-
-		const group = new THREE.Group()
-		group.add(tailParticles)
-		group.add(head)
-		globe.current.add(group) // Add to globe so it rotates with it
-
-		comets.current.push({
-			group,
-			start: performance.now(),
-			startVec,
-			endVec,
-			pathPoints: tailPts,
-			trailPositions: [],
-		})
-	}, [ping, dots])
+	}, [txCount, dots])
 
 	// Create globe & renderer once
 	useEffect(() => {

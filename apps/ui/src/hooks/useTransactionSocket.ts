@@ -1,15 +1,26 @@
 import {useEffect, useState} from 'react'
 
 export function useTransactionSocket(): number {
-	const [tick, setTick] = useState(0) // monotonically increasing
+	const [txCount, setTxCount] = useState(0)
 
 	useEffect(() => {
 		const ws = new WebSocket(`${location.origin.replace(/^http/, 'ws')}/api/ws/transactions`)
 
-		ws.onmessage = () => setTick((t) => t + 1) // no batching loss
+		ws.onmessage = (e) => {
+			try {
+				// The backend sends one “txPing” frame every 33 ms, with
+				// `count` = number of transactions in that slice.
+				const {type, count = 1} = JSON.parse(e.data)
+				if (type === 'txPing') setTxCount((t) => t + count)
+			} catch {
+				// fallback for unexpected payloads
+				setTxCount((t) => t + 1)
+			}
+		}
+
 		ws.onerror = console.error
 		return () => ws.close()
 	}, [])
 
-	return tick
+	return txCount
 }

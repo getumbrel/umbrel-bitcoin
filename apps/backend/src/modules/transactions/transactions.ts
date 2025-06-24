@@ -1,35 +1,40 @@
 import type WebSocket from 'ws'
 import {transactionStream} from './zmq-subscriber.js'
 
-// We send one ping per transaction, but limit the rate to a max of 10 pings per second.
-// This is probably the max the UI can handle without animation overload.
-const TXS_PER_PING = 1
-const MIN_INTERVAL_MS = 100
+// Throttle strategy: we queue every tx immediately, but emit at most
+// one WebSocket frame every 33 ms (~30 transactions per second). That frame includes
+// `count`, telling the UI how many transactions arrived in the slice,
+// so bursts can be represented faithfully while network & render load
+// stay capped at ≤30 messages per second.
+const MIN_INTERVAL_MS = 33
 
+// Track connected clients
 const clients = new Set<WebSocket>()
 
-function broadcastPing() {
-	const msg = '{"type":"txPing"}'
+function broadcastPing(count: number) {
+	const msg = JSON.stringify({type: 'txPing', count})
 	for (const ws of clients) {
 		if (ws.readyState === ws.OPEN) ws.send(msg)
 	}
 }
 
-let txBucket = 0
-let lastPing = 0
+// queed txs waiting to be sent
+let pending = 0
+let lastPingMs = 0
 
+// Increment the queue for every tx; no throttling here.
 transactionStream.on('hashtx', () => {
-	txBucket += 1
+	pending += 1
 
 	const now = Date.now()
-	if (txBucket >= TXS_PER_PING && now - lastPing >= MIN_INTERVAL_MS) {
-		txBucket = 0
-		lastPing = now
-		broadcastPing()
+	if (now - lastPingMs >= MIN_INTERVAL_MS) {
+		broadcastPing(pending)
+		pending = 0
+		lastPingMs = now
 	}
 })
 
-// WebSocket push for new transactions
+// WebSocket push for new clients
 export function wsStream(socket: WebSocket) {
 	clients.add(socket)
 	socket.on('close', () => clients.delete(socket))
