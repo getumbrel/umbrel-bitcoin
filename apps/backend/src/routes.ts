@@ -12,6 +12,7 @@ import * as sync from './modules/sync/sync.js'
 import * as stats from './modules/stats/stats.js'
 import * as connect from './modules/connect/connect.js'
 import * as config from './modules/config/config.js'
+import * as widgets from './modules/widgets/widgets.js'
 
 import {settingsSchema} from '#settings'
 
@@ -78,6 +79,12 @@ export default fp(async (app: FastifyInstance) => {
 		const savedLines = await config.updateCustomOptions(lines)
 		return {lines: savedLines}
 	})
+
+	// umbrelOS widget routes
+	const widgetBase = `${BASE}/widget`
+
+	app.get(`${widgetBase}/stats`, widgets.stats)
+	app.get(`${widgetBase}/sync`, widgets.sync)
 
 	// websocket routes
 	// Note: Fastify-Websocket plugin must already be registered via app.register(fastifyWs)
