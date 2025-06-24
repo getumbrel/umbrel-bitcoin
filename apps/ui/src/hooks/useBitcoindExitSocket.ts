@@ -6,6 +6,8 @@ import {useNavigate} from 'react-router-dom'
 import {useQueryClient} from '@tanstack/react-query'
 import {toast} from 'sonner'
 
+import {useWebSocketToken} from './useWebSocketToken'
+
 import type {ExitInfo} from '#types'
 
 // Fixed ID for the toast notification so we can make sure not to show it multiple times
@@ -14,9 +16,11 @@ const TOAST_ID = 'bitcoind-exit'
 export function useBitcoindExitSocket() {
 	const qc = useQueryClient()
 	const navigate = useNavigate()
+	const {data} = useWebSocketToken()
 
 	useEffect(() => {
-		const ws = new WebSocket(`${location.origin.replace(/^http/, 'ws')}/api/ws/bitcoind/exit`)
+		if (!data?.token) return
+		const ws = new WebSocket(`${location.origin.replace(/^http/, 'ws')}/api/ws/bitcoind/exit?token=${data?.token}`)
 
 		const showToast = () => {
 			toast.error('Bitcoin Core stopped unexpectedly', {
@@ -59,5 +63,5 @@ export function useBitcoindExitSocket() {
 		}
 
 		return () => ws.close()
-	}, [qc, navigate])
+	}, [qc, navigate, data?.token])
 }

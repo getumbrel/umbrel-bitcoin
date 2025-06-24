@@ -2,6 +2,7 @@ import {useQuery, useQueryClient} from '@tanstack/react-query'
 import {useEffect} from 'react'
 
 import {api} from '@/lib/api'
+import {useWebSocketToken} from './useWebSocketToken'
 
 import type {BlockSummary} from '#types'
 import type {SyncStage} from '@/lib/sync-progress'
@@ -19,6 +20,7 @@ import type {SyncStage} from '@/lib/sync-progress'
 
 export function useLatestBlocks({limit = 5, stage}: {limit?: number; stage: SyncStage}) {
 	const qc = useQueryClient()
+	const {data} = useWebSocketToken()
 
 	// REST polling
 	const pollMs =
@@ -38,6 +40,8 @@ export function useLatestBlocks({limit = 5, stage}: {limit?: number; stage: Sync
 
 	// Websocket
 	useEffect(() => {
+		if (!data?.token) return
+
 		// We only use WebSocket when out of IBD because bitcoind's ZMQ is silent until then
 		if (stage !== 'synced') return
 
@@ -45,7 +49,7 @@ export function useLatestBlocks({limit = 5, stage}: {limit?: number; stage: Sync
 		let retry = 0
 
 		const open = () => {
-			ws = new WebSocket(`${location.origin.replace(/^http/, 'ws')}/api/ws/blocks`)
+			ws = new WebSocket(`${location.origin.replace(/^http/, 'ws')}/api/ws/blocks?token=${data?.token}`)
 
 			ws.onmessage = (ev) => {
 				try {
@@ -70,7 +74,7 @@ export function useLatestBlocks({limit = 5, stage}: {limit?: number; stage: Sync
 
 		open()
 		return () => ws?.close()
-	}, [stage, qc, limit])
+	}, [stage, qc, limit, data?.token])
 
 	return query
 }

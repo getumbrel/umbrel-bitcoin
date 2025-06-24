@@ -1,10 +1,15 @@
 import {useEffect, useState} from 'react'
 
+import {useWebSocketToken} from './useWebSocketToken'
+
 export function useTransactionSocket(): number {
 	const [txCount, setTxCount] = useState(0)
+	const {data} = useWebSocketToken()
 
 	useEffect(() => {
-		const ws = new WebSocket(`${location.origin.replace(/^http/, 'ws')}/api/ws/transactions`)
+		if (!data?.token) return
+
+		const ws = new WebSocket(`${location.origin.replace(/^http/, 'ws')}/api/ws/transactions?token=${data?.token}`)
 
 		ws.onmessage = (e) => {
 			try {
@@ -20,7 +25,7 @@ export function useTransactionSocket(): number {
 
 		ws.onerror = console.error
 		return () => ws.close()
-	}, [])
+	}, [data?.token])
 
 	return txCount
 }

@@ -1,3 +1,5 @@
+import {randomBytes} from 'node:crypto'
+
 import fp from 'fastify-plugin'
 import type {FastifyError, FastifyInstance} from 'fastify'
 import {ZodError} from 'zod'
@@ -12,6 +14,8 @@ import * as connect from './modules/connect/connect.js'
 import * as config from './modules/config/config.js'
 
 import {settingsSchema} from '#settings'
+
+const WS_TOKEN = randomBytes(16).toString('hex')
 
 // We attach a global error handler for all routes (see bottom of this file)
 export default fp(async (app: FastifyInstance) => {
@@ -78,6 +82,18 @@ export default fp(async (app: FastifyInstance) => {
 	// websocket routes
 	// Note: Fastify-Websocket plugin must already be registered via app.register(fastifyWs)
 	const wsBase = `${BASE}/ws`
+
+	// Return the CSRF token (this will be unreadable cross origin due to CORS)
+	app.get(`${wsBase}/token`, (request, reply) => reply.send({token: WS_TOKEN}))
+
+	// Check CSRF token for websocket requests
+	app.addHook('preValidation', async (request, reply) => {
+		// Skip if not a websocket upgrade
+		if (request.headers.upgrade?.toLowerCase() !== 'websocket') return
+
+		// Check token
+		if ((request.query as {token?: string})?.token !== WS_TOKEN) return reply.code(401).send('Unauthorized')
+	})
 
 	// new blocks from bitcoind via zmq
 	app.get(`${wsBase}/blocks`, {websocket: true}, blocks.wsStream)
