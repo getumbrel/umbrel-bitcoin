@@ -20,6 +20,10 @@ function onLine(src: Readable, callback: (line: string) => void) {
 	src.on('error', (err) => console.error('[bitcoind-manager] stream error:', err))
 
 	const rl = readline.createInterface({input: src})
+
+	// Prevent an unhandled error from the readline from crashing the process
+	rl.on('error', (err) => console.error('[bitcoind-manager] readline error:', err))
+
 	rl.on('line', (raw) => {
 		// In event-callback land now; any throw would bubble up uncaught and kill the process
 		try {
@@ -28,9 +32,6 @@ function onLine(src: Readable, callback: (line: string) => void) {
 		} catch (err) {
 			console.error('[bitcoind-manager] onLine callback error:', err)
 		}
-
-		// Prevent an unhandled error from the readline from crashing the process
-		rl.on('error', (err) => console.error('[bitcoind-manager] readline error:', err))
 	})
 }
 
@@ -124,6 +125,9 @@ export class BitcoindManager {
 		this.lastError = null
 		console.log('[bitcoind-manager] spawned PID', this.child.pid)
 
+		// Emit start event for zmq hashtx subscriber
+		this.events.emit('start')
+
 		// Handle stdout and stderr
 		onLine(this.child.stdout, (line) => this.handleLine(line, false))
 		onLine(this.child.stderr, (line) => this.handleLine(line, true))
@@ -155,6 +159,9 @@ export class BitcoindManager {
 	// Gracefully stop bitcoind
 	async stop() {
 		if (!this.child) return
+
+		// Emit stop event for zmq hashtx subscriber
+		this.events.emit('stop')
 
 		// we don't want to emit an exit event if we are purposefully stopping bitcoind
 		this.expectingExit = true
