@@ -36,7 +36,8 @@ export function Layout() {
 			<Background />
 
 			{/* The full-viewport, flex column div that contains the floating dock, header, and main content */}
-			<div className='h-screen w-screen flex flex-col pt-6 px-4'>
+			{/* We're using dvh (Dynamic Viewport Height) units throughout to ensure the layout is responsive and doesn't have white space at the bottom on browsers that have a dynamic address bar (like iOS Safari) */}
+			<div className='h-[100dvh] w-[100vw] flex flex-col pt-6 px-4'>
 				{/* Floating dock – stays on top so content scrolls under it */}
 				<Dock className='fixed bottom-4 left-1/2 -translate-x-1/2 z-30' />
 

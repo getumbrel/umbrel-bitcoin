@@ -485,7 +485,7 @@ export default function SettingsCard() {
 								<FadeScrollArea
 									// We use a key to reset scroll position when switching tabs or search
 									key={isSearching ? 'search' : currentTab}
-									className='h-[calc(100vh-425px)] md:h-[calc(100vh-390px)] [--fade-top:hsla(0,0%,6%,1)][--fade-bottom:hsla(0,0%,3%,1)]'
+									className='h-[calc(100dvh-425px)] md:h-[calc(100dvh-390px)] [--fade-top:hsla(0,0%,6%,1)][--fade-bottom:hsla(0,0%,3%,1)]'
 								>
 									{isSearching ? (
 										matchingFields.length === 0 ? (
