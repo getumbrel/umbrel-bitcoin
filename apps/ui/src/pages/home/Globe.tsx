@@ -25,8 +25,8 @@ const HEX_MAP_COLOR = '#444'
 const GLOBE_COLOR = '#0d0d0d'
 const PEER_COLOR = 'hsl(29,100%,60%)'
 const USER_COLOR = '#FFF'
-const COMET_TAIL_COLOR = 'hsl(29,100%,70%)'
-const COMET_HEAD_COLOR = 'hsl(29,100%,80%)'
+const COMET_TAIL_COLOR = 'hsl(29,90%,60%)'
+const COMET_HEAD_COLOR = 'hsl(29,90%,70%)'
 const COMET_SPEED = 0.1 // speed in globe radius units per ms (distance/time)
 const COMET_FADE_TIME = 2000 // fade out tail+head (ms)
 const TAIL_SEGMENTS = 64 // resolution of the tail line
@@ -256,7 +256,7 @@ export default function PeersGlobe() {
 			const tailParticles = new THREE.Points(particleGeom, particleMat)
 
 			// --- head sphere --------------------------------------------------------
-			const headGeo = new THREE.SphereGeometry(0.6, 32, 32) // Smaller, higher resolution
+			const headGeo = new THREE.SphereGeometry(0.2, 32, 32) // Smaller, higher resolution
 			const headMat = new THREE.MeshBasicMaterial({
 				color: COMET_HEAD_COLOR,
 				transparent: true,
@@ -266,7 +266,7 @@ export default function PeersGlobe() {
 			head.position.copy(startVec)
 
 			// Add a subtle glow around the head
-			const glowGeo = new THREE.SphereGeometry(1.2, 16, 16)
+			const glowGeo = new THREE.SphereGeometry(0.4, 16, 16)
 			const glowMat = new THREE.MeshBasicMaterial({
 				color: COMET_HEAD_COLOR,
 				transparent: true,

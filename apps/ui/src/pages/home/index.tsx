@@ -109,6 +109,14 @@ export default function HomePage() {
 							)}
 						</AnimatePresence>
 
+						<InfoDialog
+							trigger={
+								<InfoIcon className='w-4 h-4 text-white/50 hover:text-white/80 transition-colors absolute top-3 right-3' />
+							}
+							title='Your place in the network'
+							description={`The white marker shows your node's location. Each orange marker represents a node you're connected to (peer), and the light trails represent the transactions being relayed to your node in real time.`}
+						/>
+
 						{/* Sync status */}
 						<AnimatePresence mode='wait'>
 							{/* We don't show if not running or isLoading */}
