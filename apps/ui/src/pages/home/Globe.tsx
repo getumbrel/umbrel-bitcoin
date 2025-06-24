@@ -28,7 +28,7 @@ const USER_COLOR = '#FFF'
 const COMET_TAIL_COLOR = 'hsl(29,100%,70%)'
 const COMET_HEAD_COLOR = 'hsl(29,100%,80%)'
 const COMET_SPEED = 2000 // head travel time (ms)
-const COMET_FADE_TIME = 300 // fade out tail+head (ms) - reduced from 500
+const COMET_FADE_TIME = 2000 // fade out tail+head (ms)
 const TAIL_SEGMENTS = 64 // resolution of the tail line
 
 // snap a location marker to the map grid
@@ -125,7 +125,7 @@ export default function PeersGlobe() {
 	// NOTE - Burst handling for tx animation:
 	// The backend collapses every 33 ms slice of transactions into one websocket
 	// message that carries  `count = #txs` .
-	// `txCount` is the total of all counts we’ve received while the ws is open.
+	// `txCount` is the total of all counts we've received while the ws is open.
 	// We derive `needed = txCount - lastTxCount` and spawn that many comets
 	// in one render pass, so every transaction is visualised once while message
 	// traffic stays capped at ≤30 frames / sec.
@@ -154,7 +154,7 @@ export default function PeersGlobe() {
 			}
 
 			// --- glowing particle tail ---------------------------------------------
-			const particleCount = 30
+			const particleCount = 300
 			const particlePos = new Float32Array(particleCount * 3)
 			const particleSizes = new Float32Array(particleCount)
 			const particleOpac = new Float32Array(particleCount)
@@ -165,8 +165,23 @@ export default function PeersGlobe() {
 				particlePos[i * 3 + 2] = startVec.z
 
 				const t = i / particleCount
-				particleSizes[i] = Math.pow(1 - t, 2.5) * 6 + 0.5
-				particleOpac[i] = Math.pow(1 - t, 1.5)
+				// Size curve: thick front tapering to thin back
+				const sizeMultiplier = Math.pow(1 - t, 3) // Cubic easing for smooth taper
+				particleSizes[i] = sizeMultiplier * 8 + 0.2 // Larger range: 8.2 to 0.2
+
+				// Multi-stage opacity curve for elegant fade
+				if (t < 0.1) {
+					// Strong glow at the very front
+					particleOpac[i] = 1.0
+				} else if (t < 0.5) {
+					// Gradual fade in the middle section
+					const midT = (t - 0.1) / 0.4
+					particleOpac[i] = 1.0 - midT * 0.3 // Fade from 1.0 to 0.7
+				} else {
+					// Slower fade at the tail for lingering effect
+					const tailT = (t - 0.5) / 0.5
+					particleOpac[i] = 0.7 * Math.pow(1 - tailT, 0.5)
+				}
 			}
 
 			const particleGeom = new THREE.BufferGeometry()
@@ -174,32 +189,55 @@ export default function PeersGlobe() {
 			particleGeom.setAttribute('size', new THREE.BufferAttribute(particleSizes, 1))
 			particleGeom.setAttribute('opacity', new THREE.BufferAttribute(particleOpac, 1))
 
+			// Shader for glowing particles
 			const particleMat = new THREE.ShaderMaterial({
 				uniforms: {
 					color: {value: new THREE.Color(COMET_TAIL_COLOR)},
 					globalOpacity: {value: 1.0},
+					time: {value: 0.0},
 				},
 				vertexShader: `
 					attribute float size;
 					attribute float opacity;
 					varying float vOpacity;
+					varying float vSize;
 					uniform float globalOpacity;
+					
 					void main() {
 						vOpacity = opacity * globalOpacity;
+						vSize = size;
 						vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
 						gl_PointSize = size * (500.0 / -mvPosition.z);
-						gl_Position  = projectionMatrix * mvPosition;
+						gl_Position = projectionMatrix * mvPosition;
 					}
 				`,
 				fragmentShader: `
-					uniform  vec3  color;
-					varying  float vOpacity;
+					uniform vec3 color;
+					uniform float time;
+					varying float vOpacity;
+					varying float vSize;
+					
 					void main() {
-						vec2  c   = gl_PointCoord - 0.5;
-						float d   = length(c);
-						float a   = 1.0 - smoothstep(0.0, 0.5, d);
-						a         = pow(a, 2.0);
-						gl_FragColor = vec4(color, a * vOpacity);
+						vec2 center = gl_PointCoord - 0.5;
+						float dist = length(center);
+						
+						// Multi-layered glow for depth
+						float glow1 = 1.0 - smoothstep(0.0, 0.5, dist);
+						float glow2 = 1.0 - smoothstep(0.0, 0.3, dist);
+						float glow3 = 1.0 - smoothstep(0.0, 0.1, dist);
+						
+						// Combine glows with different intensities
+						float alpha = glow1 * 0.3 + glow2 * 0.4 + glow3 * 0.3;
+						alpha = pow(alpha, 1.5); // Adjust falloff
+						
+						// Add subtle color variation based on size
+						vec3 finalColor = color;
+						if (vSize > 4.0) {
+							// Brighter, whiter core for larger particles
+							finalColor = mix(color, vec3(1.0, 0.95, 0.9), 0.3);
+						}
+						
+						gl_FragColor = vec4(finalColor, alpha * vOpacity);
 					}
 				`,
 				transparent: true,
@@ -210,18 +248,29 @@ export default function PeersGlobe() {
 			const tailParticles = new THREE.Points(particleGeom, particleMat)
 
 			// --- head sphere --------------------------------------------------------
-			const headGeo = new THREE.SphereGeometry(1.5, 16, 16)
+			const headGeo = new THREE.SphereGeometry(0.6, 32, 32) // Smaller, higher resolution
 			const headMat = new THREE.MeshBasicMaterial({
 				color: COMET_HEAD_COLOR,
 				transparent: true,
-				opacity: 1,
+				opacity: 0.9, // Slightly transparent for elegance
 			})
 			const head = new THREE.Mesh(headGeo, headMat)
 			head.position.copy(startVec)
 
+			// Add a subtle glow around the head
+			const glowGeo = new THREE.SphereGeometry(1.2, 16, 16)
+			const glowMat = new THREE.MeshBasicMaterial({
+				color: COMET_HEAD_COLOR,
+				transparent: true,
+				opacity: 0.3,
+			})
+			const headGlow = new THREE.Mesh(glowGeo, glowMat)
+			headGlow.position.copy(startVec)
+
 			// --- group & add to globe ----------------------------------------------
 			const group = new THREE.Group()
 			group.add(tailParticles)
+			group.add(headGlow)
 			group.add(head)
 			globe.current.add(group)
 
@@ -305,11 +354,12 @@ export default function PeersGlobe() {
 					}
 
 					// Update head position
-					c.group.children[1].position.copy(pos) // head is 2nd child
+					c.group.children[2].position.copy(pos) // head is 3rd child
+					c.group.children[1].position.copy(pos) // head glow is 2nd child
 
 					// Update trail positions
 					c.trailPositions.unshift(pos.clone())
-					if (c.trailPositions.length > 30) {
+					if (c.trailPositions.length > 300) {
 						// Match particle count
 						c.trailPositions.pop()
 					}
@@ -319,11 +369,17 @@ export default function PeersGlobe() {
 					const positions = tailParticles.geometry.attributes['position'] as THREE.BufferAttribute
 
 					// Update particle positions to create a trail effect
-					for (let j = 0; j < 30; j++) {
-						// 30 particles
+					for (let j = 0; j < 300; j++) {
 						if (j < c.trailPositions.length) {
 							const trailPos = c.trailPositions[j]
-							positions.setXYZ(j, trailPos.x, trailPos.y, trailPos.z)
+							// Add subtle position variation for organic feel
+							const variance = j * 0.001
+							positions.setXYZ(
+								j,
+								trailPos.x + (Math.random() - 0.5) * variance,
+								trailPos.y + (Math.random() - 0.5) * variance,
+								trailPos.z + (Math.random() - 0.5) * variance,
+							)
 						} else {
 							// Keep remaining particles at the last known position
 							const lastPos = c.trailPositions[c.trailPositions.length - 1] || pos
@@ -331,15 +387,24 @@ export default function PeersGlobe() {
 						}
 					}
 					positions.needsUpdate = true
+
+					// Update shader time for animation
+					const particleMat = (c.group.children[0] as any).material
+					if (particleMat.uniforms && particleMat.uniforms.time) {
+						particleMat.uniforms.time.value = t
+					}
 				} else if (elapsed <= COMET_SPEED + COMET_FADE_TIME) {
 					const fade = 1 - (elapsed - COMET_SPEED) / COMET_FADE_TIME
+					// Eased fade for smoother decay
+					const easedFade = Math.pow(fade, 0.5)
 
 					// Simple fade without complex position updates
 					const particleMat = (c.group.children[0] as any).material
 					if (particleMat.uniforms && particleMat.uniforms.globalOpacity) {
-						particleMat.uniforms.globalOpacity.value = fade
+						particleMat.uniforms.globalOpacity.value = easedFade
 					}
-					;(c.group.children[1] as any).material.opacity = fade
+					;(c.group.children[1] as any).material.opacity = easedFade * 0.3 // head glow
+					;(c.group.children[2] as any).material.opacity = easedFade * 0.9 // head
 				} else {
 					// dispose & remove
 					c.group.traverse((obj) => {
