@@ -27,7 +27,7 @@ const PEER_COLOR = 'hsl(29,100%,60%)'
 const USER_COLOR = '#FFF'
 const COMET_TAIL_COLOR = 'hsl(29,100%,70%)'
 const COMET_HEAD_COLOR = 'hsl(29,100%,80%)'
-const COMET_SPEED = 2000 // head travel time (ms)
+const COMET_SPEED = 0.1 // speed in globe radius units per ms (distance/time)
 const COMET_FADE_TIME = 2000 // fade out tail+head (ms)
 const TAIL_SEGMENTS = 64 // resolution of the tail line
 
@@ -87,6 +87,7 @@ export default function PeersGlobe() {
 			endVec: THREE.Vector3
 			pathPoints: THREE.Vector3[] // Store the path points
 			trailPositions: THREE.Vector3[] // Store recent positions for trail
+			duration: number // Travel time in ms based on arc length and speed
 		}[]
 	>([])
 	const booted = useRef(false)
@@ -152,6 +153,13 @@ export default function PeersGlobe() {
 			for (let i = 0; i <= TAIL_SEGMENTS; i++) {
 				tailPts.push(slerpOnSphere(startVec, endVec, i / TAIL_SEGMENTS, 0.01))
 			}
+
+			// --- calculate arc length and travel duration ---------------------------
+			let arcLength = 0
+			for (let i = 1; i < tailPts.length; i++) {
+				arcLength += tailPts[i].distanceTo(tailPts[i - 1])
+			}
+			const duration = arcLength / COMET_SPEED // travel time in ms
 
 			// --- glowing particle tail ---------------------------------------------
 			const particleCount = 300
@@ -281,6 +289,7 @@ export default function PeersGlobe() {
 				endVec,
 				pathPoints: tailPts,
 				trailPositions: [],
+				duration,
 			})
 		}
 	}, [txCount, dots])
@@ -337,8 +346,8 @@ export default function PeersGlobe() {
 			for (let i = comets.current.length - 1; i >= 0; i--) {
 				const c = comets.current[i]
 				const elapsed = now - c.start
-				if (elapsed <= COMET_SPEED) {
-					const t = elapsed / COMET_SPEED
+				if (elapsed <= c.duration) {
+					const t = elapsed / c.duration
 					// Interpolate along the stored path points
 					const pathIndex = t * (c.pathPoints.length - 1)
 					const index = Math.floor(pathIndex)
@@ -393,8 +402,8 @@ export default function PeersGlobe() {
 					if (particleMat.uniforms && particleMat.uniforms.time) {
 						particleMat.uniforms.time.value = t
 					}
-				} else if (elapsed <= COMET_SPEED + COMET_FADE_TIME) {
-					const fade = 1 - (elapsed - COMET_SPEED) / COMET_FADE_TIME
+				} else if (elapsed <= c.duration + COMET_FADE_TIME) {
+					const fade = 1 - (elapsed - c.duration) / COMET_FADE_TIME
 					// Eased fade for smoother decay
 					const easedFade = Math.pow(fade, 0.5)
 
