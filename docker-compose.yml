@@ -58,7 +58,6 @@ services:
       BITCOIND_EXTRA_ARGS: '-deprecatedrpc=create_bdb' # used to pass extra startup flags to bitcoind
 
       # BITCOIND CONF FILE SETTINGS
-      RPC_AUTH: umbrel:5071d8b3ba93e53e414446ff9f1b7d7b$$375e9731abd2cd2c2c44d2327ec19f4f2644256fdeaf4fc5229bf98b778aafec # rpcauth
       APPS_SUBNET: '10.21.0.0/16' # used to whitelist local apps as both peers (whitelist) and rpc connections (rpcallowip)
       P2P_PORT: 8333 # port, bind (also used for connect details)
       RPC_PORT: 8332 # rpcport (also used for rpc client and connect details)

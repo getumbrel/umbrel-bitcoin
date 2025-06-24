@@ -1,6 +1,7 @@
 // TODO: break out some config-helpers into a separate file
 
 import path from 'node:path'
+import {createHmac, randomBytes} from 'node:crypto'
 import fse from 'fs-extra'
 import {writeWithBackup} from './fs-helpers.js'
 
@@ -174,9 +175,19 @@ function appendPeerWhitelist(lines: string[]): string[] {
 }
 
 function appendRpcAuth(lines: string[]): string[] {
-	lines.push(
-		`rpcauth=${process.env['RPC_AUTH'] || 'umbrel:5071d8b3ba93e53e414446ff9f1b7d7b$$375e9731abd2cd2c2c44d2327ec19f4f2644256fdeaf4fc5229bf98b778aafec'}`,
-	)
+	const rpcUser = process.env['RPC_USER'] || 'umbrel'
+	const rpcPass = process.env['RPC_PASS'] || 'moneyprintergobrrr'
+
+	// Generate 16-byte random salt and convert to hex
+	const salt = randomBytes(16).toString('hex')
+
+	// Create HMAC-SHA256 with salt as key and password as message
+	const hash = createHmac('sha256', salt).update(rpcPass).digest('hex')
+
+	// Format as username:salt$hash
+	const rpcAuthValue = `${rpcUser}:${salt}$${hash}`
+
+	lines.push(`rpcauth=${rpcAuthValue}`)
 	return lines
 }
 
