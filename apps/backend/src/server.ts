@@ -41,7 +41,7 @@ await app.register(helmet, {
 
 			// The font resolver inside the worker fetches tiny JSON/WOFF files from
 			// jsDelivr. Everything else stays same-origin only.
-			connectSrc: ["'self'", 'ws:', 'https://cdn.jsdelivr.net'],
+			connectSrc: ["'self'", 'https://cdn.jsdelivr.net'],
 		},
 	},
 })
