@@ -376,6 +376,40 @@ export default function PeersGlobe() {
 			.pointRadius((d: any) => d.r * 1.5)
 			.pointColor((d: any) => d.col)
 			.pointsMerge(true)
+
+		// DEBUG: Show static arc lines between peers and user (comment out to disable)
+		const SHOW_DEBUG_ARCS = false
+		if (SHOW_DEBUG_ARCS && dots.length > 0) {
+			// Clear existing debug lines
+			const existingDebugLines = globe.current.children.filter((child: any) => child.userData?.isDebugArc)
+			existingDebugLines.forEach((line: any) => globe.current.remove(line))
+
+			const user = dots.find((d) => (d as any).isUser) || dots[0]
+			const peerDots = dots.filter((d) => !(d as any).isUser)
+
+			peerDots.forEach((peer: any) => {
+				const startVec = latLngToVec3(peer.lat, peer.lng, 0.01)
+				const endVec = latLngToVec3(user.lat, user.lng, 0.01)
+
+				// Create arc points using same calculation as comets
+				const arcPoints: THREE.Vector3[] = []
+				for (let i = 0; i <= TAIL_SEGMENTS; i++) {
+					arcPoints.push(slerpOnSphere(startVec, endVec, i / TAIL_SEGMENTS, 0.01))
+				}
+
+				// Create line geometry
+				const lineGeometry = new THREE.BufferGeometry().setFromPoints(arcPoints)
+				const lineMaterial = new THREE.LineBasicMaterial({
+					color: 0xff0000, // Red color for visibility
+					transparent: true,
+					opacity: 0.5,
+				})
+				const line = new THREE.Line(lineGeometry, lineMaterial)
+				line.userData = {isDebugArc: true} // Mark for cleanup
+
+				globe.current.add(line)
+			})
+		}
 	}, [dots])
 
 	return <div ref={mount} style={{width: SIZE, height: SIZE, margin: '0 auto'}} />
