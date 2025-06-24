@@ -44,7 +44,7 @@ export default function FeeRateChart() {
 	const deferredData = useDeferredValue(chartData)
 
 	return (
-		<ChartCard title='Fee Rates' loading={isLoading} syncing={inIBD}>
+		<ChartCard title='Median Fee Rate' loading={isLoading} syncing={inIBD}>
 			<ChartContainer config={SERIES}>
 				<AreaChart data={deferredData} margin={DEFAULT_CHART_MARGIN}>
 					{/* Gradient definitions */}
@@ -92,7 +92,7 @@ export default function FeeRateChart() {
 
 									{/* Fee Rate */}
 									<div className='flex items-center gap-2'>
-										<span className='text-white/60'>Fee Rate</span>
+										<span className='text-white/60'>Median Fee Rate</span>
 										<span className='ml-auto font-mono tabular-nums text-[#FF7E05]'>{d.p50} sat/vB</span>
 									</div>
 								</div>
