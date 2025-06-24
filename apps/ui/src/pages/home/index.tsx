@@ -121,13 +121,7 @@ export default function HomePage() {
 									transition={{duration: 0.25}}
 									className='absolute top-[70%] md:top-[80%] left-[5%] text-[30px]'
 								>
-									<span className='bg-text-gradient bg-clip-text text-transparent font-[500]'>
-										{percentSynced === 100 ? 'Synchronized' : 'Synchronizing'}&nbsp;
-									</span>
-									<span className='text-white/60'>{percentSynced}%</span>
-
-									{/* We only show the subtitle if the sync is not complete */}
-									{syncSubtitle && percentSynced < 100 && (
+									{syncSubtitle && percentSynced < 100 ? (
 										<div className='text-[14px] text-white/50 flex items-center gap-1'>
 											<span>{syncSubtitle}</span>
 											{dialogContent && (
@@ -138,7 +132,15 @@ export default function HomePage() {
 												/>
 											)}
 										</div>
+									) : (
+										<div className='text-[14px] text-white/50 flex items-center gap-1'>
+											<span>Blockchain</span>
+										</div>
 									)}
+									<span className='bg-text-gradient bg-clip-text text-transparent font-[500]'>
+										{percentSynced === 100 ? 'Synchronized' : 'Synchronizing'}&nbsp;
+									</span>
+									<span className='text-white/60'>{percentSynced}%</span>
 								</motion.h2>
 							)}
 						</AnimatePresence>
@@ -153,7 +155,7 @@ export default function HomePage() {
 
 			{/* Blocks page — hidden on mobile */}
 			<div className='hidden md:block w-full mt-4'>
-				<span className='text-white/50 text-[14px] font-[400] ml-4'>Blockchain</span>
+				<span className='text-white/50 text-[14px] font-[400] ml-4'>Latest Blocks</span>
 				<Blocks />
 			</div>
 		</>
