@@ -70,7 +70,7 @@ export default function HomePage() {
 
 	return (
 		<>
-			<Card className='bg-card-gradient backdrop-blur-2xl border-none mb-5 py-4 rounded-3xl'>
+			<Card className='bg-card-gradient backdrop-blur-2xl border-none mb-5 pt-4 pb-0 md:pb-4 rounded-3xl'>
 				<GradientBorderTopBottom depth='7%' />
 				<CardContent className='flex flex-col md:flex-row px-4 items-center'>
 					{/* Peers Globe + statuses */}
@@ -155,7 +155,7 @@ export default function HomePage() {
 					</div>
 
 					{/* Peers chart- to the right on desktop and below on mobile */}
-					<div className='w-full md:w-[215px] flex flex-col items-center mt-5 md:mt-0 pb-7 md:pb-0'>
+					<div className='w-full md:w-[215px] flex flex-col items-center mt-4 md:mt-0 pb-7 md:pb-0'>
 						<PeersChart />
 					</div>
 				</CardContent>

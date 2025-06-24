@@ -77,7 +77,7 @@ export default function PeersChart() {
 			</CardHeader>
 
 			<CardContent className='flex flex-1 flex-row-reverse md:flex-col items-center pb-0 gap-8 p-0'>
-				<ChartContainer config={chartConfig} className='w-[150px] h-[150px] mt-[-10px]'>
+				<ChartContainer config={chartConfig} className='w-[150px] h-[150px] md:mt-[-10px] mt-[-30px]'>
 					{/* TODO: figure out simple way to add a box shadow to the outer edge of each slice */}
 					{/* TODO: await isLoading false before animating the chart in */}
 					<PieChart>
