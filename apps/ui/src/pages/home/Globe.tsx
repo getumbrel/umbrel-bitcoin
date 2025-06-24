@@ -30,6 +30,7 @@ const COMET_HEAD_COLOR = 'hsl(29,90%,70%)'
 const COMET_SPEED = 0.1 // speed in globe radius units per ms (distance/time)
 const COMET_FADE_TIME = 2000 // fade out tail+head (ms)
 const TAIL_SEGMENTS = 64 // resolution of the tail line
+const MAX_COMETS = 100 // maximum number of active comets as a guardrail
 
 // snap a location marker to the map grid
 const snapToMap = ([lat, lng]: [number, number]) =>
@@ -136,12 +137,14 @@ export default function PeersGlobe() {
 		lastTxCount.current = txCount
 
 		if (!globe.current || !dots.length || !scene.current) return
+		if (comets.current.length >= MAX_COMETS) return // don't create more if at max
 
 		const user = dots.find((d) => (d as any).isUser) || dots[0]
 		const peerDots = dots.filter((d) => !(d as any).isUser)
 		if (!peerDots.length) return
 
 		for (let k = 0; k < needed; k++) {
+			if (comets.current.length >= MAX_COMETS) break // stop if we hit the max
 			const randomPeer = peerDots[(Math.random() * peerDots.length) | 0]
 
 			// --- build vectors ------------------------------------------------------
