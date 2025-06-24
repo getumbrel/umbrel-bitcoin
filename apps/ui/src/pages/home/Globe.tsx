@@ -1,6 +1,6 @@
 // TODO: Add lightning to the globe
-// TODO: check what comets look like when peers are close to user
 
+// TODO: update this comment with actual implementation details once they are settled.
 // This globe plots the postions of peers and the user
 // It also animates transactions being heard:
 // - One 'comet' per transaction, plays once, then fades and is disposed.
@@ -25,12 +25,9 @@ const HEX_MAP_COLOR = '#444'
 const GLOBE_COLOR = '#0d0d0d'
 const PEER_COLOR = 'hsl(29,100%,60%)'
 const USER_COLOR = '#FFF'
-const COMET_TAIL_COLOR = 'hsl(29,90%,60%)'
-const COMET_HEAD_COLOR = 'hsl(29,90%,70%)'
-const COMET_SPEED = 0.1 // speed in globe radius units per ms (distance/time)
-const COMET_FADE_TIME = 2000 // fade out tail+head (ms)
-const TAIL_SEGMENTS = 64 // resolution of the tail line
-const MAX_COMETS = 100 // maximum number of active comets as a guardrail
+const TX_SPHERE_COLOR = 'hsl(29,90%,70%)'
+const TX_SPEED = 0.1 // speed in globe radius units per ms (distance/time)
+const MAX_RENDERED_TX_AT_A_TIME = 100 // maximum number of active comets as a guardrail
 
 // snap a location marker to the map grid
 const snapToMap = ([lat, lng]: [number, number]) =>
@@ -80,14 +77,11 @@ export default function PeersGlobe() {
 	const mount = useRef<HTMLDivElement>(null)
 	const globe = useRef<any>(null)
 	const scene = useRef<THREE.Scene>(new THREE.Scene())
-	const comets = useRef<
+	const orbs = useRef<
 		{
-			group: THREE.Group
+			orb: THREE.Mesh
 			start: number
-			startVec: THREE.Vector3
-			endVec: THREE.Vector3
 			pathPoints: THREE.Vector3[] // Store the path points
-			trailPositions: THREE.Vector3[] // Store recent positions for trail
 			duration: number // Travel time in ms based on arc length and speed
 		}[]
 	>([])
@@ -137,161 +131,50 @@ export default function PeersGlobe() {
 		lastTxCount.current = txCount
 
 		if (!globe.current || !dots.length || !scene.current) return
-		if (comets.current.length >= MAX_COMETS) return // don't create more if at max
+		if (orbs.current.length >= MAX_RENDERED_TX_AT_A_TIME) return // don't create more if at max
 
 		const user = dots.find((d) => (d as any).isUser) || dots[0]
 		const peerDots = dots.filter((d) => !(d as any).isUser)
 		if (!peerDots.length) return
 
 		for (let k = 0; k < needed; k++) {
-			if (comets.current.length >= MAX_COMETS) break // stop if we hit the max
+			if (orbs.current.length >= MAX_RENDERED_TX_AT_A_TIME) break // stop if we hit the max
 			const randomPeer = peerDots[(Math.random() * peerDots.length) | 0]
 
 			// --- build vectors ------------------------------------------------------
 			const startVec = latLngToVec3(randomPeer.lat, randomPeer.lng, 0.01)
 			const endVec = latLngToVec3(user.lat, user.lng, 0.01)
 
-			// --- pre-compute path points (tail) -------------------------------------
-			const tailPts: THREE.Vector3[] = []
-			for (let i = 0; i <= TAIL_SEGMENTS; i++) {
-				tailPts.push(slerpOnSphere(startVec, endVec, i / TAIL_SEGMENTS, 0.01))
+			// --- pre-compute path points --------------------------------------------
+			const PATH_SEGMENTS = 64 // for the path calculation
+			const pathPts: THREE.Vector3[] = []
+			for (let i = 0; i <= PATH_SEGMENTS; i++) {
+				pathPts.push(slerpOnSphere(startVec, endVec, i / PATH_SEGMENTS, 0.01))
 			}
 
 			// --- calculate arc length and travel duration ---------------------------
 			let arcLength = 0
-			for (let i = 1; i < tailPts.length; i++) {
-				arcLength += tailPts[i].distanceTo(tailPts[i - 1])
+			for (let i = 1; i < pathPts.length; i++) {
+				arcLength += pathPts[i].distanceTo(pathPts[i - 1])
 			}
-			const duration = arcLength / COMET_SPEED // travel time in ms
+			const duration = arcLength / (TX_SPEED * 1) // travel time based on distance - faster speed
 
-			// --- glowing particle tail ---------------------------------------------
-			const particleCount = 300
-			const particlePos = new Float32Array(particleCount * 3)
-			const particleSizes = new Float32Array(particleCount)
-			const particleOpac = new Float32Array(particleCount)
-
-			for (let i = 0; i < particleCount; i++) {
-				particlePos[i * 3] = startVec.x
-				particlePos[i * 3 + 1] = startVec.y
-				particlePos[i * 3 + 2] = startVec.z
-
-				const t = i / particleCount
-				// Size curve: thick front tapering to thin back
-				const sizeMultiplier = Math.pow(1 - t, 3) // Cubic easing for smooth taper
-				particleSizes[i] = sizeMultiplier * 8 + 0.2 // Larger range: 8.2 to 0.2
-
-				// Multi-stage opacity curve for elegant fade
-				if (t < 0.1) {
-					// Strong glow at the very front
-					particleOpac[i] = 1.0
-				} else if (t < 0.5) {
-					// Gradual fade in the middle section
-					const midT = (t - 0.1) / 0.4
-					particleOpac[i] = 1.0 - midT * 0.3 // Fade from 1.0 to 0.7
-				} else {
-					// Slower fade at the tail for lingering effect
-					const tailT = (t - 0.5) / 0.5
-					particleOpac[i] = 0.7 * Math.pow(1 - tailT, 0.5)
-				}
-			}
-
-			const particleGeom = new THREE.BufferGeometry()
-			particleGeom.setAttribute('position', new THREE.BufferAttribute(particlePos, 3))
-			particleGeom.setAttribute('size', new THREE.BufferAttribute(particleSizes, 1))
-			particleGeom.setAttribute('opacity', new THREE.BufferAttribute(particleOpac, 1))
-
-			// Shader for glowing particles
-			const particleMat = new THREE.ShaderMaterial({
-				uniforms: {
-					color: {value: new THREE.Color(COMET_TAIL_COLOR)},
-					globalOpacity: {value: 1.0},
-					time: {value: 0.0},
-				},
-				vertexShader: `
-					attribute float size;
-					attribute float opacity;
-					varying float vOpacity;
-					varying float vSize;
-					uniform float globalOpacity;
-					
-					void main() {
-						vOpacity = opacity * globalOpacity;
-						vSize = size;
-						vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-						gl_PointSize = size * (500.0 / -mvPosition.z);
-						gl_Position = projectionMatrix * mvPosition;
-					}
-				`,
-				fragmentShader: `
-					uniform vec3 color;
-					uniform float time;
-					varying float vOpacity;
-					varying float vSize;
-					
-					void main() {
-						vec2 center = gl_PointCoord - 0.5;
-						float dist = length(center);
-						
-						// Multi-layered glow for depth
-						float glow1 = 1.0 - smoothstep(0.0, 0.5, dist);
-						float glow2 = 1.0 - smoothstep(0.0, 0.3, dist);
-						float glow3 = 1.0 - smoothstep(0.0, 0.1, dist);
-						
-						// Combine glows with different intensities
-						float alpha = glow1 * 0.3 + glow2 * 0.4 + glow3 * 0.3;
-						alpha = pow(alpha, 1.5); // Adjust falloff
-						
-						// Add subtle color variation based on size
-						vec3 finalColor = color;
-						if (vSize > 4.0) {
-							// Brighter, whiter core for larger particles
-							finalColor = mix(color, vec3(1.0, 0.95, 0.9), 0.3);
-						}
-						
-						gl_FragColor = vec4(finalColor, alpha * vOpacity);
-					}
-				`,
-				transparent: true,
-				depthWrite: false,
-				blending: THREE.AdditiveBlending,
+			// --- traveling sphere (ultra simple) -----------------------------------
+			const orbGeo = new THREE.SphereGeometry(0.6, 6, 4) // very low-poly: 6 segments, 4 rings
+			const orbMat = new THREE.MeshBasicMaterial({
+				color: TX_SPHERE_COLOR,
+				transparent: false,
 			})
+			const orb = new THREE.Mesh(orbGeo, orbMat)
+			orb.position.copy(startVec)
 
-			const tailParticles = new THREE.Points(particleGeom, particleMat)
+			// --- add to globe -------------------------------------------------------
+			globe.current.add(orb)
 
-			// --- head sphere --------------------------------------------------------
-			const headGeo = new THREE.SphereGeometry(0.2, 32, 32) // Smaller, higher resolution
-			const headMat = new THREE.MeshBasicMaterial({
-				color: COMET_HEAD_COLOR,
-				transparent: true,
-				opacity: 0.9, // Slightly transparent for elegance
-			})
-			const head = new THREE.Mesh(headGeo, headMat)
-			head.position.copy(startVec)
-
-			// Add a subtle glow around the head
-			const glowGeo = new THREE.SphereGeometry(0.4, 16, 16)
-			const glowMat = new THREE.MeshBasicMaterial({
-				color: COMET_HEAD_COLOR,
-				transparent: true,
-				opacity: 0.3,
-			})
-			const headGlow = new THREE.Mesh(glowGeo, glowMat)
-			headGlow.position.copy(startVec)
-
-			// --- group & add to globe ----------------------------------------------
-			const group = new THREE.Group()
-			group.add(tailParticles)
-			group.add(headGlow)
-			group.add(head)
-			globe.current.add(group)
-
-			comets.current.push({
-				group,
+			orbs.current.push({
+				orb,
 				start: performance.now(),
-				startVec,
-				endVec,
-				pathPoints: tailPts,
-				trailPositions: [],
+				pathPoints: pathPts,
 				duration,
 			})
 		}
@@ -345,90 +228,29 @@ export default function PeersGlobe() {
 		ctl.noPan = true
 		ctl.rotateSpeed = 5
 
-		function updateComets(now: number) {
-			for (let i = comets.current.length - 1; i >= 0; i--) {
-				const c = comets.current[i]
+		function updateOrbs(now: number) {
+			for (let i = orbs.current.length - 1; i >= 0; i--) {
+				const c = orbs.current[i]
 				const elapsed = now - c.start
 				if (elapsed <= c.duration) {
+					// Smoothly move sphere along the path
 					const t = elapsed / c.duration
-					// Interpolate along the stored path points
 					const pathIndex = t * (c.pathPoints.length - 1)
-					const index = Math.floor(pathIndex)
-					const fraction = pathIndex - index
+					const lowerIndex = Math.floor(pathIndex)
+					const upperIndex = Math.min(lowerIndex + 1, c.pathPoints.length - 1)
 
-					let pos: THREE.Vector3
-					if (index >= c.pathPoints.length - 1) {
-						pos = c.pathPoints[c.pathPoints.length - 1].clone()
-					} else {
-						// Linear interpolation between two adjacent path points
-						pos = c.pathPoints[index].clone()
-						pos.lerp(c.pathPoints[index + 1], fraction)
+					if (lowerIndex < c.pathPoints.length && upperIndex < c.pathPoints.length) {
+						const localT = pathIndex - lowerIndex
+						const position = new THREE.Vector3()
+						position.lerpVectors(c.pathPoints[lowerIndex], c.pathPoints[upperIndex], localT)
+						c.orb.position.copy(position)
 					}
-
-					// Update head position
-					c.group.children[2].position.copy(pos) // head is 3rd child
-					c.group.children[1].position.copy(pos) // head glow is 2nd child
-
-					// Update trail positions
-					c.trailPositions.unshift(pos.clone())
-					if (c.trailPositions.length > 300) {
-						// Match particle count
-						c.trailPositions.pop()
-					}
-
-					// Update the particle tail geometry
-					const tailParticles = c.group.children[0] as THREE.Points
-					const positions = tailParticles.geometry.attributes['position'] as THREE.BufferAttribute
-
-					// Update particle positions to create a trail effect
-					for (let j = 0; j < 300; j++) {
-						if (j < c.trailPositions.length) {
-							const trailPos = c.trailPositions[j]
-							// Add subtle position variation for organic feel
-							const variance = j * 0.001
-							positions.setXYZ(
-								j,
-								trailPos.x + (Math.random() - 0.5) * variance,
-								trailPos.y + (Math.random() - 0.5) * variance,
-								trailPos.z + (Math.random() - 0.5) * variance,
-							)
-						} else {
-							// Keep remaining particles at the last known position
-							const lastPos = c.trailPositions[c.trailPositions.length - 1] || pos
-							positions.setXYZ(j, lastPos.x, lastPos.y, lastPos.z)
-						}
-					}
-					positions.needsUpdate = true
-
-					// Update shader time for animation
-					const particleMat = (c.group.children[0] as any).material
-					if (particleMat.uniforms && particleMat.uniforms.time) {
-						particleMat.uniforms.time.value = t
-					}
-				} else if (elapsed <= c.duration + COMET_FADE_TIME) {
-					const fade = 1 - (elapsed - c.duration) / COMET_FADE_TIME
-					// Eased fade for smoother decay
-					const easedFade = Math.pow(fade, 0.5)
-
-					// Simple fade without complex position updates
-					const particleMat = (c.group.children[0] as any).material
-					if (particleMat.uniforms && particleMat.uniforms.globalOpacity) {
-						particleMat.uniforms.globalOpacity.value = easedFade
-					}
-					;(c.group.children[1] as any).material.opacity = easedFade * 0.3 // head glow
-					;(c.group.children[2] as any).material.opacity = easedFade * 0.9 // head
 				} else {
-					// dispose & remove
-					c.group.traverse((obj) => {
-						if ('geometry' in obj && obj.geometry) obj.geometry.dispose()
-						if ('material' in obj && (obj.material as any)) {
-							const m = obj.material as any
-							if (Array.isArray(m)) m.forEach((mm) => mm.dispose())
-							else m.dispose()
-						}
-					})
-					globe.current.remove(c.group)
-					comets.current.splice(i, 1)
+					// dispose & remove when done
+					c.orb.geometry.dispose()
+					;(c.orb.material as any).dispose()
+					globe.current.remove(c.orb)
+					orbs.current.splice(i, 1)
 				}
 			}
 		}
@@ -436,7 +258,7 @@ export default function PeersGlobe() {
 		;(function loop() {
 			globe.current.rotation.y += AUTOROTATE_SPEED
 			ctl.update()
-			updateComets(performance.now())
+			updateOrbs(performance.now())
 			renderer.render(sc, cam) // Direct rendering instead of composer
 			requestAnimationFrame(loop)
 		})()
@@ -454,12 +276,11 @@ export default function PeersGlobe() {
 			.pointColor((d: any) => d.col)
 			.pointsMerge(true)
 
-		// DEBUG: Show static arc lines between peers and user (comment out to disable)
-		const SHOW_DEBUG_ARCS = false
-		if (SHOW_DEBUG_ARCS && dots.length > 0) {
-			// Clear existing debug lines
-			const existingDebugLines = globe.current.children.filter((child: any) => child.userData?.isDebugArc)
-			existingDebugLines.forEach((line: any) => globe.current.remove(line))
+		// Always show subtle connection arcs between peers and user
+		if (dots.length > 0) {
+			// Clear existing connection lines
+			const existingConnections = globe.current.children.filter((child: any) => child.userData?.isConnectionArc)
+			existingConnections.forEach((line: any) => globe.current.remove(line))
 
 			const user = dots.find((d) => (d as any).isUser) || dots[0]
 			const peerDots = dots.filter((d) => !(d as any).isUser)
@@ -468,21 +289,22 @@ export default function PeersGlobe() {
 				const startVec = latLngToVec3(peer.lat, peer.lng, 0.01)
 				const endVec = latLngToVec3(user.lat, user.lng, 0.01)
 
-				// Create arc points using same calculation as comets
+				// Create arc points
 				const arcPoints: THREE.Vector3[] = []
-				for (let i = 0; i <= TAIL_SEGMENTS; i++) {
-					arcPoints.push(slerpOnSphere(startVec, endVec, i / TAIL_SEGMENTS, 0.01))
+				for (let i = 0; i <= 64; i++) {
+					arcPoints.push(slerpOnSphere(startVec, endVec, i / 64, 0.01))
 				}
 
-				// Create line geometry
+				// Create very subtle connection line
 				const lineGeometry = new THREE.BufferGeometry().setFromPoints(arcPoints)
 				const lineMaterial = new THREE.LineBasicMaterial({
-					color: 0xff0000, // Red color for visibility
+					color: PEER_COLOR, // Same as peer color but very faded
 					transparent: true,
-					opacity: 0.5,
+					opacity: 0.2, // Very subtle
+					linewidth: 1,
 				})
 				const line = new THREE.Line(lineGeometry, lineMaterial)
-				line.userData = {isDebugArc: true} // Mark for cleanup
+				line.userData = {isConnectionArc: true} // Mark for cleanup
 
 				globe.current.add(line)
 			})
