@@ -81,7 +81,7 @@ export async function peerLocations(): Promise<PeerLocationsResponse> {
 	// convert to latitude/longitude
 	const userLocation: [number, number] = topHost
 		? ipToLatLng(topHost, 'ipv4') // real clearnet IP
-		: ipToLatLng('0.0.0.0', 'ipv4') // with current list of fallback cities, this ends up being in Southern France.
+		: [-15.7942, -47.8822] // fallback to central South America default if user has no clearnet peers
 
 	return {userLocation, peers}
 }
