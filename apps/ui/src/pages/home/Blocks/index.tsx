@@ -1,6 +1,6 @@
 // Main Blocks component with 3D scene
 import {Canvas} from '@react-three/fiber'
-import {Scene} from './Scene'
+import {Scene} from './Scene.js'
 
 export default function Blocks() {
 	return (

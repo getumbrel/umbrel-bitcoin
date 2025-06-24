@@ -109,6 +109,7 @@ export async function feeRates(limit = 144): Promise<FeeRatePoint[]> {
 
 const BLOCK_CACHE_DEPTH = 5
 const blockCache = new Map<number, BlockSummary>()
+
 async function getBlock(height: number) {
 	// Check if we have a cached value and return early if so
 	const cached = blockCache.get(height)
@@ -160,9 +161,33 @@ export async function list(limit = 20): Promise<BlocksResponse> {
 
 // WebSocket push for new blocks
 export function wsStream(socket: WebSocket) {
-	const send = (b: unknown) => socket.send(JSON.stringify(b))
-	blockStream.on('block', send)
-	socket.on('close', () => blockStream.off('block', send))
+	const sendBlock = async (hash: string) => {
+		try {
+			// Get the full block data in one RPC call
+			const raw = await rpcClient.command<RawBlock>('getblock', hash, 2)
+
+			// Build the complete BlockSummary with fee tiers
+			const fullBlock: BlockSummary = {
+				hash: raw.hash,
+				height: raw.height,
+				time: raw.time,
+				txs: raw.nTx,
+				size: raw.size,
+				feeTiers: getFeeTiers(raw.tx, raw.weight),
+			}
+
+			// TODO: could consider updating the cache here.
+			socket.send(JSON.stringify(fullBlock))
+		} catch (error) {
+			console.error(`Failed to fetch block ${hash}:`, error)
+			// Note: In practice, this should never happen since ZMQ fires after
+			// the block is fully connected. But if it does, the client will
+			// get the block on the next REST poll cycle.
+		}
+	}
+
+	blockStream.on('block', sendBlock)
+	socket.on('close', () => blockStream.off('block', sendBlock))
 }
 
 // Get fee tiers for a specific block
