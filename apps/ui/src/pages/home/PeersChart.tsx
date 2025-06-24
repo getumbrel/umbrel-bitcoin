@@ -61,7 +61,7 @@ export default function PeersChart() {
 	// Get the display value and label for the center text
 	const centerValue = activeIndex !== null ? (chartData[activeIndex]?.total ?? 0) : totalPeers
 	const centerLabel =
-		activeIndex !== null ? chartConfig[chartData[activeIndex]?.network as keyof typeof chartConfig]?.label : null
+		activeIndex !== null ? chartConfig[chartData[activeIndex]?.network as keyof typeof chartConfig]?.label : 'Peers'
 
 	/* helper for glow on legend items */
 	const glowStyle = (color: string) => ({
@@ -72,7 +72,7 @@ export default function PeersChart() {
 		<Card className='flex flex-col bg-transparent border-none p-0'>
 			<CardHeader className='md:items-center md:justify-center p-0 -mb-4 md:mb-0'>
 				<CardTitle className='font-outfit text-[16px] font-[500] bg-[linear-gradient(180deg,#ffffff_0%,rgba(255,255,255,0.64)_100%)] bg-clip-text text-transparent'>
-					Peers
+					Connections
 				</CardTitle>
 			</CardHeader>
 
