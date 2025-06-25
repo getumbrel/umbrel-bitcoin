@@ -3,7 +3,7 @@ import * as THREE from 'three'
 import {useFrame} from '@react-three/fiber'
 import {useFBO} from '@react-three/drei'
 
-import type {FeeTier} from '#types'
+import type {BlockSummary} from '#types'
 
 // Tetris grid parameters
 const GRID_SIZE = 20 // Grid is 20x20
@@ -14,219 +14,33 @@ type TetrisSquare = {
 	size: number
 }
 
-// Function to generate tetris squares from fee tiers
-function generateTetrisSquaresFromTiers(tiers: FeeTier[]): TetrisSquare[] {
-	const squares: TetrisSquare[] = []
-	const grid: boolean[][] = Array(GRID_SIZE)
-		.fill(null)
-		.map(() => Array(GRID_SIZE).fill(false))
+// Pack squares in a grid
+function packSquares(squares: number[], gridSize: number): TetrisSquare[] {
+	const placedSquares: TetrisSquare[] = []
 
-	// Sort tiers by square size (descending) to place larger squares first for better packing
-	const sortedTiers = [...tiers].sort((a, b) => b.squareSize - a.squareSize)
-
-	for (const tier of sortedTiers) {
-		// Try to find the best position (top-most and leftmost that fits)
-		let bestX = -1
-		let bestY = -1
-		let bestScore = Infinity
-
-		// Scan the entire grid for the best position
-		for (let y = 0; y <= GRID_SIZE - tier.squareSize; y++) {
-			for (let x = 0; x <= GRID_SIZE - tier.squareSize; x++) {
-				// Check if the square can fit at this position
-				let canFit = true
-				for (let dy = 0; dy < tier.squareSize && canFit; dy++) {
-					for (let dx = 0; dx < tier.squareSize && canFit; dx++) {
-						if (grid[y + dy][x + dx]) {
-							canFit = false
-						}
-					}
-				}
-
-				if (canFit) {
-					// Calculate a score for this position
-					// Prefer top positions (lower y value) and leftmost positions
-					// Also prefer positions that are supported (have filled cells below)
-					let supportScore = 0
-
-					// Check how many cells below this position are filled (better support = better score)
-					if (y + tier.squareSize < GRID_SIZE) {
-						for (let dx = 0; dx < tier.squareSize; dx++) {
-							if (grid[y + tier.squareSize][x + dx]) {
-								supportScore += 1
-							}
-						}
-					} else {
-						// Bottom of grid, maximum support
-						supportScore = tier.squareSize
-					}
-
-					// Check how many cells to the left and right are filled (reduces holes)
-					let adjacencyScore = 0
-					if (x > 0) {
-						for (let dy = 0; dy < tier.squareSize; dy++) {
-							if (grid[y + dy][x - 1]) {
-								adjacencyScore += 1
-							}
-						}
-					}
-					if (x + tier.squareSize < GRID_SIZE) {
-						for (let dy = 0; dy < tier.squareSize; dy++) {
-							if (grid[y + dy][x + tier.squareSize]) {
-								adjacencyScore += 1
-							}
-						}
-					}
-
-					// Lower score is better
-					// Prioritize: y position (top is better), then support, then adjacency, then x position
-					const score = y * 1000 - supportScore * 100 - adjacencyScore * 10 + x
-
-					if (score < bestScore) {
-						bestScore = score
-						bestX = x
-						bestY = y
-					}
-				}
-			}
-		}
-
-		if (bestX !== -1 && bestY !== -1) {
-			// Place the square
-			squares.push({
-				x: bestX,
-				y: bestY,
-				size: tier.squareSize,
-			})
-
-			// Mark the grid cells as occupied
-			for (let dy = 0; dy < tier.squareSize; dy++) {
-				for (let dx = 0; dx < tier.squareSize; dx++) {
-					grid[bestY + dy][bestX + dx] = true
-				}
+	// Loop over all coords one by one for a given square size checking if it
+	// can be placed and returning the coords once a position is found
+	function findPosition(size: number) {
+		for (let y = 0; y < gridSize; y++) {
+			for (let x = 0; x < gridSize; x++) {
+				const inBounds = x + size <= gridSize && y + size <= gridSize
+				const isAvailable = !placedSquares.some(
+					(square) =>
+						x < square.x + square.size && x + size > square.x && y < square.y + square.size && y + size > square.y,
+				)
+				if (inBounds && isAvailable) return {x, y}
 			}
 		}
 	}
 
-	return squares
+	// Loop through squares, largest first
+	for (const size of squares.sort().reverse()) {
+		const position = findPosition(size)
+		if (position) placedSquares.push({...position, size})
+	}
+
+	return placedSquares
 }
-
-// Function to generate random tetris squares (fallback for when no tier data)
-// function generateRandomTetrisSquares(): TetrisSquare[] {
-// 	const squares: TetrisSquare[] = []
-// 	const grid: boolean[][] = Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(false))
-// 	const MIN_SQUARES = 30
-// 	const MAX_SQUARES = 50
-// 	const numSquares = Math.floor(Math.random() * (MAX_SQUARES - MIN_SQUARES + 1)) + MIN_SQUARES
-
-// 	let placedSquares = 0
-// 	let attempts = 0
-// 	const maxAttempts = 1000
-
-// 	while (placedSquares < numSquares && attempts < maxAttempts) {
-// 		attempts++
-
-// 		// Weighted size distribution for sizes 1-10
-// 		// Smaller sizes are more common
-// 		const sizeWeights = [30, 25, 20, 15, 10, 8, 6, 4, 2, 1]
-// 		const totalWeight = sizeWeights.reduce((a, b) => a + b, 0)
-// 		let random = Math.random() * totalWeight
-// 		let size = 1
-
-// 		for (let i = 0; i < sizeWeights.length; i++) {
-// 			random -= sizeWeights[i]
-// 			if (random <= 0) {
-// 				size = i + 1
-// 				break
-// 			}
-// 		}
-
-// 		// Try to find the best position (top-most and leftmost that fits)
-// 		let bestX = -1
-// 		let bestY = -1
-// 		let bestScore = Infinity
-
-// 		// Scan the entire grid for the best position
-// 		for (let y = 0; y <= GRID_SIZE - size; y++) {
-// 			for (let x = 0; x <= GRID_SIZE - size; x++) {
-// 				// Check if the square can fit at this position
-// 				let canFit = true
-// 				for (let dy = 0; dy < size && canFit; dy++) {
-// 					for (let dx = 0; dx < size && canFit; dx++) {
-// 						if (grid[y + dy][x + dx]) {
-// 							canFit = false
-// 						}
-// 					}
-// 				}
-
-// 				if (canFit) {
-// 					// Calculate a score for this position
-// 					// Prefer top positions (lower y value) and leftmost positions
-// 					// Also prefer positions that are supported (have filled cells below)
-// 					let supportScore = 0
-
-// 					// Check how many cells below this position are filled (better support = better score)
-// 					if (y + size < GRID_SIZE) {
-// 						for (let dx = 0; dx < size; dx++) {
-// 							if (grid[y + size][x + dx]) {
-// 								supportScore += 1
-// 							}
-// 						}
-// 					} else {
-// 						// Bottom of grid, maximum support
-// 						supportScore = size
-// 					}
-
-// 					// Check how many cells to the left and right are filled (reduces holes)
-// 					let adjacencyScore = 0
-// 					if (x > 0) {
-// 						for (let dy = 0; dy < size; dy++) {
-// 							if (grid[y + dy][x - 1]) {
-// 								adjacencyScore += 1
-// 							}
-// 						}
-// 					}
-// 					if (x + size < GRID_SIZE) {
-// 						for (let dy = 0; dy < size; dy++) {
-// 							if (grid[y + dy][x + size]) {
-// 								adjacencyScore += 1
-// 							}
-// 						}
-// 					}
-
-// 					// Lower score is better
-// 					// Prioritize: y position (top is better), then support, then adjacency, then x position
-// 					const score = y * 1000 - supportScore * 100 - adjacencyScore * 10 + x
-
-// 					if (score < bestScore) {
-// 						bestScore = score
-// 						bestX = x
-// 						bestY = y
-// 					}
-// 				}
-// 			}
-// 		}
-
-// 		if (bestX !== -1 && bestY !== -1) {
-// 			squares.push({
-// 				x: bestX,
-// 				y: bestY,
-// 				size,
-// 			})
-
-// 			// Mark the grid cells as occupied
-// 			for (let dy = 0; dy < size; dy++) {
-// 				for (let dx = 0; dx < size; dx++) {
-// 					grid[bestY + dy][bestX + dx] = true
-// 				}
-// 			}
-
-// 			placedSquares++
-// 		}
-// 	}
-
-// 	return squares
-// }
 
 // Custom shader material for golden gradient
 const goldenGradientMaterial = new THREE.ShaderMaterial({
@@ -424,19 +238,21 @@ export function Transactions({
 	faceSize,
 	planeZ,
 	isHovered = false,
-	feeTiers,
+	block,
 }: {
 	faceSize: number
 	planeZ: number
 	isHovered?: boolean
-	feeTiers?: FeeTier[]
+	block: BlockSummary[]
 }) {
 	const squares = useMemo(() => {
-		if (feeTiers && feeTiers.length > 0) {
-			return generateTetrisSquaresFromTiers(feeTiers)
+		const squares = []
+		for (const gridEntry of block?.transactionGrid ?? []) {
+			for (let i = 0; i < gridEntry.numberOfBlocks; i++) squares.push(gridEntry.size)
 		}
-		return []
-	}, [feeTiers])
+
+		return packSquares(squares, GRID_SIZE)
+	}, [block])
 
 	const cellSize = faceSize / GRID_SIZE
 	const margin = 2 // 2px margin in screen space

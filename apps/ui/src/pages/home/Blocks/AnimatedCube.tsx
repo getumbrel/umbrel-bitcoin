@@ -436,12 +436,7 @@ export function AnimatedCube({
 					</mesh>
 
 					{/* Front content */}
-					<Transactions
-						faceSize={faceSize}
-						planeZ={DISPLAY_CONFIG.PLANE_Z}
-						isHovered={isHovered}
-						feeTiers={block?.feeTiers}
-					/>
+					<Transactions faceSize={faceSize} planeZ={DISPLAY_CONFIG.PLANE_Z} isHovered={isHovered} block={block} />
 
 					{block && (
 						<>

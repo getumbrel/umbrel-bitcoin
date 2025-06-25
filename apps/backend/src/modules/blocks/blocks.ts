@@ -5,7 +5,6 @@ import PQueue from 'p-queue'
 
 import {rpcClient} from '../bitcoind/rpc-client.js'
 import {blockStream} from './zmq-subscriber.js'
-import {getFeeTiers} from './fee-tiers.js'
 
 import type {
 	BlocksResponse,
@@ -13,8 +12,8 @@ import type {
 	BlockReward,
 	BlockSizeSample,
 	FeeRatePoint,
-	BlockFeeTiers,
 	RawBlock,
+	RawTransaction,
 } from '#types'
 
 // Partial type of bitcoind's getblockstats RPC
@@ -127,10 +126,8 @@ async function getBlock(height: number) {
 		time: raw.time,
 		txs: raw.nTx,
 		size: raw.size,
+		transactionGrid: transactionGrid(raw.tx, 20),
 	}
-
-	// Get fee tiers using the external function
-	summary.feeTiers = getFeeTiers(raw.tx, raw.weight)
 
 	// Save in cache
 	blockCache.set(height, summary)
@@ -144,6 +141,44 @@ async function getBlock(height: number) {
 	}
 
 	return summary
+}
+
+function transactionGrid(transactions: RawTransaction[], gridSize: number) {
+	const TOTAL_BLOCK_SIZE = 4_000_000
+
+	// Calculate possible square sizes
+	const squareSizes = Array.from({length: gridSize}, (_, i) => i + 1).map((size) => ({
+		size,
+		totalWeight: 0,
+		numberOfBlocks: 0,
+	}))
+
+	// Calculate total weight for all transactions that proportionally fit in each size chunk
+	for (const transaction of transactions) {
+		const txPercentageOfBlock = transaction.weight / TOTAL_BLOCK_SIZE
+		for (const chunk of squareSizes) {
+			const chunkPercentageOfGrid = Math.pow(chunk.size / gridSize, 2)
+			if (txPercentageOfBlock < chunkPercentageOfGrid) {
+				chunk.totalWeight += transaction.weight
+				break
+			}
+		}
+	}
+
+	// Calculte the number of squares to represent the total weight for each threshold
+	for (const chunk of squareSizes) {
+		const chunkPercentageOfGrid = Math.pow(chunk.size / gridSize, 2)
+		const chunkPercentageOfBlock = chunk.totalWeight / TOTAL_BLOCK_SIZE
+		const numberOfBlocks = Math.round(chunkPercentageOfBlock / chunkPercentageOfGrid)
+		chunk.numberOfBlocks = numberOfBlocks
+	}
+
+	// Cleanup output
+	const output = squareSizes
+		.filter((chunk) => chunk.numberOfBlocks > 0)
+		.map(({size, numberOfBlocks}) => ({size, numberOfBlocks}))
+
+	return output
 }
 
 // Latest N block summaries
@@ -188,27 +223,6 @@ export function wsStream(socket: WebSocket) {
 
 	blockStream.on('block', sendBlock)
 	socket.on('close', () => blockStream.off('block', sendBlock))
-}
-
-// Get fee tiers for a specific block
-export async function feeTiers(blockHash?: string): Promise<BlockFeeTiers> {
-	// If no hash provided, get the latest block
-	if (!blockHash) {
-		const tipHeight = await rpcClient.command<number>('getblockcount')
-		blockHash = await rpcClient.command<string>('getblockhash', tipHeight)
-	}
-
-	// Get block with transaction details (verbosity 2)
-	const block: RawBlock = await rpcClient.command('getblock', blockHash, 2)
-
-	// Calculate fee tiers using the external function
-	const tiers = getFeeTiers(block.tx, block.weight)
-
-	return {
-		blockHash: block.hash,
-		height: block.height,
-		tiers,
-	}
 }
 
 // Long running task to keep the cache primed
