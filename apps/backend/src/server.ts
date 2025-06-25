@@ -30,11 +30,6 @@ await app.register(helmet, {
 		directives: {
 			// Upgrade-insecure-requests is ignored on HTTP, so we omit it entirely
 			upgradeInsecureRequests: null,
-
-			// Allow @react-three/drei Text component (troika-three-text) to fetch Unicode font
-			// fallback data from jsDelivr CDN. Required for 3D text rendering in the Bitcoin
-			// blocks visualization component.
-			connectSrc: ["'self'", 'https://cdn.jsdelivr.net'],
 		},
 	},
 })

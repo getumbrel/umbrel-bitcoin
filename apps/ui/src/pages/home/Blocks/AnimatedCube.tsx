@@ -14,7 +14,10 @@ import {easings} from './easings'
 
 import type {AnimatedCubeProps, AnimationPhase, EnteringSubPhase} from './types'
 
-// Configure troika-three-text to disable web workers so we don't need to loosen the CSP for blobs
+// Configure troika-three-text for tight CSP compliance:
+// We disable web workers to avoid having to loosen the CSP for blobs
+// Each Text component uses font="/roboto-regular.ttf" (locally hosted) instead of
+// defaulting to reaching out to jsDelivr CDN for a font.
 configureTextBuilder({
 	useWorker: false,
 })
@@ -453,6 +456,7 @@ export function AnimatedCube({
 								anchorX='left'
 								anchorY='bottom'
 								material-transparent={true}
+								font='/roboto-regular.ttf'
 							>
 								{block.height?.toLocaleString() ?? '—'}
 							</Text>
@@ -463,6 +467,7 @@ export function AnimatedCube({
 								anchorX='left'
 								anchorY='bottom'
 								material-transparent={true}
+								font='/roboto-regular.ttf'
 							>
 								{typeof block.size === 'number' ? prettyBytes(block.size) : '—'} •{' '}
 								{typeof block.time === 'number'
@@ -497,6 +502,7 @@ export function AnimatedCube({
 							color={displaySubPhase === 'verified' || displaySubPhase === 'spinning-to-front' ? '#00ff00' : '#ffffff'}
 							anchorX='left'
 							anchorY='bottom'
+							font='/roboto-regular.ttf'
 						>
 							{block?.height?.toLocaleString() ?? '—'}
 						</Text>
@@ -506,6 +512,7 @@ export function AnimatedCube({
 							color='#ffffff'
 							anchorX='right'
 							anchorY='top'
+							font='/roboto-regular.ttf'
 						>
 							{displaySubPhase === 'verified' || displaySubPhase === 'spinning-to-front'
 								? 'Validated'
@@ -517,6 +524,7 @@ export function AnimatedCube({
 							color='#aaaaaa'
 							anchorX='left'
 							anchorY='bottom'
+							font='/roboto-regular.ttf'
 						>
 							New Block
 						</Text>
@@ -549,6 +557,7 @@ export function AnimatedCube({
 							color='#ffffff'
 							anchorX='center'
 							anchorY='middle'
+							font='/roboto-regular.ttf'
 						>
 							Synchronizing headers
 						</Text>
@@ -562,6 +571,7 @@ export function AnimatedCube({
 								color='#ffffff'
 								anchorX='left'
 								anchorY='bottom'
+								font='/roboto-regular.ttf'
 							>
 								{Math.floor(Math.max(0, displayHeightRef.current - index)).toLocaleString()}
 							</Text>
@@ -572,6 +582,7 @@ export function AnimatedCube({
 									color='#aaaaaa'
 									anchorX='left'
 									anchorY='bottom'
+									font='/roboto-regular.ttf'
 								>
 									Block
 								</Text>
