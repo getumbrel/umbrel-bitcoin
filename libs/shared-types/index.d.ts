@@ -67,6 +67,7 @@ export type RawTransaction = {
 	txid: string
 	fee?: number // fee in BTC (not available for coinbase)
 	vsize: number
+	weight: number
 }
 
 // subset of getblock (verbosity 2) that we care about

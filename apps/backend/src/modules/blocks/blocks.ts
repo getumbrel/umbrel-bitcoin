@@ -208,7 +208,7 @@ export function wsStream(socket: WebSocket) {
 				time: raw.time,
 				txs: raw.nTx,
 				size: raw.size,
-				feeTiers: getFeeTiers(raw.tx, raw.weight),
+				transactionGrid: transactionGrid(raw.tx, 20),
 			}
 
 			// TODO: could consider updating the cache here.
