@@ -549,7 +549,7 @@ export function AnimatedCube({
 						</mesh>
 					)}
 
-					{/* Loading text based on sync stage */}
+					{/* Loading text based on sync stage
 					{syncProgress.stage === 'headers' && (
 						<Text
 							position={[0, 0, DISPLAY_CONFIG.PLANE_Z + 0.02]}
@@ -561,7 +561,7 @@ export function AnimatedCube({
 						>
 							Synchronizing headers
 						</Text>
-					)}
+					)} */}
 
 					{syncProgress.stage === 'IBD' && (
 						<>
