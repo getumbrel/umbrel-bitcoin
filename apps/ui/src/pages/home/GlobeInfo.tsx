@@ -56,7 +56,7 @@ export default function GlobeInfo() {
 						<Line
 							icon={<PeerDotIcon className='w-5 h-5 text-white' />}
 							title='Your peers'
-							description="Orange dots are other nodes you're connected to (peers). They are bigger when multiple peers share the same location"
+							description="Orange dots are other nodes you're connected to (peers). They appear bigger when multiple peers share the same location"
 						/>
 						<Line
 							icon={<TransactionIcon className='w-5 h-5 text-white' />}
