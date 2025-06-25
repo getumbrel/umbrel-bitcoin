@@ -1,6 +1,6 @@
 import {Info as InfoIcon} from 'lucide-react'
 import prettyBytes from 'pretty-bytes'
-import {formatDistanceStrict} from 'date-fns'
+import prettyMs from 'pretty-ms'
 
 import InsightCard from './InsightsCard'
 import InfoDialog from '@/components/shared/InfoDialog'
@@ -47,7 +47,7 @@ export default function StatSummary() {
 	const peers = data?.peers ?? 0
 	const {num: memVal, unit: memUnit} = prettyBytesSplit(data?.mempoolBytes)
 	const {num: chainVal, unit: chainUnit} = prettyBytesSplit(data?.chainBytes)
-	const uptimeStr = data && data.uptimeSec > 0 ? formatDistanceStrict(0, data.uptimeSec * 1000, {unit: 'minute'}) : '—'
+	const uptimeStr = data && data.uptimeSec > 0 ? prettyMs(data.uptimeSec * 1000, {verbose: true, unitCount: 1}) : '—'
 
 	return (
 		<InsightCard className='p-0 overflow-hidden h-[240px] md:h-[120px]'>
