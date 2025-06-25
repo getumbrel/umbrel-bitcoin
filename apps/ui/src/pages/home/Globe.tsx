@@ -66,25 +66,44 @@ export default function LiveGlobe({width = 650, height = 650}: {width?: number; 
 	const markers = useMemo(() => {
 		if (!data) return []
 
-		// We track the occupied map cells and deduplicate peers to not plot multiple on the same cell
-		const occupied = new Set<string>()
+		// We track peer counts per hex cell to scale radius with peer count, but we deduplicate peers to not plot multiple on the same cell
+		const hexPeerCounts = new Map<string, number>()
 		const peers: any[] = []
 		let userDot: any = null
 
-		// We plot the user first so they never get hidden by other peers (since those peers would be deduplicated)
-		if (Array.isArray(data.userLocation)) {
-			const [lat, lng] = snapToMap(data.userLocation)
-			occupied.add(`${lat},${lng}`)
-			userDot = {lat, lng, isUser: true}
-		}
-
+		// Count all peers per hex cell first
 		for (const p of data.peers) {
 			const [lat, lng] = snapToMap(p.location)
 			const key = `${lat},${lng}`
-			if (occupied.has(key)) continue
-			occupied.add(key)
-			peers.push({lat, lng})
+			hexPeerCounts.set(key, (hexPeerCounts.get(key) || 0) + 1)
 		}
+
+		// Plot user first so they never get hidden by other peers
+		if (Array.isArray(data.userLocation)) {
+			const [lat, lng] = snapToMap(data.userLocation)
+			const key = `${lat},${lng}`
+			// If user is in same hex as peers, add to the count
+			if (hexPeerCounts.has(key)) {
+				hexPeerCounts.set(key, hexPeerCounts.get(key)! + 1)
+			}
+			userDot = {lat, lng, isUser: true}
+		}
+
+		// Create unique peer markers with peer counts
+		const processedHexes = new Set<string>()
+		for (const p of data.peers) {
+			const [lat, lng] = snapToMap(p.location)
+			const key = `${lat},${lng}`
+			
+			// Skip if this hex already processed or occupied by user
+			if (processedHexes.has(key)) continue
+			if (userDot && `${userDot.lat},${userDot.lng}` === key) continue
+			
+			processedHexes.add(key)
+			const peerCount = hexPeerCounts.get(key) || 1
+			peers.push({lat, lng, peerCount})
+		}
+		
 		return userDot ? [userDot, ...peers] : peers
 	}, [data, snapToMap])
 
@@ -143,7 +162,14 @@ export default function LiveGlobe({width = 650, height = 650}: {width?: number; 
 	}, [])
 
 	const pointColor = useCallback((dot: any) => (dot.isUser ? USER_DOT_COLOR : PEER_DOT_COLOR), [])
-	const pointRadius = useCallback((dot: any) => (dot.isUser ? USER_DOT_RADIUS : PEER_DOT_RADIUS), [])
+	const pointRadius = useCallback((dot: any) => {
+		if (dot.isUser) return USER_DOT_RADIUS
+		
+		// Scale radius based on peer count, capped at 10 peers for reasonable max size
+		const peerCount = Math.min(dot.peerCount || 1, 10)
+		const scaleFactor = 1 + (peerCount - 1) * 0.15 // Each additional peer adds 15% to radius
+		return PEER_DOT_RADIUS * scaleFactor
+	}, [])
 	const hexPolygonColor = useCallback(() => HEX_POLYGON_COLOR, [])
 
 	// USEEFFECTS TO LOAD DATA AND ANIMATE THE GLOBE
