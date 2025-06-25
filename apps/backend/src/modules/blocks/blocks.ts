@@ -198,6 +198,15 @@ export async function list(limit = 20): Promise<BlocksResponse> {
 export function wsStream(socket: WebSocket) {
 	const sendBlock = async (hash: string) => {
 		try {
+			// Check if we're at the known tip by comparing the block's height to known header height
+			const blockchainInfo = await rpcClient.command<{
+				blocks: number
+				headers: number
+			}>('getblockchaininfo')
+
+			// if we're not at the known tip, don't send the block via Websocket, the frontend will continue polling the REST API
+			if (blockchainInfo.blocks !== blockchainInfo.headers) return
+
 			// Get the full block data in one RPC call
 			const raw = await rpcClient.command<RawBlock>('getblock', hash, 2)
 

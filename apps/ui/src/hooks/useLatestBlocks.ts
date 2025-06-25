@@ -27,7 +27,7 @@ export function useLatestBlocks({limit = 5, stage}: {limit?: number; stage: Sync
 		stage === 'IBD'
 			? 3_000 // fast while blocks fly in
 			: stage === 'synced'
-				? 60_000 // lazy safety poll
+				? 10_000 // lazy safety poll
 				: false // no fetch during pre-headers / headers
 
 	const query = useQuery<BlockSummary[]>({
@@ -43,6 +43,7 @@ export function useLatestBlocks({limit = 5, stage}: {limit?: number; stage: Sync
 		if (!data?.token) return
 
 		// We only use WebSocket when out of IBD because bitcoind's ZMQ is silent until then
+		// But the backend guards against sending blocks before we're at the tip
 		if (stage !== 'synced') return
 
 		let ws: WebSocket | undefined
