@@ -279,7 +279,8 @@ export const settingsMetadata = {
 		label: 'Enable Transaction Indexing',
 		bitcoinLabel: 'txindex',
 		description: 'Enable transaction indexing to speed up transaction lookups.',
-		subDescription: '⚠ txindex is automatically disabled when pruning is enabled',
+		subDescription:
+			'⚠ Many connected apps and services will not work without txindex enabled, so make sure you understand the implications before disabling it. txindex is automatically disabled when pruning is enabled.',
 		// bitcoin core default is false, but we our default is true
 		default: true,
 		/** UI hint: disable when prune > 0 */
