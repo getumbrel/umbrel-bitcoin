@@ -154,7 +154,10 @@ export default function HomePage() {
 											<span>{syncSubtitle}</span>
 											{dialogContent && (
 												<InfoDialog
-													trigger={<InfoIcon className='w-3 h-3 text-white/50 hover:text-white/80 transition-colors' />}
+													// we still need pointer events for the dialog to work
+													trigger={
+														<InfoIcon className='w-3 h-3 text-white/50 hover:text-white/80 transition-colors pointer-events-auto' />
+													}
 													title={dialogContent.title}
 													description={dialogContent.description}
 												/>
