@@ -191,6 +191,13 @@ export default function LiveGlobe({width = 650, height = 650}: {width?: number; 
 		}
 	}, [])
 
+	// Set initial camera position to tilt globe toward northern hemisphere and center near North America
+	const handleGlobeReady = useCallback(() => {
+		if (globeRef.current) {
+			globeRef.current.pointOfView({lat: 30, lng: -80}, 0)
+		}
+	}, [])
+
 	// Add custom arcs that match sphere paths
 	useEffect(() => {
 		if (!globeRef.current || !arcsData.length) return
@@ -355,6 +362,8 @@ export default function LiveGlobe({width = 650, height = 650}: {width?: number; 
 				// atmosphere
 				atmosphereColor={ATMOSPHERE_COLOR}
 				atmosphereAltitude={ATMOSPHERE_ALTITUDE}
+				// initial camera position
+				onGlobeReady={handleGlobeReady}
 				// landmass map
 				hexPolygonsData={countries.features}
 				hexPolygonResolution={HEX_POLYGON_RESOLUTION}
