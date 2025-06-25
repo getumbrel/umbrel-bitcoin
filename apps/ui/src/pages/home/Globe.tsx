@@ -17,7 +17,7 @@ const AUTO_ROTATE_SPEED = 0.5
 const HEX_POLYGON_COLOR = 'rgba(51, 51, 51, 0.8)'
 const HEX_POLYGON_RESOLUTION = 3
 const HEX_POLYGON_MARGIN = 0.4 // Higher = smaller hex dots, Lower = larger hex dots
-const HEX_POLYGON_ALTITUDE = 0.01
+const HEX_POLYGON_ALTITUDE = 0.001
 const HEX_MAP_RESOLUTION = 3
 
 // User and peer location markers
