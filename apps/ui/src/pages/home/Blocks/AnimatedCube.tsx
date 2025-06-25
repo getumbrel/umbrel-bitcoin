@@ -2,6 +2,7 @@ import {useRef, useState, useEffect, useMemo} from 'react'
 import * as THREE from 'three'
 import {useFrame, useThree} from '@react-three/fiber'
 import {RoundedBox, Text} from '@react-three/drei'
+import {configureTextBuilder} from 'troika-three-text'
 import prettyBytes from 'pretty-bytes'
 import prettyMs from 'pretty-ms'
 
@@ -12,6 +13,11 @@ import {ANIMATION_CONFIG} from './animation.config'
 import {easings} from './easings'
 
 import type {AnimatedCubeProps, AnimationPhase, EnteringSubPhase} from './types'
+
+// Configure troika-three-text to disable web workers so we don't need to loosen the CSP for blobs
+configureTextBuilder({
+	useWorker: false,
+})
 
 export function AnimatedCube({
 	index,

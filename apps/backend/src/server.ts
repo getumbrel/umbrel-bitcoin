@@ -31,16 +31,9 @@ await app.register(helmet, {
 			// Upgrade-insecure-requests is ignored on HTTP, so we omit it entirely
 			upgradeInsecureRequests: null,
 
-			// Our 3-D text renderer for the blockchain component (via @react-three/drei → troika-three-text)
-			// spawns Web Workers from blob: URLs.
-			workerSrc: ["'self'", 'blob:'],
-
-			// Those workers load their module chunks with importScripts(blob: …),
-			// so we allow blob in script-src
-			scriptSrc: ["'self'", 'blob:'],
-
-			// The font resolver inside the worker fetches tiny JSON/WOFF files from
-			// jsDelivr. Everything else stays same-origin only.
+			// Allow @react-three/drei Text component (troika-three-text) to fetch Unicode font
+			// fallback data from jsDelivr CDN. Required for 3D text rendering in the Bitcoin
+			// blocks visualization component.
 			connectSrc: ["'self'", 'https://cdn.jsdelivr.net'],
 		},
 	},
