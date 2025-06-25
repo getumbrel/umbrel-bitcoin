@@ -94,16 +94,16 @@ export default function LiveGlobe({width = 650, height = 650}: {width?: number; 
 		for (const p of data.peers) {
 			const [lat, lng] = snapToMap(p.location)
 			const key = `${lat},${lng}`
-			
+
 			// Skip if this hex already processed or occupied by user
 			if (processedHexes.has(key)) continue
 			if (userDot && `${userDot.lat},${userDot.lng}` === key) continue
-			
+
 			processedHexes.add(key)
 			const peerCount = hexPeerCounts.get(key) || 1
 			peers.push({lat, lng, peerCount})
 		}
-		
+
 		return userDot ? [userDot, ...peers] : peers
 	}, [data, snapToMap])
 
@@ -164,7 +164,7 @@ export default function LiveGlobe({width = 650, height = 650}: {width?: number; 
 	const pointColor = useCallback((dot: any) => (dot.isUser ? USER_DOT_COLOR : PEER_DOT_COLOR), [])
 	const pointRadius = useCallback((dot: any) => {
 		if (dot.isUser) return USER_DOT_RADIUS
-		
+
 		// Scale radius based on peer count, capped at 10 peers for reasonable max size
 		const peerCount = Math.min(dot.peerCount || 1, 10)
 		const scaleFactor = 1 + (peerCount - 1) * 0.15 // Each additional peer adds 15% to radius
