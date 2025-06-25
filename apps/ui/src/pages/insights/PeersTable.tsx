@@ -74,17 +74,8 @@ export const columns: ColumnDef<PeerRow>[] = [
 		accessorFn: (row) => row.network.category, // scalar for sorting
 		header: ({header}) => <SortableHeader header={header}>Network</SortableHeader>,
 		cell: ({row}) => {
-			const {category, subcategory} = row.original.network
-			return (
-				<div className='flex flex-col'>
-					<div className='capitalize'>{category}</div>
-					{/* It is very likely that the user will have a local electrum server like electrs connected which will be not_publicly_routable */}
-					{/* We show a subcategory of "private/local" in this case, because the user may have set up Tor-only for connections and may be confused at an incoming clearnet connection */}
-					{subcategory === 'not_publicly_routable' && (
-						<div className='text-[11px] text-muted-foreground'>private/local</div>
-					)}
-				</div>
-			)
+			const {category} = row.original.network
+			return <div className='capitalize'>{category}</div>
 		},
 	},
 	{
@@ -188,7 +179,16 @@ export default function PeersTable() {
 				address: p.addr,
 			},
 			network: {
-				category: p.network === 'onion' ? 'tor' : p.network === 'i2p' ? 'I2P' : 'clearnet',
+				category:
+					p.network === 'onion'
+						? 'tor'
+						: p.network === 'i2p'
+							? 'I2P'
+							: // It is very likely that the user will have a local electrum server like electrs connected which will be not_publicly_routable (along with other app connections)
+								// We show "local" in this case, because the user may have set up Tor-only for connections and may be confused at an incoming "clearnet" connection
+								p.network === 'not_publicly_routable'
+								? 'local'
+								: 'clearnet',
 				subcategory: p.network,
 			},
 			relayTxns: p.relaytxes ?? true,
