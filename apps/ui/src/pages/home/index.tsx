@@ -1,6 +1,7 @@
 import {formatDistanceToNowStrict} from 'date-fns'
 import {motion, AnimatePresence} from 'framer-motion'
 import {Info as InfoIcon} from 'lucide-react'
+import {useState, useEffect} from 'react'
 
 import {Card, CardContent} from '@/components/ui/card'
 import {GradientBorderTopBottom, GradientBorderFromCorners} from '@/components/shared/GradientBorders'
@@ -17,6 +18,28 @@ import {calcSyncPercent, syncStage} from '@/lib/sync-progress'
 export default function HomePage() {
 	const {data: status, isError, isLoading: isStatusLoading} = useBitcoindStatus()
 	const {data: syncStatus, isLoading} = useSyncStatus()
+
+	// Responsive Globe sizing
+	const [globeSize, setGlobeSize] = useState(650)
+
+	useEffect(() => {
+		const updateGlobeSize = () => {
+			if (window.innerWidth >= 768) {
+				// md tailwind breakpoint. This is is wehre the peers chart goes below the globe and we hide blocks.
+				setGlobeSize(650)
+			} else if (window.innerWidth >= 500) {
+				// this is a bit of a weird view that most people won't ever see unless they are half screen on their laptop.
+				setGlobeSize(1000)
+			} else {
+				// for mobile view
+				setGlobeSize(700)
+			}
+		}
+
+		updateGlobeSize() // Initial size
+		window.addEventListener('resize', updateGlobeSize)
+		return () => window.removeEventListener('resize', updateGlobeSize)
+	}, [])
 
 	const running = !isError && status?.running === true
 	const uptime = running && status?.startedAt ? formatDistanceToNowStrict(status.startedAt, {addSuffix: false}) : null
@@ -78,8 +101,8 @@ export default function HomePage() {
 						<div className='absolute top-[-50%] left-[-40%] w-[500%] h-[500%] rounded-full bg-black pointer-events-none' />
 						<GradientBorderFromCorners />
 
-						<div className='md:w-full md:h-full relative md:right-[30%] md:top-[-70%] sm:right-[30%] sm:top-[-90%] right-[80%] top-[-90%]'>
-							<Globe />
+						<div className='relative md:top-[-20%] md:right-[-5%] sm:top-[-40%] sm:right-[20%] top-[-25%] right-[40%]'>
+							<Globe width={globeSize} height={globeSize} />
 						</div>
 
 						{/* Running status */}
@@ -93,7 +116,7 @@ export default function HomePage() {
 									animate={{opacity: 1}}
 									exit={{opacity: 0}}
 									transition={{duration: 0.25}}
-									className='absolute top-[7%] left-[5%] flex items-center gap-1 justify-center'
+									className='absolute top-[7%] left-[5%] flex items-center gap-1 justify-center pointer-events-none select-none'
 								>
 									<StatusDot running={running} />
 
@@ -127,7 +150,7 @@ export default function HomePage() {
 									animate={{opacity: 1}}
 									exit={{opacity: 0}}
 									transition={{duration: 0.25}}
-									className='absolute top-[70%] md:top-[80%] left-[5%] text-[30px]'
+									className='absolute top-[70%] md:top-[80%] left-[5%] text-[30px] pointer-events-none select-none'
 								>
 									{syncSubtitle && percentSynced < 100 ? (
 										<div className='text-[14px] text-white/50 flex items-center gap-1'>
