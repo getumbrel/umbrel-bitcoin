@@ -43,7 +43,10 @@ export default function HomePage() {
 	}, [])
 
 	const running = !isError && status?.running === true
-	const uptime = running && status?.startedAt ? prettyMs(Date.now() - new Date(status.startedAt).getTime(), {verbose: true, unitCount: 1}) : null
+	const uptime =
+		running && status?.startedAt
+			? prettyMs(Date.now() - new Date(status.startedAt).getTime(), {verbose: true, unitCount: 1})
+			: null
 
 	const percentSynced = calcSyncPercent(syncStatus)
 	const stage = syncStage(syncStatus)
@@ -124,7 +127,7 @@ export default function HomePage() {
 									{running ? (
 										<>
 											<span className='text-[#0BC39E] text-[14px] font-[500] ml-1'>Running</span>
-											{uptime && <span className='text-white/60 text-[14px] font-[400]'>since {uptime}</span>}
+											{uptime && <span className='text-white/60 text-[14px] font-[400]'>for {uptime}</span>}
 										</>
 									) : (
 										<span className='text-[#EF4444] text-[14px] font-[500] ml-1'>Not running</span>
