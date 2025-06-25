@@ -6,6 +6,8 @@ import {latLngToCell, cellToLatLng} from 'h3-js'
 import {usePeerLocations} from '@/hooks/usePeers'
 import {useTransactionSocket} from '@/hooks/useTransactionSocket'
 
+import GlobeImage from '@/assets/globe-full.webp'
+
 // ===== VISUAL CONSTANTS =====
 
 // Globe appearance and atmosphere
@@ -42,7 +44,22 @@ const TX_SPEED = 125 // units per second
 const MAX_SPHERES_PER_UPDATE = 20 // Max spheres to spawn per transaction count update
 const MAX_CONCURRENT_SPHERES = 75 // Max total spheres animating simultaneously
 
+function isWebGLSupported() {
+	const canvas = document.createElement('canvas')
+	const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl')
+	return Boolean(gl)
+}
+
 export default function LiveGlobe({width = 650, height = 650}: {width?: number; height?: number}) {
+	// If WebGL is not supported, show a static image of the globe
+	// This will happen on Tor Browser and some older browsers
+	if (!isWebGLSupported())
+		return (
+			<div style={{width: width, height: height, scale: 0.8}}>
+				<img src={GlobeImage} />
+			</div>
+		)
+
 	const [countries, setCountries] = useState({features: []})
 	const [isReady, setIsReady] = useState(false)
 	const globeRef = useRef<any>(null)
