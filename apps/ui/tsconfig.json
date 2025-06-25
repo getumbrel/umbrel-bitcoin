@@ -1,0 +1,12 @@
+{
+	"extends": "../../tsconfig.base.json",
+	"files": [],
+	// Shadcn requirement
+	// https://ui.shadcn.com/docs/installation/vite
+	"compilerOptions": {
+		"baseUrl": ".",
+		"paths": {
+			"@/*": ["./src/*"]
+		}
+	}
+}

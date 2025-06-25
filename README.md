@@ -1,10 +1,10 @@
 <p align="center">
-  <a href="https://umbrel.com">
+  <a href="https://apps.umbrel.com/app/bitcoin">
     <img src="https://i.imgur.com/rhDWq5W.jpg" alt="Logo">
   </a>
-  <h1 align="center">Bitcoin Node for Umbrel</h1>
+  <h1 align="center">Bitcoin Node</h1>
   <p align="center">
-    Run a Bitcoin node on your Umbrel personal server. An official app by Umbrel. Powered by Bitcoin Core.
+    Run a Bitcoin node on your umbrelOS personal server. An official app by Umbrel. Powered by Bitcoin Core.
     <br />
     <a href="https://umbrel.com"><strong>umbrel.com »</strong></a>
     <br />
@@ -26,21 +26,7 @@
 
 ## Getting started
 
-This app can be installed in one click via the Umbrel App Store.
-
----
-
-## Contributing
-
-We welcome and appreciate new contributions!
-
-If you're a developer looking to help but not sure where to begin, check out [these issues](https://github.com/getumbrel/umbrel-bitcoin/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) that have specifically been marked as being friendly to new contributors.
-
-If you're looking for a bigger challenge, before opening a pull request please [create an issue](https://github.com/getumbrel/umbrel-bitcoin/issues/new/choose) or [join our community chat](https://t.me/getumbrel) to get feedback, discuss the best way to tackle the challenge, and to ensure that there's no duplication of work.
-
-## Acknowledgements
-
-This app is built upon the work done by [Casa](https://github.com/casa) on its open source [API](https://github.com/Casa/Casa-Node-API).
+This app can be installed in one click from the [Umbrel App Store](https://apps.umbrel.com/app/bitcoin).
 
 ---
 

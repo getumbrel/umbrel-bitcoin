@@ -1,35 +1,102 @@
-version: "3.7"
+# docker-compose.prod.yml — for testing the production image
+
+version: '3.7' # version 3.7 matches current umbrelOS app-store requirement
+
+# Same network subnet as umbrelOS apps
+networks:
+  devnet:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.21.0.0/16
 
 services:
-  bitcoind:
-    image: getumbrel/bitcoind:v28.0@sha256:95c5eb9778fc0050e185b22700061fb7e7d71a0c27860067461bed2afcfbe5c4
+  app:
+    image: umbrel-bitcoin:prod
+    user: '1000:1000'
+    ports:
+      - '3000:3000'
     volumes:
-      - ${PWD}/bitcoin:/data/.bitcoin
-    restart: on-failure
-    stop_grace_period: 15m30s
-    ports:
-      - "18443:18443"
-      # - "8333:8333" # "$BITCOIN_P2P_PORT:$BITCOIN_P2P_PORT"
-  server:
-    build: .
-    depends_on: [bitcoind]
-    command: ["npm", "start"]
-    restart: on-failure
-    ports:
-      - "3005:3005"
+      - ./data:/data # persistent app, bitcoin, i2pd dirs
     environment:
-      PORT: "3005"
-      BITCOIN_HOST: "bitcoind"
-      RPC_PORT: $BITCOIN_RPC_PORT
-      RPC_USER: $BITCOIN_RPC_USER
-      RPC_PASSWORD: $BITCOIN_RPC_PASS
-      BITCOIN_RPC_HIDDEN_SERVICE: "/var/lib/tor/bitcoin-rpc/hostname"
-      BITCOIN_P2P_HIDDEN_SERVICE: "/var/lib/tor/bitcoin-p2p/hostname"
+      # DATA DIRECTORY SETTINGS
+      # BITCOIN_DIR: bitcoin-dir-override
+      # APP_STATE_DIR: app-state-dir-override
 
-networks:
-  default:
-    name: umbrel_main_network
-    ipam:
-      driver: default
-      config:
-        - subnet: "$NETWORK_IP/24"
+      # BITCOIND BINARY SETTINGS
+      # BITCOIND_BIN: bitcoind-binary-path-override
+      BITCOIND_EXTRA_ARGS: '-deprecatedrpc=create_bdb' # used to pass extra startup flags to bitcoind
+
+      # BITCOIND CONF FILE SETTINGS
+      APPS_SUBNET: '10.21.0.0/16' # used to whitelist local apps as both peers (whitelist) and rpc connections (rpcallowip)
+      P2P_PORT: 8333 # port, bind (also used for connect details)
+      RPC_PORT: 8332 # rpcport (also used for rpc client and connect details)
+      TOR_PORT: 8334 # bind=onion
+      ZMQ_RAWBLOCK_PORT: 28332 # zmqpubrawblock
+      ZMQ_RAWTX_PORT: 28333 # zmqpubrawtx
+      ZMQ_HASHBLOCK_PORT: 28334 # zmqpubhashblock
+      ZMQ_SEQUENCE_PORT: 28335 # zmqpubsequence
+      ZMQ_HASHTX_PORT: 28336 # zmqpubhashtx
+      TOR_HOST: 10.21.22.10 # proxy, onion, torcontrol
+      TOR_SOCKS_PORT: 9050 # proxy, onion
+      TOR_CONTROL_PORT: 9051 # torcontrol
+      TOR_CONTROL_PASSWORD: supersecretpassword # torpassword
+      I2P_HOST: 10.21.22.11 # i2psam
+      I2P_SAM_PORT: 7656 # i2psam
+
+      # RPC CLIENT SETTINGS
+      BITCOIND_IP: 10.21.21.8 # host for the rpc client. Also used for bitcoind conf file rpcbind & bind.
+      RPC_USER: umbrel # also shown in the connect modal
+      RPC_PASS: moneyprintergobrrr # also shown in the connect modal
+
+      # CONNECTION DETAILS (shown to user in the connect modal)
+      DEVICE_DOMAIN_NAME: 127.0.0.1
+      P2P_HIDDEN_SERVICE: somehiddenservice
+      RPC_HIDDEN_SERVICE: someotherhiddenservice
+
+      # DEV ONLY SETTINGS (not needed in production)
+      DEFAULT_CHAIN: regtest # dev override to set the chain on first start to non-mainnet.
+    networks:
+      devnet:
+        ipv4_address: 10.21.21.8 # matches existing APP_BITCOIN_NODE_IP on umbrelOS app store
+
+  tor:
+    image: getumbrel/tor:0.4.7.8@sha256:2ace83f22501f58857fa9b403009f595137fa2e7986c4fda79d82a8119072b6a
+    user: '1000:1000' # match bind-mount ownership
+    restart: on-failure
+    # no volume in dev so Tor state is ephemeral
+    # uses /tmp so non-root user can write torrc + keys
+    environment:
+      HOME: '/tmp'
+    # creates a working torrc file in /tmp/torrc
+    entrypoint: >
+      bash -c '
+        TORRC=/tmp/torrc
+        PASS="supersecretpassword"
+        HASH=$$(tor --hash-password "$$PASS" | tail -n1)
+
+        # overwrite torrc with minimal dev settings
+        {
+          echo "SocksPort 0.0.0.0:9050"
+          echo "ControlPort 0.0.0.0:9051"
+          echo "CookieAuthentication 1"
+          echo "CookieAuthFileGroupReadable 1"
+          echo "HashedControlPassword $$HASH"
+        } > "$$TORRC"
+
+        exec tor -f "$$TORRC"
+      '
+    networks:
+      devnet:
+        ipv4_address: 10.21.22.10 # matches existing APP_BITCOIN_TOR_PROXY_IP on umbrelOS app store
+
+  i2p:
+    image: purplei2p/i2pd:release-2.44.0@sha256:d154a599793c393cf9c91f8549ba7ece0bb40e5728e1813aa6dd4c210aa606f6
+    user: '1000:1000'
+    command: --sam.enabled=true --sam.address=0.0.0.0 --sam.port=7656 --loglevel=error
+    restart: on-failure
+    volumes:
+      - ./data/i2pd:/home/i2pd/data
+    networks:
+      devnet:
+        ipv4_address: 10.21.22.11 # matches existing APP_BITCOIN_I2P_DAEMON_IP on umbrelOS app store

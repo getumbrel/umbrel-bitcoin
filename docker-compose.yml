@@ -1,84 +1,155 @@
-version: "3.7"
+# docker-compose.yml — development stack only (prod compose lives in umbrelOS App Store)
+
+version: '3.7' # version 3.7 matches current umbrelOS app-store requirement
+
+# Same network subnet as umbrelOS apps
+networks:
+  devnet:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.21.0.0/16
 
 services:
-  i2pd_daemon:
-    container_name: i2pd_daemon
+  # Backend container with hot reload.
+  # In production the React bundle is baked into backend, but in dev we have a separate ui container for vite hot-reload.
+  backend:
+    user: '1000:1000'
+    build:
+      context: .
+      dockerfile: apps/backend/Dockerfile
+      target: dev # use the hot-reload dev stage, not the full production image
+    working_dir: /repo
+    volumes:
+      - .:/repo # live source for hot reload
+      - ./data/__node_modules_linux__:/repo/node_modules # deps cache shared with the ui container
+      - ./data:/data # persistent app, bitcoin, i2pd dirs
+
+    # We install workspaces only when package-lock.json changes (uses hash guard).
+    # TODO: handle changes to non-root package.json files.
+    command: >
+      bash -c '
+        set -e
+        hash=$$(sha256sum /repo/package-lock.json | awk "{print \$$1}")
+        stamp=/repo/node_modules/.linux_stamp
+        if [ ! -f "$$stamp" ] || ! grep -q "$$hash" "$$stamp"; then
+          echo "⏳ Installing workspaces (hash $$hash)…"
+          npm ci --workspaces --include-workspace-root
+          echo "$$hash" > "$$stamp"
+        else
+          echo "✅ node_modules up-to-date (hash $$hash)"
+        fi
+        npm --workspace apps/backend run dev
+      '
+
+    # Health check to report “healthy” once node_modules exists.
+    # The ui container waits until all dependencies are ready.
+    healthcheck:
+      test: ['CMD-SHELL', 'test -f /repo/node_modules/.linux_stamp']
+      interval: 5s
+      retries: 20
+    environment:
+      # DATA DIRECTORY SETTINGS
+      # BITCOIN_DIR: bitcoin-dir-override
+      # APP_STATE_DIR: app-state-dir-override
+
+      # BITCOIND BINARY SETTINGS
+      # BITCOIND_BIN: bitcoind-binary-path-override
+      BITCOIND_EXTRA_ARGS: '-deprecatedrpc=create_bdb' # used to pass extra startup flags to bitcoind
+
+      # BITCOIND CONF FILE SETTINGS
+      APPS_SUBNET: '10.21.0.0/16' # used to whitelist local apps as both peers (whitelist) and rpc connections (rpcallowip)
+      P2P_PORT: 8333 # port, bind (also used for connect details)
+      RPC_PORT: 8332 # rpcport (also used for rpc client and connect details)
+      TOR_PORT: 8334 # bind=onion
+      ZMQ_RAWBLOCK_PORT: 28332 # zmqpubrawblock
+      ZMQ_RAWTX_PORT: 28333 # zmqpubrawtx
+      ZMQ_HASHBLOCK_PORT: 28334 # zmqpubhashblock
+      ZMQ_SEQUENCE_PORT: 28335 # zmqpubsequence
+      ZMQ_HASHTX_PORT: 28336 # zmqpubhashtx
+      TOR_HOST: 10.21.22.10 # proxy, onion, torcontrol
+      TOR_SOCKS_PORT: 9050 # proxy, onion
+      TOR_CONTROL_PORT: 9051 # torcontrol
+      TOR_CONTROL_PASSWORD: supersecretpassword # torpassword
+      I2P_HOST: 10.21.22.11 # i2psam
+      I2P_SAM_PORT: 7656 # i2psam
+
+      # RPC CLIENT SETTINGS
+      BITCOIND_IP: 10.21.21.8 # host for the rpc client. Also used for bitcoind conf file rpcbind & bind.
+      RPC_USER: umbrel # also shown in the connect modal
+      RPC_PASS: moneyprintergobrrr # also shown in the connect modal
+
+      # CONNECTION DETAILS (shown to user in the connect modal)
+      DEVICE_DOMAIN_NAME: 127.0.0.1
+      P2P_HIDDEN_SERVICE: somehiddenservice
+      RPC_HIDDEN_SERVICE: someotherhiddenservice
+
+      # DEV ONLY SETTINGS (not needed in production)
+      DEFAULT_CHAIN: regtest # dev override to set the chain on first start to non-mainnet.
+    networks:
+      devnet:
+        ipv4_address: 10.21.21.8 # matches existing APP_BITCOIN_NODE_IP on umbrelOS app store
+
+  # UI container with vite hot-reload.
+  # In production the React bundle is baked into backend, but in dev we have a separate ui container for vite hot-reload.
+  ui:
+    user: '1000:1000'
+    build:
+      context: .
+      dockerfile: apps/ui/Dockerfile
+    working_dir: /repo/apps/ui
+
+    # Wait until backend’s health-check says node_modules is ready so that all dependencies are available.
+    depends_on:
+      backend:
+        condition: service_healthy
+    volumes:
+      - .:/repo
+      - ./data/__node_modules_linux__:/repo/node_modules # shares same deps cache as backend container
+    command: ['npm', 'run', 'dev', '--', '--host']
+    ports:
+      - '5173:5173' # localhost:5173 for ui
+    environment:
+      VITE_API_BASE: http://backend:3000
+    networks: [devnet]
+
+  tor:
+    image: getumbrel/tor:0.4.7.8@sha256:2ace83f22501f58857fa9b403009f595137fa2e7986c4fda79d82a8119072b6a
+    user: '1000:1000' # match bind-mount ownership
+    restart: on-failure
+    # no volume in dev so Tor state is ephemeral
+    # uses /tmp so non-root user can write torrc + keys
+    environment:
+      HOME: '/tmp'
+    # creates a working torrc file in /tmp/torrc
+    entrypoint: >
+      bash -c '
+        TORRC=/tmp/torrc
+        PASS="supersecretpassword"
+        HASH=$$(tor --hash-password "$$PASS" | tail -n1)
+
+        # overwrite torrc with minimal dev settings
+        {
+          echo "SocksPort 0.0.0.0:9050"
+          echo "ControlPort 0.0.0.0:9051"
+          echo "CookieAuthentication 1"
+          echo "CookieAuthFileGroupReadable 1"
+          echo "HashedControlPassword $$HASH"
+        } > "$$TORRC"
+
+        exec tor -f "$$TORRC"
+      '
+    networks:
+      devnet:
+        ipv4_address: 10.21.22.10 # matches existing APP_BITCOIN_TOR_PROXY_IP on umbrelOS app store
+
+  i2p:
     image: purplei2p/i2pd:release-2.44.0@sha256:d154a599793c393cf9c91f8549ba7ece0bb40e5728e1813aa6dd4c210aa606f6
-    user: "1000:1000"
+    user: '1000:1000'
     command: --sam.enabled=true --sam.address=0.0.0.0 --sam.port=7656 --loglevel=error
     restart: on-failure
     volumes:
-      - ${PWD}/data/i2pd:/home/i2pd/data
+      - ./data/i2pd:/home/i2pd/data
     networks:
-      default:
-        ipv4_address: "10.21.0.2"
-  
-  tor_server:
-    container_name: tor_server
-    image: getumbrel/tor:0.4.7.8@sha256:2ace83f22501f58857fa9b403009f595137fa2e7986c4fda79d82a8119072b6a
-    user: "1000:1000"
-    restart: on-failure
-    entrypoint: /tor-entrypoint/tor-entrypoint.sh
-    volumes:
-      - ${PWD}/data/tor:/etc/tor
-      - ${PWD}/tor-entrypoint:/tor-entrypoint
-    environment:
-      HOME: "/tmp"
-    networks:
-      default:
-        ipv4_address: "10.21.0.3"
-  
-  bitcoind:
-    image: getumbrel/bitcoind:v28.0@sha256:95c5eb9778fc0050e185b22700061fb7e7d71a0c27860067461bed2afcfbe5c4
-    user: "1000:1000"
-    command: -port=8333 -rpcport=8332 -rpcbind=0.0.0.0 -rpcallowip=0.0.0.0/0 -rpcauth=umbrel:5071d8b3ba93e53e414446ff9f1b7d7b$$375e9731abd2cd2c2c44d2327ec19f4f2644256fdeaf4fc5229bf98b778aafec
-    volumes:
-      - ${PWD}/data/bitcoin:/data/.bitcoin
-    restart: unless-stopped
-    stop_grace_period: 15m30s
-    ports:
-      - "8332:8332" # rpc
-      - "8333:8333" # p2p
-    networks:
-      default:
-        ipv4_address: "10.21.0.4"
-  
-  server:
-    build: .
-    depends_on: [bitcoind]
-    command: ["npm", "start"]
-    restart: on-failure
-    ports:
-      - "3005:3005"
-    volumes:
-      - ${PWD}/data/app:/data # volume to persist advanced settings json
-      - ${PWD}/data/bitcoin:/bitcoin/.bitcoin # volume to persist umbrel-bitcoin.conf and bitcoin.conf
-    environment:
-      PORT: "3005"
-      BITCOIN_HOST: "bitcoind"
-      BITCOIN_P2P_PORT: 8333
-      BITCOIN_RPC_PORT: 8332
-      BITCOIN_DEFAULT_NETWORK: "regtest"
-      RPC_USER: "umbrel"
-      RPC_PASSWORD: "moneyprintergobrrr"
-      BITCOIN_RPC_HIDDEN_SERVICE: "somehiddenservice.onion"
-      BITCOIN_P2P_HIDDEN_SERVICE: "anotherhiddenservice.onion"
-      DEVICE_DOMAIN_NAME: "test.local"
-      BITCOIND_IP: "10.21.0.4"
-      TOR_PROXY_IP: "10.21.0.3"
-      TOR_PROXY_PORT: "9050"
-      TOR_PROXY_CONTROL_PORT: "9051"
-      TOR_PROXY_CONTROL_PASSWORD: "umbrelisneat"
-      I2P_DAEMON_IP: "10.21.0.2"
-      I2P_DAEMON_PORT: "7656"
-    networks:
-      default:
-        ipv4_address: "10.21.0.5"
-
-networks:
-    default:
-      name: advanced_settings_test_network
-      ipam:
-          driver: default
-          config:
-              - subnet: "10.21.0.0/16"
+      devnet:
+        ipv4_address: 10.21.22.11 # matches existing APP_BITCOIN_I2P_DAEMON_IP on umbrelOS app store

@@ -1,5 +1,0 @@
-#!/usr/bin/env bash
-echo "Checking style, apply linting!"
-npm run lint -- .
-
-make test

@@ -1,0 +1,11 @@
+{
+	"extends": "../../tsconfig.base.json",
+	"compilerOptions": {
+		"rootDir": ".", // source is this folder
+		"outDir": "dist", // emit JS & .d.ts into dist/
+		"declaration": true,
+		"emitDeclarationOnly": true,
+		"composite": true // so other projects can reference it
+	},
+	"include": ["index.d.ts"]
+}
