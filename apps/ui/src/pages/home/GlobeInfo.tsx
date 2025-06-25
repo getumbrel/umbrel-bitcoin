@@ -8,6 +8,7 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from '@/components/ui/dialog'
+import {AspectRatio} from '@/components/ui/aspect-ratio'
 
 import {GradientBorderFromTop} from '@/components/shared/GradientBorders'
 
@@ -15,8 +16,11 @@ import UserDotIcon from '@/assets/user-dot.svg?react'
 import PeerDotIcon from '@/assets/peer-dot.svg?react'
 import TransactionIcon from '@/assets/transaction.svg?react'
 import GlobeImage from '@/assets/globe.png'
+import {motion} from 'framer-motion'
+import {useState} from 'react'
 
 export default function GlobeInfo() {
+	const [loaded, setLoaded] = useState(false)
 	return (
 		<Dialog>
 			<DialogTrigger asChild>
@@ -62,7 +66,22 @@ export default function GlobeInfo() {
 					</div>
 				</div>
 
-				<img src={GlobeImage} alt='Globe' className='w-full flex-1 object-cover rounded-b-2xl' />
+				{/* <img src={GlobeImage} alt='Globe' className='w-full flex-1 object-cover rounded-b-2xl' /> */}
+				{/* Space is reserved by AspectRatio; image fades in once loaded */}
+				<AspectRatio ratio={688 / 154} className='w-full'>
+					<motion.img
+						src={GlobeImage}
+						alt='Globe'
+						width={1280}
+						height={720}
+						loading='lazy'
+						onLoad={() => setLoaded(true)}
+						initial={{opacity: 0}}
+						animate={{opacity: loaded ? 1 : 0}}
+						transition={{duration: 0.4, ease: 'easeOut'}}
+						className='absolute inset-0 w-full h-full object-cover rounded-b-2xl'
+					/>
+				</AspectRatio>
 			</DialogContent>
 		</Dialog>
 	)

@@ -12,6 +12,7 @@
 		"@fontsource-variable/outfit": "^5.2.5",
 		"@hookform/resolvers": "^5.0.1",
 		"@radix-ui/react-alert-dialog": "^1.1.14",
+		"@radix-ui/react-aspect-ratio": "^1.1.7",
 		"@radix-ui/react-checkbox": "^1.3.2",
 		"@radix-ui/react-dialog": "^1.1.14",
 		"@radix-ui/react-dropdown-menu": "^2.1.14",
