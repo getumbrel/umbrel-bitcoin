@@ -306,7 +306,7 @@ export const settingsMetadata = {
 		bitcoinLabel: 'datacarriersize',
 		description: 'Set the maximum size of the data in OP_RETURN outputs (in bytes) that your node will relay.',
 		subDescription: 'Note: datacarrier must be enabled for this setting to take effect.',
-		default: 83,
+		default: 42,
 	},
 
 	permitbaremultisig: {
@@ -315,7 +315,7 @@ export const settingsMetadata = {
 		label: 'Relay Bare Multisig Transactions',
 		bitcoinLabel: 'permitbaremultisig',
 		description: 'Relay non-P2SH multisig transactions.',
-		default: true,
+		default: false,
 	},
 
 	rejectparasites: {
@@ -388,7 +388,7 @@ export const settingsMetadata = {
 		label: 'Number of transactions to keep in memory for reconstruction',
 		bitcoinLabel: 'blockreconstructionextratxn',
 		description: 'Extra transactions to keep in memory for compact block reconstructions',
-		default: 3985000,
+		default: 1000000,
 	},
 	
 	coinstatsindex: {
