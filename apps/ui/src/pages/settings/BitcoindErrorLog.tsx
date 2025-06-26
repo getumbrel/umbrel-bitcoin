@@ -80,7 +80,7 @@ export default function BitcoindErrorLog() {
 					className='mb-6 rounded-lg border border-red-900 bg-red-950/80 p-4'
 				>
 					<p className='mb-2 text-sm text-red-200'>
-						Bitcoin Core stopped unexpectedly. Review the logs below for more information.
+						Bitcoin Knots stopped unexpectedly. Review the logs below for more information.
 					</p>
 
 					{/* scrollable log viewer with FadeScrollArea */}

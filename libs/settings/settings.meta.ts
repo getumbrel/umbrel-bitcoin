@@ -5,7 +5,7 @@
 // To add a new bitcoin.conf option, just add a new block to the `settingsMetadata` object and check that it is being written to the conf file correctly.
 
 // Tabs for organization (used in the UI to group settings)
-export type Tab = 'peers' | 'optimization' | 'rpc-rest' | 'network' | 'advanced'
+export type Tab = 'peers' | 'optimization' | 'rpc-rest' | 'network' | 'advanced' | 'policy'
 
 interface BaseOption {
 	tab: Tab
@@ -291,7 +291,7 @@ export const settingsMetadata = {
 	// mempoolfullrbf - no longer an option as of Core 28.0.0
 
 	datacarrier: {
-		tab: 'optimization',
+		tab: 'policy',
 		kind: 'toggle',
 		label: 'Relay Transactions Containing Arbitrary Data',
 		bitcoinLabel: 'datacarrier',
@@ -300,7 +300,7 @@ export const settingsMetadata = {
 	},
 
 	datacarriersize: {
-		tab: 'optimization',
+		tab: 'policy',
 		kind: 'number',
 		label: 'Max Allowed Size of Arbitrary Data in Transactions',
 		bitcoinLabel: 'datacarriersize',
@@ -310,7 +310,7 @@ export const settingsMetadata = {
 	},
 
 	permitbaremultisig: {
-		tab: 'peers',
+		tab: 'policy',
 		kind: 'toggle',
 		label: 'Relay Bare Multisig Transactions',
 		bitcoinLabel: 'permitbaremultisig',
@@ -319,7 +319,7 @@ export const settingsMetadata = {
 	},
 
 	rejectparasites: {
-		tab: 'optimization',
+		tab: 'policy',
 		kind: 'toggle',
 		label: 'Reject parasitic transactions',
 		bitcoinLabel: 'rejectparasites',
@@ -328,7 +328,7 @@ export const settingsMetadata = {
 	},
 
 	rejecttokens: {
-		tab: 'optimization',
+		tab: 'policy',
 		kind: 'toggle',
 		label: 'Reject tokens transactions',
 		bitcoinLabel: 'rejecttokens',
@@ -336,17 +336,8 @@ export const settingsMetadata = {
 		default: false,
 	},
 
-	minrelaytxfee: {
-		tab: 'optimization',
-		kind: 'number',
-		label: 'Min Transaction Relay Fee',
-		bitcoinLabel: 'minrelaytxfee',
-		description: 'Fee rates (in BTC/kB) smaller than this are considered zero fee for relaying, mining and transaction creation.',
-		default: 0.00001,
-	},
-
 	permitbarepubkey: {
-		tab: 'peers',
+		tab: 'policy',
 		kind: 'toggle',
 		label: 'Permit Bare Pubkey',
 		bitcoinLabel: 'permitbarepubkey',
@@ -355,7 +346,7 @@ export const settingsMetadata = {
 	},
 
 	datacarriercost: {
-		tab: 'optimization',
+		tab: 'policy',
 		kind: 'number',
 		label: 'Datacarrier cost',
 		bitcoinLabel: 'datacarriercost',
@@ -365,7 +356,7 @@ export const settingsMetadata = {
 	},
 
 	acceptnonstddatacarrier: {
-		tab: 'optimization',
+		tab: 'policy',
 		kind: 'toggle',
 		label: 'Accept non standard datacarrier',
 		bitcoinLabel: 'acceptnonstddatacarrier',
@@ -373,17 +364,8 @@ export const settingsMetadata = {
 		default: false,
 	},
 
-	dustrelayfee: {
-		tab: 'optimization',
-		kind: 'number',
-		label: 'Dust Relay Fee',
-		bitcoinLabel: 'dustrelayfee',
-		description: 'Fee rate (in BTC/kvB) used to define dust, the value of an output such that it will cost more than its value in fees at this fee rate to spend it.',
-		default: 0.00003,
-	},
-
 	blockmaxsize: {
-		tab: 'optimization',
+		tab: 'advanced',
 		kind: 'number',
 		label: 'Max block size in bytes',
 		bitcoinLabel: 'blockmaxsize',
@@ -392,7 +374,7 @@ export const settingsMetadata = {
 	},
 
 	blockmaxweight: {
-		tab: 'optimization',
+		tab: 'advanced',
 		kind: 'number',
 		label: 'Max block size in weight',
 		bitcoinLabel: 'blockmaxweight',
@@ -401,7 +383,7 @@ export const settingsMetadata = {
 	},
 
 	blockreconstructionextratxn: {
-		tab: 'optimization',
+		tab: 'advanced',
 		kind: 'number',
 		label: 'Number of transactions to keep in memory for reconstruction',
 		bitcoinLabel: 'blockreconstructionextratxn',

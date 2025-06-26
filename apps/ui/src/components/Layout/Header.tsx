@@ -13,7 +13,7 @@ export default function Header({className}: {className?: string}) {
 	const {data: version, isLoading, isError} = useBitcoindVersion()
 
 	// placeholder text to prevent layout shift and fall back on error
-	const placeholder = 'Bitcoin Core'
+	const placeholder = 'Bitcoin Knots'
 
 	// Remove the 'v' prefix from the version string if it exists
 	const cleanedVersion = version?.version?.replace(/^v/i, '')

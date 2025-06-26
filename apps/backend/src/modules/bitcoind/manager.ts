@@ -94,7 +94,7 @@ export class BitcoindManager {
 
 			// version = first vX.Y.Z
 			// e.g., "v29.0.0"
-			const version = (firstLine.match(/v\d+\.\d+\.\d+/) ?? ['unknown'])[0]
+			const version = (firstLine.match(/v\d+\.\d+\.[\w\d\.]+/) ?? ['unknown'])[0]
 
 			this.versionInfo = {implementation, version}
 		} catch (error) {

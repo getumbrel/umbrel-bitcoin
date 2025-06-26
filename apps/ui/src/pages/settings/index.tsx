@@ -345,7 +345,7 @@ export default function SettingsCard() {
 	const onUpdateSettings = (data: SettingsSchema) => {
 		// If the mutation takes longer than 1 second, we show a loading toast
 		updateTimer.current = setTimeout(() => {
-			updateToastId.current = toast.loading('Hang tight, Bitcoin Core is restarting...', {duration: Infinity})
+			updateToastId.current = toast.loading('Hang tight, Bitcoin Knots is restarting...', {duration: Infinity})
 		}, 1000)
 
 		updateSettings.mutate(data, {
@@ -475,6 +475,7 @@ export default function SettingsCard() {
 											<SettingsTabTrigger value='optimization'>Optimization</SettingsTabTrigger>
 											<SettingsTabTrigger value='rpc-rest'>RPC and REST</SettingsTabTrigger>
 											<SettingsTabTrigger value='network'>Network Selection</SettingsTabTrigger>
+											<SettingsTabTrigger value='policy'>Policy</SettingsTabTrigger>
 											<SettingsTabTrigger value='advanced'>Advanced</SettingsTabTrigger>
 										</TabsList>
 									</FadeScrollArea>
@@ -517,6 +518,10 @@ export default function SettingsCard() {
 
 											<TabsContent value='network' className='space-y-6 pt-6'>
 												<SettingsTabContent tab='network' form={form} />
+											</TabsContent>
+
+											<TabsContent value='policy' className='space-y-6 pt-6'>
+												<SettingsTabContent tab='policy' form={form} />
 											</TabsContent>
 
 											<TabsContent value='advanced' className='space-y-6 pt-6'>
