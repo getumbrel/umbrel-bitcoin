@@ -318,6 +318,106 @@ export const settingsMetadata = {
 		default: true,
 	},
 
+	rejectparasites: {
+		tab: 'optimization',
+		kind: 'toggle',
+		label: 'Reject parasitic transactions',
+		bitcoinLabel: 'rejectparasites',
+		description: 'Reject parasitic transactions that are non-monetary.',
+		default: true,
+	},
+
+	rejecttokens: {
+		tab: 'optimization',
+		kind: 'toggle',
+		label: 'Reject tokens transactions',
+		bitcoinLabel: 'rejecttokens',
+		description: 'Reject token transactions (runes).',
+		default: false,
+	},
+
+	minrelaytxfee: {
+		tab: 'optimization',
+		kind: 'number',
+		label: 'Min Transaction Relay Fee',
+		bitcoinLabel: 'minrelaytxfee',
+		description: 'Fee rates (in BTC/kB) smaller than this are considered zero fee for relaying, mining and transaction creation.',
+		default: 0.00001,
+	},
+
+	permitbarepubkey: {
+		tab: 'peers',
+		kind: 'toggle',
+		label: 'Permit Bare Pubkey',
+		bitcoinLabel: 'permitbarepubkey',
+		description: 'Relay legacy pubkey outputs.',
+		default: false,
+	},
+
+	datacarriercost: {
+		tab: 'optimization',
+		kind: 'number',
+		label: 'Datacarrier cost',
+		bitcoinLabel: 'datacarriercost',
+		description: 'Treat extra data in transactions as at least N vbytes per actual byte.',
+		subDescription: 'Note: datacarrier must be enabled for this setting to take effect.',
+		default: 1,
+	},
+
+	acceptnonstddatacarrier: {
+		tab: 'optimization',
+		kind: 'toggle',
+		label: 'Accept non standard datacarrier',
+		bitcoinLabel: 'acceptnonstddatacarrier',
+		description: 'Relay and mine non-OP_RETURN datacarrier injection',
+		default: false,
+	},
+
+	dustrelayfee: {
+		tab: 'optimization',
+		kind: 'number',
+		label: 'Dust Relay Fee',
+		bitcoinLabel: 'dustrelayfee',
+		description: 'Fee rate (in BTC/kvB) used to define dust, the value of an output such that it will cost more than its value in fees at this fee rate to spend it.',
+		default: 0.00003,
+	},
+
+	blockmaxsize: {
+		tab: 'optimization',
+		kind: 'number',
+		label: 'Max block size in bytes',
+		bitcoinLabel: 'blockmaxsize',
+		description: 'Set maximum block size in bytes.',
+		default: 3985000,
+	},
+
+	blockmaxweight: {
+		tab: 'optimization',
+		kind: 'number',
+		label: 'Max block size in weight',
+		bitcoinLabel: 'blockmaxweight',
+		description: 'Set maximum BIP141 block weight.',
+		default: 3985000,
+	},
+
+	blockreconstructionextratxn: {
+		tab: 'optimization',
+		kind: 'number',
+		label: 'Number of transactions to keep in memory for reconstruction',
+		bitcoinLabel: 'blockreconstructionextratxn',
+		description: 'Extra transactions to keep in memory for compact block reconstructions',
+		default: 3985000,
+	},
+	
+	coinstatsindex: {
+		tab: 'optimization',
+		kind: 'toggle',
+		label: 'Coin Stats Index',
+		bitcoinLabel: 'coinstatsindex',
+		description: 'Enabling Coinstats Index reduces the time for the gettxoutsetinfo RPC to complete at the cost of using additional disk space.',
+		default: false,
+	},
+
 	maxmempool: {
 		tab: 'optimization',
 		kind: 'number',
