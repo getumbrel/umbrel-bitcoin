@@ -2,6 +2,7 @@ import {useState, useEffect, useMemo, useRef, useCallback} from 'react'
 import Globe from 'react-globe.gl'
 import * as THREE from 'three'
 import {latLngToCell, cellToLatLng} from 'h3-js'
+import {ErrorBoundary} from 'react-error-boundary'
 
 import {usePeerLocations} from '@/hooks/usePeers'
 import {useTransactionSocket} from '@/hooks/useTransactionSocket'
@@ -44,22 +45,25 @@ const TX_SPEED = 125 // units per second
 const MAX_SPHERES_PER_UPDATE = 20 // Max spheres to spawn per transaction count update
 const MAX_CONCURRENT_SPHERES = 75 // Max total spheres animating simultaneously
 
-function isWebGLSupported() {
-	const canvas = document.createElement('canvas')
-	const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl')
-	return Boolean(gl)
+// If WebGL is not supported, show a static image of the globe
+// This will happen on Tor Browser and some older browsers
+function ImageFallback({width = 650, height = 650}: {width?: number; height?: number}) {
+	return (
+		<div style={{width: width, height: height, scale: 0.8}}>
+			<img src={GlobeImage} />
+		</div>
+	)
 }
 
 export default function LiveGlobe({width = 650, height = 650}: {width?: number; height?: number}) {
-	// If WebGL is not supported, show a static image of the globe
-	// This will happen on Tor Browser and some older browsers
-	if (!isWebGLSupported())
-		return (
-			<div style={{width: width, height: height, scale: 0.8}}>
-				<img src={GlobeImage} />
-			</div>
-		)
+	return (
+		<ErrorBoundary fallbackRender={() => <ImageFallback width={width} height={height} />}>
+			<LiveGlobeWebGL width={width} height={height} />
+		</ErrorBoundary>
+	)
+}
 
+function LiveGlobeWebGL({width = 650, height = 650}: {width?: number; height?: number}) {
 	const [countries, setCountries] = useState({features: []})
 	const [isReady, setIsReady] = useState(false)
 	const globeRef = useRef<any>(null)

@@ -43,6 +43,7 @@
 		"pretty-ms": "^9.2.0",
 		"react": "^19.1.0",
 		"react-dom": "^19.1.0",
+		"react-error-boundary": "^6.0.0",
 		"react-globe.gl": "^2.33.2",
 		"react-router-dom": "^7.6.0",
 		"react-spring": "^10.0.0",
