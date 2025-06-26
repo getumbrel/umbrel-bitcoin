@@ -15,9 +15,11 @@ const SETTINGS_JSON = path.join(APP_STATE_DIR, 'settings.json')
 const UMBREL_CONF = path.join(BITCOIN_DIR, 'umbrel-bitcoin.conf')
 const BITCOIN_CONF = path.join(BITCOIN_DIR, 'bitcoin.conf')
 
+const BITCOIN_CONF_INCLUDE_LINE = `includeconf=${path.basename(UMBREL_CONF)}`
+
 const BITCOIN_CONF_BANNER = [
 	'# Load additional configuration file, relative to the data directory.',
-	`includeconf=${path.basename(UMBREL_CONF)}`,
+	BITCOIN_CONF_INCLUDE_LINE,
 ].join('\n')
 
 // In-memory cache of the current settings
@@ -260,14 +262,27 @@ async function writeUmbrelConf(settings: SettingsSchema): Promise<void> {
 async function ensureIncludeLine() {
 	await fse.ensureFile(BITCOIN_CONF)
 
-	const current = await fse.readFile(BITCOIN_CONF, 'utf8').catch(() => '')
+	let contents = await fse.readFile(BITCOIN_CONF, 'utf8').catch(() => '')
 
 	// return early if the banner is already present
-	if (current.startsWith(BITCOIN_CONF_BANNER)) return
+	if (!contents.startsWith(BITCOIN_CONF_BANNER)) {
+		contents = `${BITCOIN_CONF_BANNER}\n${contents}`
+	}
 
-	const newContents = `${BITCOIN_CONF_BANNER}\n${current}`
+	// Ensure only one include line
+	let seenInclude = false
+	contents = contents
+		.split(`\n`)
+		.filter((line) => {
+			if (line === BITCOIN_CONF_INCLUDE_LINE) {
+				if (seenInclude) return false
+				seenInclude = true
+			}
+			return true
+		})
+		.join('\n')
 
-	await writeWithBackup(BITCOIN_CONF, newContents)
+	await writeWithBackup(BITCOIN_CONF, contents)
 }
 
 // Called at server startup (before launching bitcoind):
