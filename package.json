@@ -1,6 +1,6 @@
 {
 	"name": "umbrel-bitcoin",
-	"version": "1.0.1-core.v29.0",
+	"version": "1.0.2-core.v29.0",
 	"private": true,
 	"workspaces": [
 		"apps/*"
