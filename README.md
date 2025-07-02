@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://apps.umbrel.com/app/bitcoin">
-    <img src="https://i.imgur.com/rhDWq5W.jpg" alt="Logo">
+    <img src="https://github.com/user-attachments/assets/b9ff1e96-f899-41e3-8295-3247b88f6f79" alt="Logo">
   </a>
   <h1 align="center">Bitcoin Node</h1>
   <p align="center">
