@@ -15,9 +15,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 await ensureDirs()
 
 // Start bitcoind without blocking server start
-bootBitcoind().catch((err) => {
-	bitcoind.setLastError(err as Error) // record for /status
-	app.log.error('Bitcoind bootstrap failed:', err)
+bootBitcoind().catch((error) => {
+	bitcoind.setLastError(error as Error) // record for /status
+	app.log.error(error, 'Bitcoind bootstrap failed.')
 })
 
 // Create the HTTP server and register the routes
