@@ -168,14 +168,6 @@ function handlePruneConversion(lines: string[], settings: SettingsSchema): strin
 
 // HANDLERS FOR LINES WE ALWAYS ADD TO umbrel-bitcoin.conf
 
-function appendPeerWhitelist(lines: string[]): string[] {
-	if (process.env['APPS_SUBNET']) {
-		lines.push(`whitelist=${process.env['APPS_SUBNET']}`)
-	}
-	lines.push('whitelist=127.0.0.1')
-	return lines
-}
-
 function appendRpcAuth(lines: string[]): string[] {
 	const rpcUser = process.env['RPC_USER'] || 'umbrel'
 	const rpcPass = process.env['RPC_PASS'] || 'moneyprintergobrrr'
@@ -218,8 +210,14 @@ function appendNetworkStanza(lines: string[], settings: SettingsSchema): string[
 	lines.push(`[${net}]`) // e.g. "[signet]", "[main]", etc
 
 	// p2p and tor binds
-	lines.push(`port=${process.env['P2P_PORT'] || '8333'}`)
-	lines.push(`bind=0.0.0.0:${process.env['P2P_PORT'] || '8333'}`)
+	const p2pPort = process.env['P2P_PORT'] || '8333'
+	const whitebindPort = process.env['P2P_WHITEBIND_PORT']
+	lines.push(`port=${p2pPort}`)
+	lines.push(`bind=0.0.0.0:${p2pPort}`)
+	if (whitebindPort) {
+		// Additional inbound P2P listener granting whitelisted permissions (whitebind). Intended for trusted internal apps; We do not publish externally.
+		lines.push(`whitebind=0.0.0.0:${whitebindPort}`)
+	}
 	lines.push(`bind=${process.env['BITCOIND_IP']}:${process.env['TOR_PORT'] || '8334'}=onion`)
 
 	// rpc binds
@@ -240,7 +238,6 @@ function generateConfLines(settings: SettingsSchema): string[] {
 	lines = handlePruneConversion(lines, settings)
 
 	// append lines that we always want to be present
-	lines = appendPeerWhitelist(lines)
 	lines = appendRpcAllowIps(lines)
 	lines = appendZmqPubs(lines)
 	lines = appendRpcAuth(lines)

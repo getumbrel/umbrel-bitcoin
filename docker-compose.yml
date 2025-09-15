@@ -58,8 +58,9 @@ services:
       BITCOIND_EXTRA_ARGS: '-deprecatedrpc=create_bdb' # used to pass extra startup flags to bitcoind
 
       # BITCOIND CONF FILE SETTINGS
-      APPS_SUBNET: '10.21.0.0/16' # used to whitelist local apps as both peers (whitelist) and rpc connections (rpcallowip)
+      APPS_SUBNET: '10.21.0.0/16' # used for rpcallowip
       P2P_PORT: 8333 # port, bind (also used for connect details)
+      P2P_WHITEBIND_PORT: 8335 # Additional inbound P2P listener granting whitelisted permissions (whitebind) to this port; for trusted internal apps only; do not publish externally
       RPC_PORT: 8332 # rpcport (also used for rpc client and connect details)
       TOR_PORT: 8334 # bind=onion
       ZMQ_RAWBLOCK_PORT: 28332 # zmqpubrawblock
