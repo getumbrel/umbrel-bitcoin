@@ -14,7 +14,7 @@
 ###########################################
 # Bitcoind binaries - published by Umbrel
 ###########################################
-FROM ghcr.io/getumbrel/docker-bitcoind:v29.0 AS bitcoind
+FROM ghcr.io/getumbrel/docker-bitcoind:v29.1 AS bitcoind
 
 ##########################################################
 # Dependencies layer — install every workspace deps
