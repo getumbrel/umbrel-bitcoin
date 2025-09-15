@@ -74,7 +74,8 @@ export class BitcoindManager {
 		// This allows us to add extra flags in the app store compose file without changing this codebase
 		const envArgs = (process.env['BITCOIND_EXTRA_ARGS'] ?? '')
 			.trim()
-			.split(/\s+/) // splits on spaces, tabs, or newlines
+			.split(',') // splits on commas to allow spaces in arguments
+			.map(arg => arg.trim()) // trim whitespace from each argument
 			.filter(Boolean) // removes empty strings
 
 		this.extraArgs = [
