@@ -118,11 +118,11 @@ function generateBaseConfLines(settings: SettingsSchema): string[] {
 
 // HANDLERS FOR SPECIFIC SETTINGS
 
-// If "torProxyForClearnet" is true, set proxy=<tor-proxy-ip>:<tor-proxy-port>
+// If "proxy" is true, set proxy=<tor-proxy-ip>:<tor-proxy-port>
 function handleTorProxy(lines: string[], settings: SettingsSchema): string[] {
 	// Remove any existing "proxy=" lines first
 	const withoutProxy = lines.filter((line) => !line.startsWith('proxy='))
-	if (settings['torProxyForClearnet']) {
+	if (settings['proxy']) {
 		withoutProxy.push(`proxy=${process.env['TOR_HOST']}:${process.env['TOR_SOCKS_PORT']}`)
 	}
 	return withoutProxy
