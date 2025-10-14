@@ -166,6 +166,25 @@ function handlePruneConversion(lines: string[], settings: SettingsSchema): strin
 	return lines
 }
 
+// Converts fee rates from sat/vB (UI and settings.json) to BTC/kvB (bitcoin.conf)
+function handleFeeRateConversion(lines: string[], settings: SettingsSchema): string[] {
+	const convertSatPerVbToBtcPerKb = (satPerVb: number): string => (satPerVb * 1e-5).toFixed(8)
+
+	const updatedLines = lines.filter((l) => !l.startsWith('minrelaytxfee=') && !l.startsWith('blockmintxfee='))
+
+	if (typeof settings['minrelaytxfee'] === 'number') {
+		const btcPerKb = convertSatPerVbToBtcPerKb(settings['minrelaytxfee'])
+		updatedLines.push(`minrelaytxfee=${btcPerKb}`)
+	}
+
+	if (typeof settings['blockmintxfee'] === 'number') {
+		const btcPerKb = convertSatPerVbToBtcPerKb(settings['blockmintxfee'])
+		updatedLines.push(`blockmintxfee=${btcPerKb}`)
+	}
+
+	return updatedLines
+}
+
 // HANDLERS FOR LINES WE ALWAYS ADD TO umbrel-bitcoin.conf
 
 function appendRpcAuth(lines: string[]): string[] {
@@ -235,7 +254,10 @@ function generateConfLines(settings: SettingsSchema): string[] {
 	lines = handleTorProxy(lines, settings)
 	lines = handleTor(lines, settings)
 	lines = handleI2P(lines, settings)
+
+	// apply unit conversions (we use different units in the UI and settings.json than what bitcoin.conf expects for certain settings)
 	lines = handlePruneConversion(lines, settings)
+	lines = handleFeeRateConversion(lines, settings)
 
 	// append lines that we always want to be present
 	lines = appendRpcAllowIps(lines)

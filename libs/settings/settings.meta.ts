@@ -334,6 +334,41 @@ export const settingsMetadata = {
 		unit: 'MB',
 	},
 
+	// Fee policy settings (rates shown as sat/vB; converted to BTC/kvB when writing bitcoin.conf)
+	blockmintxfee: {
+		tab: 'optimization',
+		kind: 'number',
+		label: 'Minimum Transaction Fee for Block Templates',
+		bitcoinLabel: 'blockmintxfee',
+		description:
+			'Set the lowest fee rate for transactions to be included in block creation. Transactions below this threshold will not be considered when your node is constructing a block template (e.g., used by miners to filter transactions by fee rate).',
+		// Default based on Bitcoin Core v30 help: ~0.001 sat/vB
+		default: 0.001,
+		min: 0,
+		// Max derived from Core MoneyRange(MAX_MONEY): 21,000,000 BTC/kvB → 2_100_000_000_000 sat/vB
+		// Core rejects out-of-range values (errors on startup) and does not clamp.
+		max: 2_100_000_000_000,
+		step: 0.001,
+		unit: 'sat/vB',
+	},
+
+	minrelaytxfee: {
+		tab: 'optimization',
+		kind: 'number',
+		label: 'Minimum Transaction Fee to Relay',
+		bitcoinLabel: 'minrelaytxfee',
+		description:
+			'Sets the minimum fee rate your node will accept for relaying, mining, transaction creation, and mempool admission. Transactions below this threshold will be neither relayed nor accepted into your mempool.',
+		// Default based on Bitcoin Core v30 help: ~0.1 sat/vB
+		default: 0.1,
+		min: 0,
+		// Max derived from Core MoneyRange(MAX_MONEY): 21,000,000 BTC/kvB → 2_100_000_000_000 sat/vB
+		// Core rejects out-of-range values (errors on startup) and does not clamp.
+		max: 2_100_000_000_000,
+		step: 0.001,
+		unit: 'sat/vB',
+	},
+
 	mempoolexpiry: {
 		tab: 'optimization',
 		kind: 'number',

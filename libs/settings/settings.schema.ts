@@ -15,9 +15,13 @@ for (const key of Object.keys(settingsMetadata) as Array<keyof typeof settingsMe
 	switch (meta.kind) {
 		// numbers (e.g., dbcache)
 		case 'number': {
-			let schema = z
-				.number({invalid_type_error: `${meta.bitcoinLabel} must be a number`})
-				.int(`${meta.label} must be an integer`)
+			let schema = z.number({invalid_type_error: `${meta.bitcoinLabel} must be a number`})
+
+			// Enforce integer only when step implies integer inputs (default or integer step)
+			const stepImpliesInteger = meta.step === undefined || Number.isInteger(meta.step)
+			if (stepImpliesInteger) {
+				schema = schema.int(`${meta.label} must be an integer`)
+			}
 
 			if (meta.min !== undefined) {
 				schema = schema.min(meta.min, {
