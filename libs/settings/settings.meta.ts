@@ -306,7 +306,12 @@ export const settingsMetadata = {
 		bitcoinLabel: 'datacarriersize',
 		description: 'Set the maximum size of the data in OP_RETURN outputs (in bytes) that your node will relay.',
 		subDescription: 'Note: datacarrier must be enabled for this setting to take effect.',
-		default: 83,
+		// Bitcoin Core v30 default changed from 83 to 100_000.
+		// We never overwrite a users saved value, so only fresh installs will get initially set to the new default.
+		default: 100_000,
+		min: 0,
+		max: 100_000,
+		unit: 'bytes',
 	},
 
 	permitbaremultisig: {
