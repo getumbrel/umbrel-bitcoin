@@ -386,7 +386,7 @@ export const settingsMetadata = {
 		// No min or max in Core, but we should set a min here to avoid the user breaking the UI which relies on RPC calls to show data
 		min: 1,
 		default: 128,
-		unit: 'threads',
+		unit: 'requests',
 	},
 
 	/* ===== Network tab ===== */
