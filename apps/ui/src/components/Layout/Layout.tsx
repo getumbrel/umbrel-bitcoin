@@ -5,6 +5,7 @@ import Header from './Header'
 import Dock from './Dock'
 import Background from './Background'
 
+import {cn} from '@/lib/utils'
 import {usePrefetchInsights} from '@/hooks/usePrefetchInsights'
 import {useBitcoindExitSocket} from '@/hooks/useBitcoindExitSocket'
 
@@ -51,9 +52,13 @@ export function Layout() {
 				{/* TODO: implement a scroll fade */}
 				<main
 					ref={mainRef}
-					className={`flex-1 min-h-0 overscroll-contain pb-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${
-						isSettingsPage ? 'overflow-hidden' : 'overflow-y-auto'
-					}`}
+					className={cn(
+						// Base scroll container styles; visually hide scrollbars
+						// Reserve bottom space for the floating Dock (including safe-area for iOS bars/notches)
+						'flex-1 min-h-0 overscroll-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden pb-[calc(var(--dock-clearance)+env(safe-area-inset-bottom))]',
+						// Settings page is non-scrollable (content handles its own overflow), while the other pages scroll
+						isSettingsPage ? 'overflow-hidden' : 'overflow-y-auto',
+					)}
 				>
 					{/* Inner column has a max width of 768px to float within the viewport */}
 					<div className='w-full max-w-screen-md mx-auto'>

@@ -55,6 +55,8 @@ body {
 
 :root {
 	--radius: 0.625rem;
+	/* We reserve bottom space so content doesn't sit under the floating Dock. */
+	--dock-clearance: 80px;
 	--background: oklch(1 0 0);
 	--foreground: oklch(0.145 0 0);
 	--card: oklch(1 0 0);
