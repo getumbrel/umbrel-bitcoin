@@ -1,6 +1,6 @@
 import {motion, AnimatePresence} from 'framer-motion'
 import {Info as InfoIcon} from 'lucide-react'
-import prettyMs from 'pretty-ms'
+import {formatUptimeMs} from '@/lib/formatUptime'
 import {useState, useEffect} from 'react'
 
 import {Card, CardContent} from '@/components/ui/card'
@@ -43,10 +43,7 @@ export default function HomePage() {
 	}, [])
 
 	const running = !isError && status?.running === true
-	const uptime =
-		running && status?.startedAt
-			? prettyMs(Date.now() - new Date(status.startedAt).getTime(), {verbose: true, unitCount: 1})
-			: null
+	const uptime = running && status?.startedAt ? formatUptimeMs(Date.now() - new Date(status.startedAt).getTime()) : null
 
 	const percentSynced = calcSyncPercent(syncStatus)
 	const stage = syncStage(syncStatus)
