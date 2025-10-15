@@ -47,7 +47,6 @@ interface MultiOption extends BaseOption {
 
 export type Option = NumberOption | BooleanOption | SelectOption | MultiOption
 
-// TODO: add in any requested config options
 // TypeScript infers the type of the object literals below based on the `kind` property.
 export const settingsMetadata = {
 	/* ===== Peers tab ===== */
@@ -102,6 +101,23 @@ export const settingsMetadata = {
 		default: [],
 		requireAtLeastOne: false,
 	},
+
+	// -natpmp is enabled by default as of Bitcoin Core v30.
+	// This means that nodes with -listen enabled but running behind a firewall, such as a local network router, will be reachable if the firewall/router supports any of the PCP or NAT-PMP protocols (without needing to port forward).
+	// NAT‑PMP uses UDP 5351 to the LAN router; but we run in Docker bridge mode so these packets hit the Docker bridge/NAT gateway, not the router, so no mapping is created from inside the container.
+	// TODO: If umbrelOS adds a way to keep bridge mode but proxy required packets, we can expose this setting (default to `false`) so users with PCP/NAT‑PMP routers can opt in and not have to manually port forward.
+	// natpmp: {
+	// 	tab: 'peers',
+	// 	kind: 'toggle',
+	// 	label: 'Enable NAT-PMP Port Mapping',
+	// 	bitcoinLabel: 'natpmp',
+	// 	description:
+	// 		'Automatically request port forwarding from your router using PCP or NAT-PMP for inbound P2P connections on clearnet. Requires a PCP/NAT-PMP capable router and may not work on all networks. Requires a NAT-PMP capable router and may not work on all networks.',
+	// 	subDescription:
+	// 		'Note: This does not affect Tor or I2P. If disabled, you can still forward ports manually on your router.',
+	// 	// Bitcoin Core default is false
+	// 	default: false,
+	// },
 
 	peerblockfilters: {
 		tab: 'peers',
