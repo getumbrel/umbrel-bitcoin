@@ -1,5 +1,6 @@
 import {Outlet, useLocation} from 'react-router-dom'
 import {useEffect, useRef} from 'react'
+import {motion, useScroll, useTransform} from 'framer-motion'
 
 import Header from './Header'
 import Dock from './Dock'
@@ -31,6 +32,10 @@ export function Layout() {
 	// Listen for bitcoind exit events so we can show a toast notification if it crashes / has crashed
 	useBitcoindExitSocket()
 
+	// Map scroll progress of main to a simple fade opacity (0 -> 1 over first ~3% scroll)
+	const {scrollYProgress} = useScroll({container: mainRef})
+	const fadeOpacity = useTransform(scrollYProgress, [0, 0.03], [0, 1])
+
 	return (
 		<>
 			{/* Moving gradient background. This is fixed to the full-viewport and never scrolls */}
@@ -49,7 +54,6 @@ export function Layout() {
 
 				{/* Main content below the header */}
 				{/* The outer scroll container is the full width of the viewport so that scrolling can be triggered outside of the inner floating column */}
-				{/* TODO: implement a scroll fade */}
 				<main
 					ref={mainRef}
 					className={cn(
@@ -60,11 +64,23 @@ export function Layout() {
 						isSettingsPage ? 'overflow-hidden' : 'overflow-y-auto',
 					)}
 				>
+					{/* Top fade right below the header - only appears when scrolled */}
+					<motion.div
+						className='pointer-events-none sticky top-0 h-12 -mt-12 z-10'
+						style={{background: 'linear-gradient(to bottom, #000 0%, transparent 100%)', opacity: fadeOpacity}}
+					/>
+
 					{/* Inner column has a max width of 768px to float within the viewport */}
 					<div className='w-full max-w-screen-md mx-auto'>
 						<Outlet />
 					</div>
 				</main>
+
+				{/* Bottom fade overlay fixed to viewport bottom (Dock sits over it)*/}
+				<div
+					className='pointer-events-none fixed inset-x-0 bottom-0 h-12 z-20'
+					style={{background: 'linear-gradient(to top, #000 0%, transparent 100%)'}}
+				/>
 			</div>
 		</>
 	)
