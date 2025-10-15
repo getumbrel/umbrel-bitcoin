@@ -195,36 +195,13 @@ function FieldRenderer({name, form}: {name: SettingName; form: ReturnType<typeof
 
 					return (
 						<div className='flex flex-col gap-1'>
-							<div className='flex flex-row justify-between items-center'>
-								<div>
-									<label className='text-[14px] font-[400] text-white'>{meta.label}</label>
-									<div className='flex flex-wrap gap-1 my-1'>
-										{meta.bitcoinLabel.split(',').map((label, index) => (
-											<span key={index} className='text-[12px] font-[400] text-white/50 bg-[#2C2C2C] px-1 rounded-sm'>
-												{label.trim()}
-											</span>
-										))}
-									</div>
-								</div>
-								{/*  one Toggle per option  */}
-								<div className='relative flex flex-col gap-2 items-end'>
-									{/* validation error - TODO: move this to appropriate area */}
-									{fieldState.error && (
-										<p className='absolute top-20 right-0 text-xs text-red-400 text-right whitespace-nowrap'>
-											{fieldState.error.message}
-										</p>
-									)}
-
-									{meta.options.map((opt) => (
-										<div key={opt.value} className='flex items-center gap-2'>
-											<span className='text-[12px] font-[400] text-white/60'>{opt.label}</span>
-											<Toggle
-												name={`${name}-${opt.value}`}
-												checked={isChecked(opt.value)}
-												onToggle={() => toggleValue(opt.value)}
-												disabled={disabled}
-											/>
-										</div>
+							<div>
+								<label className='text-[14px] font-[400] text-white'>{meta.label}</label>
+								<div className='flex flex-wrap gap-1 my-1'>
+									{meta.bitcoinLabel.split(',').map((label, index) => (
+										<span key={index} className='text-[12px] font-[400] text-white/50 bg-[#2C2C2C] px-1 rounded-sm'>
+											{label.trim()}
+										</span>
 									))}
 								</div>
 							</div>
@@ -232,6 +209,21 @@ function FieldRenderer({name, form}: {name: SettingName; form: ReturnType<typeof
 							<p className='text-[12px] font-[400] text-white/50 mt-2'>
 								default: {meta.default.length ? meta.default.join(', ') : 'none'}
 							</p>
+							{/*  one Toggle per option, rendered below all text and left-aligned in a row */}
+							<div className='mt-2 flex flex-row flex-wrap items-center gap-4'>
+								{meta.options.map((opt) => (
+									<div key={opt.value} className='flex items-center gap-2'>
+										<span className='text-[12px] font-[400] text-white/60'>{opt.label}</span>
+										<Toggle
+											name={`${name}-${opt.value}`}
+											checked={isChecked(opt.value)}
+											onToggle={() => toggleValue(opt.value)}
+											disabled={disabled}
+										/>
+									</div>
+								))}
+							</div>
+							{fieldState.error && <p className='text-xs text-red-400'>{fieldState.error.message}</p>}
 						</div>
 					)
 				}}
