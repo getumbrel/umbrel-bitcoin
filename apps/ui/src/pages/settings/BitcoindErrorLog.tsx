@@ -15,7 +15,11 @@ import {Button} from '@/components/ui/button'
 const ERROR_REGEX = /(error|fatal|panic|disk full|corrupt|invalid)/i
 const WARN_REGEX = /(warn)/i
 
-export default function BitcoindErrorLog() {
+export default function BitcoindErrorLog({
+	settingsViewportRef,
+}: {
+	settingsViewportRef?: React.RefObject<HTMLDivElement | null>
+}) {
 	const {data: exitInfo} = useBitcoindExitInfo()
 	const [errorsOnly, setErrorsOnly] = useState(false)
 	const fadeScrollRef = useRef<HTMLDivElement | null>(null)
@@ -37,22 +41,14 @@ export default function BitcoindErrorLog() {
 	// Scroll component into view when advanced tab is active and component is rendered
 	useEffect(() => {
 		const currentTab = searchParams.get('tab') || 'peers'
-		if (currentTab === 'advanced' && exitInfo && componentRef.current) {
-			// Small delay to ensure the component is fully rendered after the AnimatePresence animation
-			const timer = setTimeout(() => {
-				componentRef.current?.scrollIntoView({
-					behavior: 'smooth',
-					block: 'center',
-				})
-			}, 300) // Slightly longer than the animation duration
-
-			return () => clearTimeout(timer)
-		}
+		if (currentTab !== 'advanced' || !exitInfo || !componentRef.current) return
 	}, [searchParams, exitInfo])
 
 	// Filter for showing only error lines
-	const visibleLines =
-		errorsOnly && exitInfo ? exitInfo.logTail.filter((line) => ERROR_REGEX.test(line)) : exitInfo?.logTail || []
+	const visibleLines: string[] =
+		errorsOnly && exitInfo
+			? exitInfo.logTail.filter((line: string) => ERROR_REGEX.test(line))
+			: (exitInfo?.logTail ?? [])
 
 	// Download the log as a .txt file without navigating away from the page
 	const downloadLog = () => {
@@ -77,6 +73,29 @@ export default function BitcoindErrorLog() {
 					animate={{opacity: 1, y: 0}}
 					exit={{opacity: 0, y: -10}}
 					transition={{duration: 0.25}}
+					onAnimationComplete={() => {
+						// After the enter animation finishes, center this error card inside the
+						// scrollable settings viewport so it's immediately visible to the user.
+						const settingsViewportElement = settingsViewportRef?.current
+						const errorLogElement = componentRef.current
+						if (!settingsViewportElement || !errorLogElement) return
+						const settingsViewportRect = settingsViewportElement.getBoundingClientRect()
+						const errorLogRect = errorLogElement.getBoundingClientRect()
+						// Compute the element's top relative to the viewport's scroll origin
+						// (accounting for current scroll position).
+						const errorLogTopWithinViewport =
+							errorLogRect.top - settingsViewportRect.top + settingsViewportElement.scrollTop
+						// Target a scrollTop that centers the element, and clamp it within
+						// [0, maxScrollable] to avoid overscrolling.
+						const scrollTopTarget = Math.max(
+							0,
+							Math.min(
+								errorLogTopWithinViewport - settingsViewportElement.clientHeight / 2 + errorLogElement.clientHeight / 2,
+								settingsViewportElement.scrollHeight - settingsViewportElement.clientHeight,
+							),
+						)
+						settingsViewportElement.scrollTo({top: scrollTopTarget, behavior: 'smooth'})
+					}}
 					className='mb-6 rounded-lg border border-red-900 bg-red-950/80 p-4'
 				>
 					<p className='mb-2 text-sm text-red-200'>
@@ -112,7 +131,7 @@ export default function BitcoindErrorLog() {
 					<label className='flex items-center gap-1 text-xs text-white/80 mt-2'>
 						<Checkbox
 							checked={errorsOnly}
-							onCheckedChange={(checked) => setErrorsOnly(checked === true)}
+							onCheckedChange={(checked: boolean | 'indeterminate') => setErrorsOnly(checked === true)}
 							className='border-white/50 data-[state=checked]:bg-red-600'
 						/>
 						Show errors only

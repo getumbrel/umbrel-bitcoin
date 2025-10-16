@@ -12,9 +12,12 @@ import {Root as ScrollRoot, Viewport as ScrollViewport, Corner as ScrollCorner} 
 import {cn} from '@/lib/utils'
 import {SexyScrollBar} from '@/components/shared/SexyScrollBar'
 
-type Props = React.ComponentProps<typeof ScrollRoot>
+type Props = React.ComponentProps<typeof ScrollRoot> & {
+	// Optional ref to the inner viewport element so parents can control scrolling
+	viewportRef?: React.Ref<HTMLDivElement>
+}
 
-export default function FadeScrollArea({className, children, ...props}: Props) {
+export default function FadeScrollArea({className, children, viewportRef: externalViewportRef, ...props}: Props) {
 	const viewportRef = React.useRef<HTMLDivElement | null>(null)
 	const contentRef = React.useRef<HTMLDivElement | null>(null)
 	const [showTop, setShowTop] = React.useState(false)
@@ -49,7 +52,14 @@ export default function FadeScrollArea({className, children, ...props}: Props) {
 	return (
 		<ScrollRoot data-slot='scroll-area' className={cn('relative', className)} {...props}>
 			<ScrollViewport
-				ref={viewportRef}
+				ref={(el) => {
+					viewportRef.current = el
+					if (typeof externalViewportRef === 'function') {
+						externalViewportRef(el)
+					} else if (externalViewportRef && 'current' in (externalViewportRef as any)) {
+						;(externalViewportRef as React.MutableRefObject<HTMLDivElement | null>).current = el
+					}
+				}}
 				data-slot='scroll-area-viewport'
 				className='size-full rounded-[inherit] transition-[color,box-shadow]
                    outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50
