@@ -66,8 +66,16 @@ export default function LiveGlobe({width = 650, height = 650}: {width?: number; 
 function LiveGlobeWebGL({width = 650, height = 650}: {width?: number; height?: number}) {
 	const [countries, setCountries] = useState({features: []})
 	const [isReady, setIsReady] = useState(false)
+	const [shouldInitialize, setShouldInitialize] = useState(false)
 	const globeRef = useRef<any>(null)
 	const animatedSpheresRef = useRef<any[]>([])
+
+	// Defer initialization very briefly so the Dock animation completes before heavy WebGL work
+	// The Globe's WebGL initialization can cause main-thread jank if it starts during the dock pill transition (dock animation looks janky).
+	useEffect(() => {
+		const timer = setTimeout(() => setShouldInitialize(true), 200)
+		return () => clearTimeout(timer)
+	}, [])
 
 	// Reusable geometries and materials for better performance
 	const sphereGeometryRef = useRef<THREE.SphereGeometry>(new THREE.SphereGeometry(TX_SPHERE_RADIUS, 8, 6))
@@ -366,6 +374,11 @@ function LiveGlobeWebGL({width = 650, height = 650}: {width?: number; height?: n
 		const timer = setTimeout(() => setIsReady(true), 1000)
 		return () => clearTimeout(timer)
 	}, [])
+
+	// Don't render until initialization is deferred
+	if (!shouldInitialize) {
+		return <div style={{width, height}} />
+	}
 
 	return (
 		<div className={`transition-opacity duration-500 ease-in-out ${isReady ? 'opacity-100' : 'opacity-0'}`}>
