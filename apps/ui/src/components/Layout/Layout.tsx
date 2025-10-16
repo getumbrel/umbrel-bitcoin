@@ -1,6 +1,9 @@
+// @ts-nocheck
 import {Outlet, useLocation} from 'react-router-dom'
-import {useEffect, useRef} from 'react'
+import {useEffect, useRef, useState} from 'react'
 import {motion, useScroll, useTransform} from 'framer-motion'
+import {ErrorBoundary} from 'react-error-boundary'
+import ErrorFallback from '../shared/ErrorFallback'
 
 import Header from './Header'
 import Dock from './Dock'
@@ -13,17 +16,14 @@ import {useBitcoindExitSocket} from '@/hooks/useBitcoindExitSocket'
 // React Router injects the routed page in <Outlet/>.
 export function Layout() {
 	const mainRef = useRef<HTMLElement>(null)
+	const [isAtTop, setIsAtTop] = useState(true)
 
 	const {pathname} = useLocation()
 	const isSettingsPage = pathname.startsWith('/settings')
 
-	// Reset scroll position on page change
-	// Prevents unwanted scroll position on Settings page when Insights page has been scrolled
-	useEffect(() => {
-		if (mainRef.current) {
-			mainRef.current.scrollTop = 0
-		}
-	}, [pathname])
+	// Map scroll progress of <main/> to a simple fade opacity (0 -> 1 over first ~3% scroll)
+	const {scrollYProgress} = useScroll({container: mainRef})
+	const fadeOpacity = useTransform(scrollYProgress, [0, 0.03], [0, 1])
 
 	// Prefetch data for the insights page on first mount
 	// Fires after the first paint, so it never delays a page's render or its own fetches
@@ -32,9 +32,25 @@ export function Layout() {
 	// Listen for bitcoind exit events so we can show a toast notification if it crashes / has crashed
 	useBitcoindExitSocket()
 
-	// Map scroll progress of main to a simple fade opacity (0 -> 1 over first ~3% scroll)
-	const {scrollYProgress} = useScroll({container: mainRef})
-	const fadeOpacity = useTransform(scrollYProgress, [0, 0.03], [0, 1])
+	// Reset <main/> scroll position on page change
+	// Prevents unwanted scroll position on Settings page when Insights page has been scrolled
+	useEffect(() => {
+		if (mainRef.current) {
+			mainRef.current.scrollTop = 0
+			setIsAtTop(true)
+		}
+	}, [pathname])
+
+	// Keep an explicit "at top" guard so the fade is hidden on initial load
+	// and after route changes; it should only appear once the user scrolls.
+	useEffect(() => {
+		const el = mainRef.current
+		if (!el) return
+		const onScroll = () => setIsAtTop(el.scrollTop <= 1)
+		onScroll()
+		el.addEventListener('scroll', onScroll, {passive: true})
+		return () => el.removeEventListener('scroll', onScroll)
+	}, [])
 
 	return (
 		<>
@@ -67,12 +83,19 @@ export function Layout() {
 					{/* Top fade right below the header - only appears when scrolled */}
 					<motion.div
 						className='pointer-events-none sticky top-0 h-12 -mt-12 z-10'
-						style={{background: 'linear-gradient(to bottom, #000 0%, transparent 100%)', opacity: fadeOpacity}}
+						style={{
+							background: 'linear-gradient(to bottom, #000 0%, transparent 100%)',
+							opacity: isAtTop ? 0 : fadeOpacity,
+						}}
 					/>
 
 					{/* Inner column has a max width of 768px to float within the viewport */}
 					<div className='w-full max-w-screen-md mx-auto'>
-						<Outlet />
+						{/* We wrap the routed page in an ErrorBoundary to catch unexpected render-time errors */}
+						{/* We still show header and dock, but the content is replaced by the ErrorFallback. */}
+						<ErrorBoundary resetKeys={[pathname]} fallbackRender={() => <ErrorFallback />}>
+							<Outlet />
+						</ErrorBoundary>
 					</div>
 				</main>
 

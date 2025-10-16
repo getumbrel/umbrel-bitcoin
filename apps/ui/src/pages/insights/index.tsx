@@ -1,5 +1,4 @@
 // TODO: make sure we handle pruned nodes properly here
-// TODO: make charts responsive
 import BlockRewardsChart from './BlockRewardsChart'
 import PeersTable from './PeersTable'
 import BlockSizeChart from './BlockSizeChart'

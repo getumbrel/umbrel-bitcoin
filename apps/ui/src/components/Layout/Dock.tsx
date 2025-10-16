@@ -15,7 +15,15 @@ import {cn} from '@/lib/utils'
 
 export default function Dock({className}: {className?: string}) {
 	const {pathname} = useLocation()
-	const activeTab = pathname.startsWith('/insights') ? 'insights' : pathname.startsWith('/settings') ? 'settings' : '/'
+	const activeTab =
+		pathname === '/'
+			? '/'
+			: pathname.startsWith('/insights')
+				? 'insights'
+				: pathname.startsWith('/settings')
+					? 'settings'
+					: // On 404 routes we don't highlight any tab
+						'none'
 
 	return (
 		<Tabs value={activeTab} className={cn('w-max', className)}>
