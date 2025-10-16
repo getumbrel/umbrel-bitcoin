@@ -308,6 +308,9 @@ export default function SettingsCard() {
 		shouldUnregister: false,
 	})
 
+	// Ref to the main settings content scroll viewport
+	const settingsViewportRef = useRef<HTMLDivElement | null>(null)
+
 	// reset form with initial settings when they are available
 	useEffect(() => {
 		if (initialSettings) form.reset(initialSettings)
@@ -478,6 +481,9 @@ export default function SettingsCard() {
 									// We use a key to reset scroll position when switching tabs or search
 									key={isSearching ? 'search' : currentTab}
 									className='h-[calc(100dvh-425px)] md:h-[calc(100dvh-390px)] [--fade-top:hsla(0,0%,6%,1)][--fade-bottom:hsla(0,0%,3%,1)]'
+									viewportRef={(el) => {
+										settingsViewportRef.current = el
+									}}
 								>
 									{isSearching ? (
 										matchingFields.length === 0 ? (
@@ -515,7 +521,7 @@ export default function SettingsCard() {
 												{/* TODO: determine where to place the log */}
 												<DangerZoneAlert />
 												<CustomConfigEditor />
-												<BitcoindErrorLog />
+												<BitcoindErrorLog settingsViewportRef={settingsViewportRef} />
 
 												{/* Currently we don't have anything from settings.meta.ts that shows up in advanced. */}
 												<SettingsTabContent tab='advanced' form={form} />
