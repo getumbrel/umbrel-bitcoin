@@ -15,12 +15,15 @@ import {cn} from '@/lib/utils'
 
 export default function Dock({className}: {className?: string}) {
 	const {pathname} = useLocation()
+	// We don't have subroutes, so exact matching covers all valid paths
+	// and allows the Dock to not show a selected tab on 404 routes that start with a valid route (e.g. '/insightss')
+	// Query parameters (?tab=advanced) don't affect pathname, so this is safe
 	const activeTab =
 		pathname === '/'
 			? '/'
-			: pathname.startsWith('/insights')
+			: pathname === '/insights'
 				? 'insights'
-				: pathname.startsWith('/settings')
+				: pathname === '/settings'
 					? 'settings'
 					: // On 404 routes we don't highlight any tab
 						'none'
