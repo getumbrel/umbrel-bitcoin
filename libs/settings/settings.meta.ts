@@ -23,6 +23,8 @@ interface NumberOption extends BaseOption {
 	step?: number
 	default: number
 	unit?: string
+	disabledWhen?: Record<string, (v: unknown) => boolean>
+	disabledMessage?: string
 }
 
 interface BooleanOption extends BaseOption {
@@ -304,9 +306,13 @@ export const settingsMetadata = {
 		kind: 'number',
 		label: 'Max Allowed Size of Arbitrary Data in Transactions',
 		bitcoinLabel: 'datacarriersize',
-		description: 'Set the maximum size of the data in OP_RETURN outputs (in bytes) that your node will relay.',
-		subDescription: 'Note: datacarrier must be enabled for this setting to take effect.',
+		description: 'Set the maximum size of the data in OP_RETURN outputs (in bytes) that your node will relay. Only values 0, 42, or 83 bytes are allowed.',
+		subDescription: '⚠ This setting is automatically set to 0 when datacarrier is disabled.',
 		default: 83,
+		disabledWhen: {
+			datacarrier: (v: unknown) => v === false,
+		},
+		disabledMessage: 'automatically set to 0 when datacarrier is disabled',
 	},
 
 	permitbaremultisig: {
