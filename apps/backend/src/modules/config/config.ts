@@ -41,6 +41,9 @@ function applyDerivedSettings(settings: SettingsSchema): SettingsSchema {
 	// If prune > 0 -> txindex must be off
 	if (newSettings['prune'] > 0) newSettings['txindex'] = false
 
+	// If datacarrier is off -> datacarriersize must be 0
+	if (!newSettings['datacarrier']) newSettings['datacarriersize'] = 0
+
 	// If proxy is on, but onlynet doesn't include clearnet and tor -> disable proxy
 	if (
 		newSettings['proxy'] &&

@@ -56,5 +56,15 @@ for (const key of Object.keys(settingsMetadata) as Array<keyof typeof settingsMe
 	}
 }
 
+// Custom validation: restrict datacarriersize to only 0, 42, or 83 bytes
+if (schemaMap.datacarriersize) {
+	schemaMap.datacarriersize = (schemaMap.datacarriersize as z.ZodNumber).refine(
+		(val: number) => val === 0 || val === 42 || val === 83,
+		{
+			message: 'datacarriersize must be 0, 42, or 83 bytes',
+		}
+	)
+}
+
 export const settingsSchema = z.object(schemaMap as Record<string, z.ZodTypeAny>)
 export type SettingsSchema = z.infer<typeof settingsSchema>
