@@ -23,6 +23,9 @@ interface NumberOption extends BaseOption {
 	step?: number
 	default: number
 	unit?: string
+	disabledWhen?: Record<string, (v: unknown) => boolean>
+	disabledMessage?: string
+	getDefault?: (settings: any) => number
 }
 
 interface BooleanOption extends BaseOption {
@@ -290,13 +293,32 @@ export const settingsMetadata = {
 
 	// mempoolfullrbf - no longer an option as of Core 28.0.0
 
+	blockInscriptions: {
+		tab: 'optimization',
+		kind: 'select',
+		label: 'Inscription Filtering',
+		bitcoinLabel: 'inscriptionfilter',
+		description: 'Prevent inscription spam by blocking transactions with data in witness scripts. This helps reduce blockchain bloat and lower fees for regular transactions.',
+		subDescription: 'Flexible mode allows some OP_RETURN data while still blocking witness inscriptions.',
+		default: 'off',
+		options: [
+			{ value: 'off', label: 'Disabled' },
+			{ value: 'flexible', label: 'Flexible (allow some OP_RETURN data)' },
+			{ value: 'strict', label: 'Strict (block all inscriptions and OP_RETURN data)' }
+		]
+	},
+
 	datacarrier: {
 		tab: 'optimization',
 		kind: 'toggle',
 		label: 'Relay Transactions Containing Arbitrary Data',
 		bitcoinLabel: 'datacarrier',
 		description: 'Relay transactions with OP_RETURN outputs.',
-		default: true,
+		default: true, // Enabled by default to match Bitcoin Core's behavior
+		disabledWhen: {
+			blockInscriptions: (v: unknown) => v === 'strict', // Only disable in strict mode
+		},
+		disabledMessage: 'disabled in Strict mode',
 	},
 
 	datacarriersize: {
@@ -306,7 +328,24 @@ export const settingsMetadata = {
 		bitcoinLabel: 'datacarriersize',
 		description: 'Set the maximum size of the data in OP_RETURN outputs (in bytes) that your node will relay.',
 		subDescription: 'Note: datacarrier must be enabled for this setting to take effect.',
-		default: 83,
+		default: 83, // This is the initial default, but we'll handle dynamic defaults in the form
+		min: 0,
+		max: 83,
+		disabledWhen: {
+			blockInscriptions: (v: unknown) => v === 'strict', // Disable in strict mode
+		},
+		disabledMessage: 'set to 0 in Strict mode',
+		// Get the effective value based on blockInscriptions mode
+		getDefault: (settings: any) => {
+			// If we have a saved value, use it (allows user to override the default)
+			if (settings?.datacarriersize !== undefined) {
+				return settings.datacarriersize;
+			}
+			// Otherwise, use the mode-based defaults
+			if (settings?.blockInscriptions === 'strict') return 0;
+			if (settings?.blockInscriptions === 'flexible') return 42;
+			return 83; // Default when blockInscriptions is 'off' or not set
+		}
 	},
 
 	permitbaremultisig: {

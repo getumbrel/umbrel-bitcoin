@@ -49,6 +49,19 @@ function applyDerivedSettings(settings: SettingsSchema): SettingsSchema {
 		newSettings['proxy'] = false
 	}
 
+	// Set datacarriersize based on blockInscriptions mode
+	if (newSettings['blockInscriptions'] === 'strict') {
+		newSettings['datacarrier'] = false;
+		newSettings['datacarriersize'] = 0;
+	} else if (newSettings['blockInscriptions'] === 'flexible') {
+		newSettings['datacarrier'] = true;
+		newSettings['datacarriersize'] = 42;
+	} else {
+		// 'off' or any other value
+		newSettings['datacarrier'] = true;
+		newSettings['datacarriersize'] = 83;
+	}
+
 	return newSettings
 }
 
@@ -166,6 +179,30 @@ function handlePruneConversion(lines: string[], settings: SettingsSchema): strin
 	return lines
 }
 
+function handleInscriptionFiltering(lines: string[], settings: SettingsSchema): string[] {
+    // Remove any existing datacarrier and datacarriersize lines
+    lines = lines.filter((l) => !l.startsWith('datacarrier=') && !l.startsWith('datacarriersize='));
+
+    // Handle the three possible states
+    if (settings['blockInscriptions'] === 'off') {
+        // Disabled mode: Allow all OP_RETURN data (Bitcoin Core default)
+        lines.push('datacarrier=1');
+        // Always set to 83 in off mode, regardless of saved value
+        lines.push('datacarriersize=83');
+    } else if (settings['blockInscriptions'] === 'flexible') {
+        // Flexible mode: Allow some OP_RETURN data but block witness inscriptions
+        lines.push('datacarrier=1');
+        // Always set to 42 in flexible mode, regardless of saved value
+        lines.push('datacarriersize=42');
+    } else {
+        // Strict mode: Block all OP_RETURN data
+        lines.push('datacarrier=0');
+        lines.push('datacarriersize=0');
+    }
+
+    return lines;
+}
+
 // HANDLERS FOR LINES WE ALWAYS ADD TO umbrel-bitcoin.conf
 
 function appendRpcAuth(lines: string[]): string[] {
@@ -236,17 +273,18 @@ function generateConfLines(settings: SettingsSchema): string[] {
 	lines = handleTor(lines, settings)
 	lines = handleI2P(lines, settings)
 	lines = handlePruneConversion(lines, settings)
+	lines = handleInscriptionFiltering(lines, settings)
 
 	// append lines that we always want to be present
+	lines = appendRpcAuth(lines)
 	lines = appendRpcAllowIps(lines)
 	lines = appendZmqPubs(lines)
-	lines = appendRpcAuth(lines)
+
+	// Add network-specific settings (port, rpcport, etc.)
 	lines = appendNetworkStanza(lines, settings)
 
 	return lines
 }
-
-// Write out umbrel-bitcoin.conf atomically
 async function writeUmbrelConf(settings: SettingsSchema): Promise<void> {
 	const lines = generateConfLines(settings)
 

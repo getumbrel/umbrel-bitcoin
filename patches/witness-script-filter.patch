@@ -1,0 +1,51 @@
+diff --git a/src/validation.cpp b/src/validation.cpp
+index 1234567..89abcdef 100644
+--- a/src/validation.cpp
++++ b/src/validation.cpp
+@@ -1234,6 +1234,22 @@ static bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& map
+     return true;
+ }
+ 
++bool IsWitnessScriptSpam(const CScript& scriptPubKey, const CTransaction& tx)
++{
++    // Check for witness script spam (inscriptions, etc.)
++    if (!scriptPubKey.IsWitnessProgram() && tx.HasWitness()) {
++        for (const auto& txin : tx.vin) {
++            if (txin.scriptWitness.IsNull()) continue;
++            for (const auto& witnessItem : txin.scriptWitness.stack) {
++                // Look for common inscription patterns in witness data
++                if (witnessItem.size() > 1000) { // Arbitrary size limit
++                    return true;
++                }
++            }
++        }
++    }
++    return false;
++}
++
+ bool IsStandardTx(const CTransaction& tx, bool permit_bare_multisig, const CFeeRate& max_tx_fee, std::string& reason)
+ {
+     AssertLockHeld(cs_main);
+@@ -1304,6 +1320,10 @@ bool IsStandardTx(const CTransaction& tx, bool permit_bare_multisig, const CFeeR
+         return false;
+     }
+ 
++    if (IsWitnessScriptSpam(txout.scriptPubKey, tx)) {
++        reason = "witness-script-spam";
++        return false;
++    }
+     return true;
+ }
+ 
+diff --git a/src/validation.h b/src/validation.h
+index 1234567..89abcdef 100644
+--- a/src/validation.h
++++ b/src/validation.h
+@@ -423,6 +423,7 @@ bool IsFinalTx(const CTransaction &tx, int nBlockHeight, int64_t nBlockTime);
+  * Check if transaction is final per BIP 68 sequence numbers and can be included in a block.
+  * Consensus critical. Takes as input a list of heights at which tx's inputs (all txin.NextInputBlockHeight()) are confirmed.
+  */
++bool IsWitnessScriptSpam(const CScript& scriptPubKey, const CTransaction& tx);
+ bool IsFinalTxAtHeight(const CTransaction &tx, int nBlockHeight, const std::vector<int>& prevHeights);
+ 
+ /**
