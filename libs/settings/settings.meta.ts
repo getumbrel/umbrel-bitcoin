@@ -128,7 +128,7 @@ export const settingsMetadata = {
 		description:
 			'Store an index of compact block filters which allows faster wallet re-scanning. In order to serve compact block filters to peers, you must also enable Peer Block Filters above.',
 		subDescription:
-			'⚠ To use Block Filter Index with a pruned node, you must enable it when you start the Prune Old Blocks process under the Optimization category. If your node is already pruned and Block Filter Index is off, enabling it will prevent your node from starting. To fix this while keeping Block Filter Index on, you will need to either reindex your node or turn off Prune Old Blocks.',
+			'Enabling this will store additional data to speed up wallet operations and improve the performance of certain light wallet clients.',
 		// Bitcoind Core's default for this is false
 		default: true,
 	},
@@ -255,26 +255,6 @@ export const settingsMetadata = {
 		unit: 'MiB',
 	},
 
-	prune: {
-		tab: 'optimization',
-		kind: 'number',
-		label: 'Prune Old Blocks',
-		bitcoinLabel: 'prune',
-		description:
-			'Save storage space by pruning (deleting) old blocks and keeping only a limited copy of the blockchain. It may take some time for your node to become responsive after you turn on pruning.',
-		subDescription:
-			'⚠ txindex is incompatible with a pruned node. It will be automatically disabled when you save with pruning enabled. Note that some connected apps and services may not work with a pruned blockchain. If you turn off pruning after turning it on, you will need to redownload the entire blockchain.',
-		// bitcoind units are MiB, but we use GB here for UX
-		// 1 MiB = allow manual pruning via RPC, >=550 MiB =
-		// automatically prune block files to stay under the specified
-		// target size in MiB
-		// using GB and a step of 1 means users will never select between 1 MiB or <550 MiB behaviours described above
-		default: 0, // 0 disables pruning
-		step: 1,
-		min: 0,
-		unit: 'GB',
-	},
-
 	// TODO: should we delete the txindex dir when this is disabled?
 	txindex: {
 		tab: 'optimization',
@@ -283,15 +263,10 @@ export const settingsMetadata = {
 		bitcoinLabel: 'txindex',
 		description: 'Enable transaction indexing to speed up transaction lookups.',
 		subDescription:
-			'⚠ Many connected apps and services will not work without txindex enabled, so make sure you understand the implications before disabling it. txindex is automatically disabled when pruning is enabled.',
+			'⚠ Many connected apps and services will not work without txindex enabled, so make sure you understand the implications before disabling it.',
 		// bitcoin core default is false, but we our default is true
 		default: true,
-		/** UI hint: disable when prune > 0 */
-		disabledWhen: {prune: (v: unknown) => (v as number) > 0},
-		disabledMessage: 'automatically disabled when pruning is enabled',
 	},
-
-	// mempoolfullrbf - no longer an option as of Core 28.0.0
 
 	blockInscriptions: {
 		tab: 'optimization',

@@ -38,9 +38,6 @@ function applyDerivedSettings(settings: SettingsSchema): SettingsSchema {
 	// If Peer Block Filters is on -> Block Filter Index must also be on
 	if (newSettings['peerblockfilters']) newSettings['blockfilterindex'] = true
 
-	// If prune > 0 -> txindex must be off
-	if (newSettings['prune'] > 0) newSettings['txindex'] = false
-
 	// If proxy is on, but onlynet doesn't include clearnet and tor -> disable proxy
 	if (
 		newSettings['proxy'] &&
@@ -170,14 +167,6 @@ function handleI2P(lines: string[], settings: SettingsSchema): string[] {
 	return lines
 }
 
-function handlePruneConversion(lines: string[], settings: SettingsSchema): string[] {
-	// if prune > 0 convert from GB to MiB (1 GB = 953.674 MiB)
-	if (settings['prune'] > 0) {
-		lines = lines.filter((l) => !l.startsWith('prune='))
-		lines.push(`prune=${Math.round(settings['prune'] * 953.674)}`)
-	}
-	return lines
-}
 
 function handleInscriptionFiltering(lines: string[], settings: SettingsSchema): string[] {
     // Remove any existing datacarrier and datacarriersize lines
@@ -272,7 +261,6 @@ function generateConfLines(settings: SettingsSchema): string[] {
 	lines = handleTorProxy(lines, settings)
 	lines = handleTor(lines, settings)
 	lines = handleI2P(lines, settings)
-	lines = handlePruneConversion(lines, settings)
 	lines = handleInscriptionFiltering(lines, settings)
 
 	// append lines that we always want to be present
