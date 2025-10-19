@@ -72,7 +72,6 @@ const LEGACY_TO_MODERN_MAP: Record<string, keyof SettingsSchema> = {
 	timeout: 'timeout',
 	maxuploadtarget: 'maxuploadtarget',
 	cacheSizeMB: 'dbcache',
-	// prune: handled above to deconstruct the pruneSizeGB value
 	// mempoolFullRbf: no longer in bitcoind -help-debug
 	datacarrier: 'datacarrier',
 	datacarriersize: 'datacarriersize',
@@ -111,8 +110,6 @@ export async function migrateLegacyConfig(): Promise<SettingsSchema | undefined>
 		],
 		// the legacy config had a single incomingConnections key that was a boolean for whether to allow incoming connections on ALL networks
 		listen: toBool(legacyConfig.incomingConnections) ? ['clearnet', 'tor', 'i2p'] : [],
-		// only use the pruneSizeGB value if prune is enabled because pruning could be disabled in the old app even with a pruneSizeGB value set
-		prune: toBool(legacyConfig.prune?.enabled) ? Number(legacyConfig.prune.pruneSizeGB) : 0,
 	}
 
 	// Then we translate the config options that are 1-to-1
@@ -154,16 +151,9 @@ export async function migrateLegacyConfig(): Promise<SettingsSchema | undefined>
 //   maxconnections: 125,
 //   maxreceivebuffer: 5000,
 //   maxsendbuffer: 1000,
-//   maxtimeadjustment: 4200,
 //   peertimeout: 60,
 //   timeout: 5000,
 //   maxuploadtarget: 0,
-//   cacheSizeMB: 450,
-//   prune: {
-//     enabled: false,
-//     pruneSizeGB: 300,
-//   },
-//   mempoolFullRbf: true,
 //   datacarrier: true,
 //   datacarriersize: 83,
 //   permitbaremultisig: true,

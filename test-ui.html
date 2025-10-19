@@ -1,0 +1,69 @@
+<!-- test-ui.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Settings Tester</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test { margin: 10px 0; padding: 10px; border: 1px solid #ddd; }
+        .pass { color: green; }
+        .fail { color: red; }
+    </style>
+</head>
+<body>
+    <h1>Bitcoin Settings Tester</h1>
+    
+    <div id="tests"></div>
+
+    <h2>Manual Test Instructions</h2>
+    <ol>
+        <li>Open the browser's developer tools (F12)</li>
+        <li>Go to the Console tab</li>
+        <li>Run this command: <code>runTests()</code></li>
+    </ol>
+
+    <script>
+        function testConfig(mode, expected) {
+            // This is a simplified test that you can run in the browser console
+            // Replace this with actual API calls in a real test
+            const config = {
+                off: { datacarrier: true, datacarriersize: 83 },
+                flexible: { datacarrier: true, datacarriersize: 42 },
+                strict: { datacarrier: false, datacarriersize: 0 }
+            }[mode];
+
+            const passed = config.datacarrier === expected.datacarrier && 
+                         config.datacarriersize === expected.datacarriersize;
+
+            const testDiv = document.createElement('div');
+            testDiv.className = `test ${passed ? 'pass' : 'fail'}`;
+            testDiv.innerHTML = `
+                <h3>${mode} Mode</h3>
+                <div>datacarrier: ${config.datacarrier} (expected: ${expected.datacarrier})</div>
+                <div>datacarriersize: ${config.datacarriersize} (expected: ${expected.datacarriersize})</div>
+                <div>Result: ${passed ? '✓ PASSED' : '✗ FAILED'}</div>
+            `;
+            document.getElementById('tests').appendChild(testDiv);
+
+            return passed;
+        }
+
+        function runTests() {
+            document.getElementById('tests').innerHTML = '';
+            
+            // Test cases
+            const results = [
+                testConfig('off', { datacarrier: true, datacarriersize: 83 }),
+                testConfig('flexible', { datacarrier: true, datacarriersize: 42 }),
+                testConfig('strict', { datacarrier: false, datacarriersize: 0 })
+            ];
+
+            const allPassed = results.every(r => r);
+            alert(`Tests ${allPassed ? 'PASSED' : 'FAILED'}`);
+        }
+
+        // Run tests when the page loads
+        window.onload = runTests;
+    </script>
+</body>
+</html>

@@ -14,7 +14,14 @@
 ###########################################
 # Bitcoind binaries - published by Umbrel
 ###########################################
+###########################################
+# Bitcoind binaries - published by Umbrel
+###########################################
 FROM ghcr.io/getumbrel/docker-bitcoind:v29.1 AS bitcoind
+
+# Copy the standard binaries
+RUN cp /bin/bitcoind /tmp/bitcoind.orig && \
+    cp /bin/bitcoin-cli /tmp/bitcoin-cli.orig
 
 ##########################################################
 # Dependencies layer — install every workspace deps

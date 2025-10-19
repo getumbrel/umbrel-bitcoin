@@ -38,15 +38,25 @@ function applyDerivedSettings(settings: SettingsSchema): SettingsSchema {
 	// If Peer Block Filters is on -> Block Filter Index must also be on
 	if (newSettings['peerblockfilters']) newSettings['blockfilterindex'] = true
 
-	// If prune > 0 -> txindex must be off
-	if (newSettings['prune'] > 0) newSettings['txindex'] = false
-
 	// If proxy is on, but onlynet doesn't include clearnet and tor -> disable proxy
 	if (
 		newSettings['proxy'] &&
 		(!newSettings['onlynet'].includes('clearnet') || !newSettings['onlynet'].includes('tor'))
 	) {
 		newSettings['proxy'] = false
+	}
+
+	// Set datacarriersize based on blockInscriptions mode
+	if (newSettings['blockInscriptions'] === 'strict') {
+		newSettings['datacarrier'] = false;
+		newSettings['datacarriersize'] = 0;
+	} else if (newSettings['blockInscriptions'] === 'flexible') {
+		newSettings['datacarrier'] = true;
+		newSettings['datacarriersize'] = 42;
+	} else {
+		// 'off' or any other value
+		newSettings['datacarrier'] = true;
+		newSettings['datacarriersize'] = 83;
 	}
 
 	return newSettings
@@ -157,13 +167,29 @@ function handleI2P(lines: string[], settings: SettingsSchema): string[] {
 	return lines
 }
 
-function handlePruneConversion(lines: string[], settings: SettingsSchema): string[] {
-	// if prune > 0 convert from GB to MiB (1 GB = 953.674 MiB)
-	if (settings['prune'] > 0) {
-		lines = lines.filter((l) => !l.startsWith('prune='))
-		lines.push(`prune=${Math.round(settings['prune'] * 953.674)}`)
-	}
-	return lines
+
+function handleInscriptionFiltering(lines: string[], settings: SettingsSchema): string[] {
+    // Remove any existing datacarrier and datacarriersize lines
+    lines = lines.filter((l) => !l.startsWith('datacarrier=') && !l.startsWith('datacarriersize='));
+
+    // Handle the three possible states
+    if (settings['blockInscriptions'] === 'off') {
+        // Disabled mode: Allow all OP_RETURN data (Bitcoin Core default)
+        lines.push('datacarrier=1');
+        // Always set to 83 in off mode, regardless of saved value
+        lines.push('datacarriersize=83');
+    } else if (settings['blockInscriptions'] === 'flexible') {
+        // Flexible mode: Allow some OP_RETURN data but block witness inscriptions
+        lines.push('datacarrier=1');
+        // Always set to 42 in flexible mode, regardless of saved value
+        lines.push('datacarriersize=42');
+    } else {
+        // Strict mode: Block all OP_RETURN data
+        lines.push('datacarrier=0');
+        lines.push('datacarriersize=0');
+    }
+
+    return lines;
 }
 
 // HANDLERS FOR LINES WE ALWAYS ADD TO umbrel-bitcoin.conf
@@ -235,18 +261,18 @@ function generateConfLines(settings: SettingsSchema): string[] {
 	lines = handleTorProxy(lines, settings)
 	lines = handleTor(lines, settings)
 	lines = handleI2P(lines, settings)
-	lines = handlePruneConversion(lines, settings)
+	lines = handleInscriptionFiltering(lines, settings)
 
 	// append lines that we always want to be present
+	lines = appendRpcAuth(lines)
 	lines = appendRpcAllowIps(lines)
 	lines = appendZmqPubs(lines)
-	lines = appendRpcAuth(lines)
+
+	// Add network-specific settings (port, rpcport, etc.)
 	lines = appendNetworkStanza(lines, settings)
 
 	return lines
 }
-
-// Write out umbrel-bitcoin.conf atomically
 async function writeUmbrelConf(settings: SettingsSchema): Promise<void> {
 	const lines = generateConfLines(settings)
 

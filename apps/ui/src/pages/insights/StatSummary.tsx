@@ -87,11 +87,7 @@ export default function StatSummary() {
 					label='Blockchain Size'
 					value={chainVal}
 					unit={chainUnit}
-					description={`This is the space used by the block data and the undo information that lets your node rewind blocks if needed. It grows with every new block unless pruning is enabled from the Settings page. The number excludes the UTXO database, index files, wallets, and logs.
-
-											• Full node: shows the entire size of the blockchain.
-
-											• Pruned node: stays near your prune-target size because older blocks are deleted.`}
+					description={`This is the space used by the block data and the undo information that lets your node rewind blocks if needed. It grows with every new block. The number excludes the UTXO database, index files, wallets, and logs.`}
 				/>
 				<Stat
 					label='Node Uptime'
