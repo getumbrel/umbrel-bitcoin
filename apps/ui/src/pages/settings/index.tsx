@@ -141,7 +141,7 @@ function FieldRenderer({name, form}: {name: SettingName; form: ReturnType<typeof
 				control={form.control}
 				render={({field, fieldState}) => (
 					<div className='flex flex-col gap-1'>
-						<div className='flex flex-row justify-between items-center'>
+						<div className='flex flex-row justify-between sm:items-center'>
 							<div>
 								<label className='text-[14px] font-[400] text-white'>{meta.label}</label>
 								<div className='flex flex-wrap gap-1 my-1'>
@@ -152,14 +152,16 @@ function FieldRenderer({name, form}: {name: SettingName; form: ReturnType<typeof
 									))}
 								</div>
 							</div>
-							<Toggle
-								name={name}
-								// current RHF value
-								checked={!!field.value}
-								onToggle={field.onChange}
-								disabled={disabled || disabledByOtherSetting}
-								disabledMessage={meta.disabledMessage}
-							/>
+							<div className='max-sm:mt-2'>
+								<Toggle
+									name={name}
+									// current RHF value
+									checked={!!field.value}
+									onToggle={field.onChange}
+									disabled={disabled || disabledByOtherSetting}
+									disabledMessage={meta.disabledMessage}
+								/>
+							</div>
 						</div>
 						<p className='text-[13px] font-[400] text-white/60'>{meta.description}</p>
 						{meta.subDescription && <p className='text-[12px] font-[400] text-white/60 mt-1'>{meta.subDescription}</p>}
@@ -195,34 +197,39 @@ function FieldRenderer({name, form}: {name: SettingName; form: ReturnType<typeof
 
 					return (
 						<div className='flex flex-col gap-1'>
-							<div>
-								<label className='text-[14px] font-[400] text-white'>{meta.label}</label>
-								<div className='flex flex-wrap gap-1 my-1'>
-									{meta.bitcoinLabel.split(',').map((label, index) => (
-										<span key={index} className='text-[12px] font-[400] text-white/50 bg-[#2C2C2C] px-1 rounded-sm'>
-											{label.trim()}
-										</span>
+							<div className='flex flex-row justify-between sm:items-center max-sm:mb-2'>
+								<div>
+									<label className='text-[14px] font-[400] text-white'>{meta.label}</label>
+									<div className='flex flex-wrap gap-1 my-1'>
+										{meta.bitcoinLabel.split(',').map((label, index) => (
+											<span key={index} className='text-[12px] font-[400] text-white/50 bg-[#2C2C2C] px-1 rounded-sm'>
+												{label.trim()}
+											</span>
+										))}
+									</div>
+								</div>
+								{/* one Toggle per option, rendered on the right side */}
+								<div className='flex flex-col items-end sm:flex-row flex-wrap sm:items-center gap-3'>
+									{meta.options.map((opt) => (
+										<div key={opt.value} className='flex items-center gap-1'>
+											<span className='text-[12px] font-[400] text-white/60'>{opt.label}</span>
+											<Toggle
+												name={`${name}-${opt.value}`}
+												checked={isChecked(opt.value)}
+												onToggle={() => toggleValue(opt.value)}
+												disabled={disabled}
+											/>
+										</div>
 									))}
 								</div>
 							</div>
 							<p className='text-[13px] font-[400] text-white/60'>{meta.description}</p>
+							{meta.subDescription && (
+								<p className='text-[12px] font-[400] text-white/60 mt-1'>{meta.subDescription}</p>
+							)}
 							<p className='text-[12px] font-[400] text-white/50 mt-2'>
 								default: {meta.default.length ? meta.default.join(', ') : 'none'}
 							</p>
-							{/*  one Toggle per option, rendered below all text and left-aligned in a row */}
-							<div className='mt-2 flex flex-row flex-wrap items-center gap-4'>
-								{meta.options.map((opt) => (
-									<div key={opt.value} className='flex items-center gap-2'>
-										<span className='text-[12px] font-[400] text-white/60'>{opt.label}</span>
-										<Toggle
-											name={`${name}-${opt.value}`}
-											checked={isChecked(opt.value)}
-											onToggle={() => toggleValue(opt.value)}
-											disabled={disabled}
-										/>
-									</div>
-								))}
-							</div>
 							{fieldState.error && <p className='text-xs text-red-400'>{fieldState.error.message}</p>}
 						</div>
 					)
