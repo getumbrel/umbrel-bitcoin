@@ -20,11 +20,11 @@ export default function Header({className}: {className?: string}) {
 	const fullVersionString = `${placeholder} ${cleanedVersion ?? ''}`
 
 	return (
-		<header className={cn('flex items-end md:items-center justify-between mb-8 w-full', className)}>
-			<div className='flex flex-col md:flex-row md:items-center gap-3.5'>
-				<Logo aria-label='Bitcoin Node logo' className='w-[38px] md:w-[60px] h-[38px] md:h-[60px] shrink-0' />
+		<header className={cn('flex items-end md:items-center justify-between mb-6 md:mb-8 w-full', className)}>
+			<div className='flex flex-row items-center gap-2.5 md:gap-3.5'>
+				<Logo aria-label='Bitcoin Node logo' className='w-[50px] md:w-[60px] h-[50px] md:h-[60px] shrink-0' />
 				<div>
-					<h1 className='font-outfit text-[25px] md:text-[28px] font-[400] bg-text-gradient bg-clip-text text-transparent leading-none pb-2 md:pb-1'>
+					<h1 className='font-outfit text-[22px] md:text-[28px] font-[400] bg-text-gradient bg-clip-text text-transparent leading-none pb-1'>
 						Bitcoin Node
 					</h1>
 

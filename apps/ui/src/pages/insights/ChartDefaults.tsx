@@ -32,7 +32,7 @@ export const makeYAxis = (label: string): Partial<YAxisProps> => ({
 // TODO: add better loading placeholder
 export function ChartLoadingPlaceholder({title, text}: {title: string; text?: string}) {
 	return (
-		<div className='flex items-center justify-center w-full aspect-video text-white/40'>
+		<div className='flex items-center justify-center w-full aspect-video text-white/40 px-6 text-center'>
 			<div className='flex flex-col items-center gap-3'>
 				<div className='flex gap-1'>
 					{[...Array(3)].map((_, i) => (
