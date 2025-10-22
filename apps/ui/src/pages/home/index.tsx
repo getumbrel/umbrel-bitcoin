@@ -6,6 +6,7 @@ import {useState, useEffect} from 'react'
 import {Card, CardContent} from '@/components/ui/card'
 import {GradientBorderTopBottom, GradientBorderFromCorners} from '@/components/shared/GradientBorders'
 import InfoDialog from '@/components/shared/InfoDialog'
+import HorizontalFadeScroll from '@/components/shared/HorizontalFadeScroll'
 import Globe from './Globe'
 import PeersChart from './PeersChart'
 import StatusDot from './StatusDot'
@@ -184,10 +185,12 @@ export default function HomePage() {
 				</CardContent>
 			</Card>
 
-			{/* Blocks page — hidden on mobile */}
-			<div className='hidden md:block w-full mt-4'>
+			{/* Blocks — horizontally scrollable on mobile */}
+			<div className='w-full mt-4'>
 				<span className='text-white/50 text-[14px] font-[400] ml-4'>Latest Blocks</span>
-				<Blocks />
+				<HorizontalFadeScroll>
+					<Blocks />
+				</HorizontalFadeScroll>
 			</div>
 		</>
 	)
