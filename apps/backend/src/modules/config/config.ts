@@ -202,7 +202,9 @@ function handlePruneConversion(lines: string[], settings: SettingsSchema): strin
 function handleFeeRateConversion(lines: string[], settings: SettingsSchema): string[] {
 	const convertSatPerVbToBtcPerKb = (satPerVb: number): string => (satPerVb * 1e-5).toFixed(8)
 
-	const updatedLines = lines.filter((l) => !l.startsWith('minrelaytxfee=') && !l.startsWith('blockmintxfee='))
+	const updatedLines = lines.filter(
+		(l) => !l.startsWith('minrelaytxfee=') && !l.startsWith('blockmintxfee=') && !l.startsWith('incrementalrelayfee='),
+	)
 
 	if (typeof settings['minrelaytxfee'] === 'number') {
 		const btcPerKb = convertSatPerVbToBtcPerKb(settings['minrelaytxfee'])
@@ -212,6 +214,11 @@ function handleFeeRateConversion(lines: string[], settings: SettingsSchema): str
 	if (typeof settings['blockmintxfee'] === 'number') {
 		const btcPerKb = convertSatPerVbToBtcPerKb(settings['blockmintxfee'])
 		updatedLines.push(`blockmintxfee=${btcPerKb}`)
+	}
+
+	if (typeof settings['incrementalrelayfee'] === 'number') {
+		const btcPerKb = convertSatPerVbToBtcPerKb(settings['incrementalrelayfee'])
+		updatedLines.push(`incrementalrelayfee=${btcPerKb}`)
 	}
 
 	return updatedLines
