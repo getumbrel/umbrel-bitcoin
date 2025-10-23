@@ -552,6 +552,16 @@ export default function SettingsCard() {
 
 	const isSearching = search.length > 0
 
+	// This array drives both the tab triggers (navigation) and tab content rendering
+	const tabs = [
+		{value: 'peers', label: 'Peer Settings'},
+		{value: 'optimization', label: 'Optimization'},
+		{value: 'rpc-rest', label: 'RPC and REST'},
+		{value: 'network', label: 'Network Selection'},
+		{value: 'version', label: 'Bitcoin Core Version'},
+		{value: 'advanced', label: 'Advanced'},
+	] as const
+
 	return (
 		<SettingsDisabledContext.Provider value={isInputsDisabled}>
 			<FormProvider {...form}>
@@ -591,60 +601,19 @@ export default function SettingsCard() {
 								>
 									<FadeScrollArea className='w-full'>
 										<TabsList className='relative flex bg-transparent rounded-none h-auto p-0 gap-1 z-10 w-max'>
-											<SettingsTabTrigger
-												value='peers'
-												control={form.control}
-												names={Object.keys(settingsMetadata).filter(
-													(k) => (settingsMetadata as any)[k].tab === 'peers',
-												)}
-											>
-												Peer Settings
-											</SettingsTabTrigger>
-											<SettingsTabTrigger
-												value='optimization'
-												control={form.control}
-												names={Object.keys(settingsMetadata).filter(
-													(k) => (settingsMetadata as any)[k].tab === 'optimization',
-												)}
-											>
-												Optimization
-											</SettingsTabTrigger>
-											<SettingsTabTrigger
-												value='rpc-rest'
-												control={form.control}
-												names={Object.keys(settingsMetadata).filter(
-													(k) => (settingsMetadata as any)[k].tab === 'rpc-rest',
-												)}
-											>
-												RPC and REST
-											</SettingsTabTrigger>
-											<SettingsTabTrigger
-												value='network'
-												control={form.control}
-												names={Object.keys(settingsMetadata).filter(
-													(k) => (settingsMetadata as any)[k].tab === 'network',
-												)}
-											>
-												Network Selection
-											</SettingsTabTrigger>
-											<SettingsTabTrigger
-												value='version'
-												control={form.control}
-												names={Object.keys(settingsMetadata).filter(
-													(k) => (settingsMetadata as any)[k].tab === 'version',
-												)}
-											>
-												Bitcoin Core Version
-											</SettingsTabTrigger>
-											<SettingsTabTrigger
-												value='advanced'
-												control={form.control}
-												names={Object.keys(settingsMetadata).filter(
-													(k) => (settingsMetadata as any)[k].tab === 'advanced',
-												)}
-											>
-												Advanced
-											</SettingsTabTrigger>
+											{/* Render tab triggers dynamically from the tabs configuration */}
+											{tabs.map((tab) => (
+												<SettingsTabTrigger
+													key={tab.value}
+													value={tab.value}
+													control={form.control}
+													names={Object.keys(settingsMetadata).filter(
+														(k) => (settingsMetadata as any)[k].tab === tab.value,
+													)}
+												>
+													{tab.label}
+												</SettingsTabTrigger>
+											))}
 										</TabsList>
 									</FadeScrollArea>
 								</div>
@@ -675,53 +644,45 @@ export default function SettingsCard() {
 										)
 									) : (
 										<>
-											<TabsContent value='peers' className='space-y-6 pt-6'>
-												<SettingsTabContent tab='peers' form={form} settingsMetadata={settingsMetadata as any} />
-											</TabsContent>
-
-											<TabsContent value='optimization' className='space-y-6 pt-6'>
-												<SettingsTabContent tab='optimization' form={form} settingsMetadata={settingsMetadata as any} />
-											</TabsContent>
-
-											<TabsContent value='rpc-rest' className='space-y-6 pt-6'>
-												<SettingsTabContent tab='rpc-rest' form={form} settingsMetadata={settingsMetadata as any} />
-											</TabsContent>
-
-											<TabsContent value='network' className='space-y-6 pt-6'>
-												<SettingsTabContent tab='network' form={form} settingsMetadata={settingsMetadata as any} />
-											</TabsContent>
-
-											<TabsContent value='version' className='space-y-6 pt-6'>
-												<AnimatePresence mode='wait' initial={false}>
-													{currentTab === 'version' && Object.values(form.formState.errors).length > 0 && (
-														<motion.div
-															initial={{height: 0, opacity: 0, marginBottom: 0}}
-															animate={{height: 'auto', opacity: 1, marginBottom: 20}}
-															exit={{height: 0, opacity: 0, marginBottom: 0}}
-															transition={{
-																type: 'spring',
-																stiffness: 250,
-																damping: 30,
-																duration: 0.45,
-															}}
-															style={{overflow: 'hidden'}}
-														>
-															<IncompatibleSettingsAlert />
-														</motion.div>
+											{/* Render tab content dynamically from the tabs configuration */}
+											{tabs.map((tab) => (
+												<TabsContent key={tab.value} value={tab.value} className='space-y-6 pt-6'>
+													{/* Special handling for version tab since we have a special error alert for it */}
+													{tab.value === 'version' && (
+														<AnimatePresence mode='wait' initial={false}>
+															{currentTab === 'version' && Object.values(form.formState.errors).length > 0 && (
+																<motion.div
+																	initial={{height: 0, opacity: 0, marginBottom: 0}}
+																	animate={{height: 'auto', opacity: 1, marginBottom: 20}}
+																	exit={{height: 0, opacity: 0, marginBottom: 0}}
+																	transition={{
+																		type: 'spring',
+																		stiffness: 250,
+																		damping: 30,
+																		duration: 0.45,
+																	}}
+																	style={{overflow: 'hidden'}}
+																>
+																	<IncompatibleSettingsAlert />
+																</motion.div>
+															)}
+														</AnimatePresence>
 													)}
-												</AnimatePresence>
-												<SettingsTabContent tab='version' form={form} settingsMetadata={settingsMetadata as any} />
-											</TabsContent>
 
-											<TabsContent value='advanced' className='space-y-6 pt-6'>
-												{/* TODO: determine where to place the log */}
-												<DangerZoneAlert />
-												<CustomConfigEditor />
-												<BitcoindErrorLog settingsViewportRef={settingsViewportRef} />
+													{/* Special handling for advanced tab since it renders unique content (custom config editor etc.) */}
+													{/* Currently we don't have anything from settings.meta.ts that shows up in advanced. */}
+													{tab.value === 'advanced' && (
+														<>
+															{/* TODO: the error log feels a bit clunky being under "Advanced". */}
+															<DangerZoneAlert />
+															<CustomConfigEditor />
+															<BitcoindErrorLog settingsViewportRef={settingsViewportRef} />
+														</>
+													)}
 
-												{/* Currently we don't have anything from settings.meta.ts that shows up in advanced. */}
-												<SettingsTabContent tab='advanced' form={form} settingsMetadata={settingsMetadata as any} />
-											</TabsContent>
+													<SettingsTabContent tab={tab.value} form={form} settingsMetadata={settingsMetadata as any} />
+												</TabsContent>
+											))}
 										</>
 									)}
 								</FadeScrollArea>
