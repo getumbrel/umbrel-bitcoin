@@ -220,12 +220,9 @@ function FieldRenderer({
 				name={name}
 				control={form.control}
 				render={({field, fieldState}) => (
-					<div className='flex flex-col gap-1'>
+					<div className='relative flex flex-col gap-1'>
 						<div className='flex flex-row justify-between sm:items-center'>
 							<div>
-								{fieldState.error && (
-									<p className='absolute top-10 right-1 text-xs text-red-500'>{fieldState.error.message}</p>
-								)}
 								<label className='text-[14px] font-[400] text-white'>{option.label}</label>
 								<div className='flex flex-wrap gap-1 my-1'>
 									{option.bitcoinLabel.split(',').map((label, index) => (
@@ -253,6 +250,9 @@ function FieldRenderer({
 						<p className='text-[12px] font-[400] text-white/50 mt-2'>
 							default: {option.default ? 'enabled' : 'disabled'}
 						</p>
+						{fieldState.error && (
+							<p className='absolute -bottom-4 left-0 text-xs text-red-500'>{fieldState.error.message}</p>
+						)}
 					</div>
 				)}
 			/>
@@ -280,7 +280,7 @@ function FieldRenderer({
 					}
 
 					return (
-						<div className='flex flex-col gap-1'>
+						<div className='relative flex flex-col gap-1'>
 							<div className='flex flex-row justify-between sm:items-center max-sm:mb-2'>
 								<div>
 									<label className='text-[14px] font-[400] text-white'>{option.label}</label>
@@ -314,7 +314,9 @@ function FieldRenderer({
 							<p className='text-[12px] font-[400] text-white/50 mt-2'>
 								default: {option.default.length ? option.default.join(', ') : 'none'}
 							</p>
-							{fieldState.error && <p className='text-xs text-red-400'>{fieldState.error.message}</p>}
+							{fieldState.error && (
+								<p className='absolute -bottom-4 left-0 text-xs text-red-500'>{fieldState.error.message}</p>
+							)}
 						</div>
 					)
 				}}
