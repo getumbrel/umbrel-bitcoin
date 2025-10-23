@@ -14,7 +14,7 @@ import * as connect from './modules/connect/connect.js'
 import * as config from './modules/config/config.js'
 import * as widgets from './modules/widgets/widgets.js'
 
-import {settingsSchema} from '#settings'
+import {type SettingsSchema} from '#settings'
 
 const WS_TOKEN = randomBytes(16).toString('hex')
 
@@ -58,13 +58,9 @@ export default fp(async (app: FastifyInstance) => {
 	app.get(`${configBase}/settings`, config.getSettings)
 
 	app.patch(`${configBase}/settings`, async (req) => {
-		// We create a new Zod schema whose keys are all optional
-		// and validate+coerce the incoming JSON against it.
-		// This allows us to patch only the fields we want to change.
-		// This will throw ZodError, which Fastify converts to 400 JSON automatically.
-		const settingsChanges = settingsSchema.partial().parse(req.body)
-
-		return config.updateSettings(settingsChanges)
+		// Validation is handled in config.updateSettings(). Zod errors become 400 via the global handler.
+		const patch = req.body as Partial<SettingsSchema>
+		return config.updateSettings(patch)
 	})
 
 	app.post(`${configBase}/restore-defaults`, config.restoreDefaults)

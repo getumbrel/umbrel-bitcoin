@@ -23,7 +23,7 @@ export function useUpdateSettings() {
 			api<SettingsSchema>('/config/settings', {method: 'PATCH', body: data}),
 
 		// Update/invalidate the cache so all components see the new values
-		onSuccess: (fresh) => {
+		onSuccess: (fresh: SettingsSchema) => {
 			qc.setQueryData(['config', 'settings'], fresh)
 
 			// clear crash UI
@@ -35,6 +35,9 @@ export function useUpdateSettings() {
 			// Purge and kickoff background refetches for rpc data
 			qc.removeQueries({queryKey: ['rpc']})
 			qc.invalidateQueries({queryKey: ['rpc']})
+
+			// Invalidate version cache so header updates
+			qc.invalidateQueries({queryKey: ['bitcoind', 'version']})
 		},
 	})
 }
@@ -46,7 +49,7 @@ export function useRestoreDefaults() {
 		// No payload – just POST with empty body
 		mutationFn: () => api<SettingsSchema>('/config/restore-defaults', {method: 'POST', body: {}}),
 
-		onSuccess: (fresh) => {
+		onSuccess: (fresh: SettingsSchema) => {
 			qc.setQueryData(['config', 'settings'], fresh)
 
 			// clear crash UI
@@ -58,6 +61,9 @@ export function useRestoreDefaults() {
 			// Purge and kickoff background refetches for rpc data
 			qc.removeQueries({queryKey: ['rpc']})
 			qc.invalidateQueries({queryKey: ['rpc']})
+
+			// Invalidate version cache so header updates
+			qc.invalidateQueries({queryKey: ['bitcoind', 'version']})
 		},
 	})
 }

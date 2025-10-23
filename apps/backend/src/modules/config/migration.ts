@@ -6,7 +6,15 @@ import {ZodError} from 'zod'
 
 import {writeWithBackup} from './fs-helpers.js'
 import {APP_STATE_DIR} from '../../lib/paths.js'
-import {settingsSchema, defaultValues, settingsMetadata, type SettingsSchema, type Option} from '#settings'
+import {
+	schemaForVersion,
+	settingsMetadata,
+	type SettingsSchema,
+	type Option,
+	DefaultValuesForVersion,
+	resolveVersion,
+	LATEST,
+} from '#settings'
 
 const LEGACY_CONFIG_PATH = path.join(APP_STATE_DIR, 'bitcoin-config.json')
 const NEW_CONFIG_PATH = path.join(APP_STATE_DIR, 'settings.json')
@@ -124,7 +132,14 @@ export async function migrateLegacyConfig(): Promise<SettingsSchema | undefined>
 	const coerced = coerceFromMetadata(translated)
 
 	try {
-		const validated = settingsSchema.parse({...defaultValues, ...coerced})
+		const latestVersion = resolveVersion(LATEST)
+		const defaultValues = DefaultValuesForVersion(latestVersion)
+		// Merge defaults for latest Bitcoin Core version with coerced legacy values and validate against the
+		// versioned schema to produce a clean, current settings.json
+		const validated = schemaForVersion(LATEST).parse({
+			...defaultValues,
+			...coerced,
+		})
 		await writeWithBackup(NEW_CONFIG_PATH, JSON.stringify(validated, null, 2) + '\n')
 		await fse.move(LEGACY_CONFIG_PATH, `${LEGACY_CONFIG_PATH}.bak`, {overwrite: false})
 		return validated
