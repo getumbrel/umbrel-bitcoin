@@ -517,7 +517,9 @@ export const settingsMetadata = {
 		label: 'Bitcoin Core Version',
 		bitcoinLabel: 'version',
 		description:
-			'Select whether to always run the latest version of Bitcoin Core, or stay on a specific version until you change it manually. Your Bitcoin Node app will continue to receive updates from the Umbrel App Store even if you decide to stay on a specific version.',
+			'Select whether to always run the latest version of Bitcoin Core available in the Bitcoin Node app, or stay on a specific version until you change it manually. Your Bitcoin Node app will continue to receive updates from the Umbrel App Store even if you decide to stay on a specific version.',
+		subDescription:
+			'⚠ If you choose to stay on a specific version, please make sure your chosen version is up to date with the latest security fixes.',
 		options: [
 			{value: LATEST, label: 'Always use the latest version'},
 			...AVAILABLE_BITCOIN_CORE_VERSIONS.map((version) => ({value: version, label: version})),
