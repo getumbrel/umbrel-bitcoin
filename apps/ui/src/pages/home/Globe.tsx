@@ -212,24 +212,27 @@ function LiveGlobeWebGL({width = 650, height = 650}: {width?: number; height?: n
 
 	// Enable auto-rotation and disable zooming
 	useEffect(() => {
-		if (globeRef.current) {
-			const controls = globeRef.current.controls()
-			controls.autoRotate = true
-			controls.autoRotateSpeed = AUTO_ROTATE_SPEED
-			controls.enableZoom = false
-		}
-	}, [])
+		if (!globeRef.current) return
+		const controls = globeRef.current.controls()
+		controls.autoRotate = true
+		controls.autoRotateSpeed = AUTO_ROTATE_SPEED
+		controls.enableZoom = false
+		// we re-run this effect when the globe is ready since we defer initialization
+	}, [shouldInitialize])
 
-	// Set initial camera position to tilt globe toward northern hemisphere and center near North America
+	// Set initial camera (tilt globe toward northern hemisphere and center near North America) and ensure controls (auto-rotate, no zoom) once globe is ready
 	const handleGlobeReady = useCallback(() => {
-		if (globeRef.current) {
-			globeRef.current.pointOfView({lat: 30, lng: -80}, 0)
-		}
+		if (!globeRef.current) return
+		const controls = globeRef.current.controls()
+		controls.autoRotate = true
+		controls.autoRotateSpeed = AUTO_ROTATE_SPEED
+		controls.enableZoom = false
+		globeRef.current.pointOfView({lat: 30, lng: -80}, 0)
 	}, [])
 
 	// Add custom arcs that match sphere paths
 	useEffect(() => {
-		if (!globeRef.current || !arcsData.length) return
+		if (!globeRef.current) return
 
 		const scene = globeRef.current.scene()
 
@@ -240,6 +243,9 @@ function LiveGlobeWebGL({width = 650, height = 650}: {width?: number; height?: n
 			arc.geometry.dispose()
 			arc.material.dispose()
 		})
+
+		// If there are no arcs to render, exit after cleanup
+		if (!arcsData.length) return
 
 		// Create arcs using same spherical interpolation as spheres
 		arcsData.forEach((arc) => {
@@ -264,7 +270,8 @@ function LiveGlobeWebGL({width = 650, height = 650}: {width?: number; height?: n
 
 			scene.add(line)
 		})
-	}, [arcsData, latLngToVector3, slerpOnSphere])
+		// We make sure to re-run this effect when the globe is ready since we defer initialization (`shouldInitialize`)
+	}, [arcsData, latLngToVector3, slerpOnSphere, shouldInitialize])
 
 	// Animate spheres along arc lines when transactions come in
 	useEffect(() => {
