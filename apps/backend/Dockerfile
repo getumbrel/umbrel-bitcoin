@@ -15,6 +15,7 @@
 # Bitcoind
 ###########################################
 # https://github.com/getumbrel/docker-bitcoind
+FROM ghcr.io/getumbrel/docker-bitcoind:v30.2 AS bitcoind_30_2
 FROM ghcr.io/getumbrel/docker-bitcoind:v30.0 AS bitcoind_30_0
 FROM ghcr.io/getumbrel/docker-bitcoind:v29.2 AS bitcoind_29_2
 
@@ -48,7 +49,9 @@ WORKDIR /repo/apps/backend
 VOLUME /data
 
 # bitcoind binaries
-RUN mkdir -p /opt/bitcoind/v30.0 /opt/bitcoind/v29.2
+RUN mkdir -p /opt/bitcoind/v30.2 /opt/bitcoind/v30.0 /opt/bitcoind/v29.2
+COPY --from=bitcoind_30_2 /bin/bitcoind    /opt/bitcoind/v30.2/bitcoind
+COPY --from=bitcoind_30_2 /bin/bitcoin-cli /opt/bitcoind/v30.2/bitcoin-cli
 COPY --from=bitcoind_30_0 /bin/bitcoind    /opt/bitcoind/v30.0/bitcoind
 COPY --from=bitcoind_30_0 /bin/bitcoin-cli /opt/bitcoind/v30.0/bitcoin-cli
 COPY --from=bitcoind_29_2 /bin/bitcoind    /opt/bitcoind/v29.2/bitcoind
@@ -59,7 +62,7 @@ RUN chown 1000:1000 /opt/bitcoind
 
 # Symbolic link for default bitcoind binary
 # By default we point to the latest version of Bitcoin Core
-RUN ln -sfn /opt/bitcoind/v30.0 /opt/bitcoind/current
+RUN ln -sfn /opt/bitcoind/v30.2 /opt/bitcoind/current
 RUN ln -sfn /opt/bitcoind/current/bitcoind    /usr/local/bin/bitcoind
 RUN ln -sfn /opt/bitcoind/current/bitcoin-cli /usr/local/bin/bitcoin-cli
 
@@ -108,7 +111,9 @@ COPY --from=app-builder /repo/libs/settings/dist ./libs/settings/dist
 COPY --from=app-builder /repo/libs/shared-types/dist ./libs/shared-types/dist
 
 # bitcoind binaries
-RUN mkdir -p /opt/bitcoind/v30.0 /opt/bitcoind/v29.2
+RUN mkdir -p /opt/bitcoind/v30.2 /opt/bitcoind/v30.0 /opt/bitcoind/v29.2
+COPY --from=bitcoind_30_2 /bin/bitcoind    /opt/bitcoind/v30.2/bitcoind
+COPY --from=bitcoind_30_2 /bin/bitcoin-cli /opt/bitcoind/v30.2/bitcoin-cli
 COPY --from=bitcoind_30_0 /bin/bitcoind    /opt/bitcoind/v30.0/bitcoind
 COPY --from=bitcoind_30_0 /bin/bitcoin-cli /opt/bitcoind/v30.0/bitcoin-cli
 COPY --from=bitcoind_29_2 /bin/bitcoind    /opt/bitcoind/v29.2/bitcoind
@@ -119,7 +124,7 @@ RUN chown 1000:1000 /opt/bitcoind
 
 # Symbolic link for default bitcoind binary
 # By default we point to the latest version of Bitcoin Core
-RUN ln -sfn /opt/bitcoind/v30.0 /opt/bitcoind/current
+RUN ln -sfn /opt/bitcoind/v30.2 /opt/bitcoind/current
 RUN ln -sfn /opt/bitcoind/current/bitcoind    /usr/local/bin/bitcoind
 RUN ln -sfn /opt/bitcoind/current/bitcoin-cli /usr/local/bin/bitcoin-cli
 

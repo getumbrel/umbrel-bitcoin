@@ -8,7 +8,7 @@
 // IMPORTANT:
 // - Any version added here needs to be added in the Dockerfile
 // - The array of versions must be newest → oldest. We do a simple index comparison to compare versions, so lower index = newer.
-export const AVAILABLE_BITCOIN_CORE_VERSIONS = ['v30.0', 'v29.2'] as const
+export const AVAILABLE_BITCOIN_CORE_VERSIONS = ['v30.2', 'v30.0', 'v29.2'] as const
 
 // Default Bitcoin Core version used by bitcoind manager (always the newest version in the array)
 export const DEFAULT_BITCOIN_CORE_VERSION = AVAILABLE_BITCOIN_CORE_VERSIONS[0]
