@@ -23,6 +23,10 @@ export function useTransactionSocket(): number {
 			}
 		}
 
+		// In dev, React StrictMode double-invokes effects (mount → unmount → mount).
+		// The first unmount closes the WebSocket before it connects, triggering a
+		// harmless "WebSocket is closed before the connection is established" error.
+		// This does not happen in production.
 		ws.onerror = console.error
 		return () => ws.close()
 	}, [data?.token])

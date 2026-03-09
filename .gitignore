@@ -1,6 +1,8 @@
 node_modules
 dist
 .env*
+*.tsbuildinfo
+.claude/
 
 # App data during dev
 # includes __node_modules_linux__ deps cache

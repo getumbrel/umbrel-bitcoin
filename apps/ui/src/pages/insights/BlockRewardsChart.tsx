@@ -7,7 +7,7 @@ import {ChartContainer, ChartTooltip} from '@/components/ui/chart'
 import {ChartCard, DEFAULT_GRID_PROPS, DEFAULT_CHART_MARGIN, makeXAxis, makeYAxis} from './ChartDefaults'
 import {sliceLast24h, calculateHoursAgo, hoursToMs, satsToBTC} from '@/lib/chartHelpers'
 
-import {useBlockRewards} from '@/hooks/useBlockRewards'
+import {useBlocks} from '@/hooks/useBlocks'
 import {syncStage} from '@/lib/sync-progress'
 import {useSyncStatus} from '@/hooks/useSyncStatus'
 
@@ -27,7 +27,7 @@ export default function RewardsChart() {
 
 	// 144 blocks is exactly 24 hours at 1 block per 10 min.
 	// 200 blocks ensures we have 24 hours of data even at worst-case historical block times
-	const {data: raw = [], isLoading} = useBlockRewards(200, {enabled: !inIBD})
+	const {data: raw = [], isLoading} = useBlocks({limit: 200, stage})
 
 	// slice the last 24 hours of data
 	const {slice} = sliceLast24h(raw)

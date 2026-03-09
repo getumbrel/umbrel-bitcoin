@@ -1,146 +1,60 @@
+// Block cache and data pipeline.
+//
+// A single in-memory cache of up to 200 Block objects serves all consumers
+// (REST endpoint, WebSocket, insights charts, home page 3D blocks).
+//
+// Cache population strategy:
+//   Synced:    ZMQ hashblock events → fetch by hash → cache + broadcast to WebSocket clients.
+//              Frontend receives real-time updates via a single global WebSocket (no polling).
+//   IBD:      ZMQ is silent (Core suppresses notifications during IBD). Frontend does not
+//              fetch blocks during IBD (home page shows sync progress via useSyncStatus).
+//              Cache supports fetch-on-miss if the REST endpoint is hit directly.
+//   Catch-up: ZMQ fires rapidly while blocks < headers. We skip these events. Once
+//              blocks === headers, normal ZMQ handling resumes. This happens in two scenarios:
+//              1. The node was offline and is catching up on missed blocks.
+//              2. During initial sync — Core's IBD flag flips to false when the chain
+//                 tip is within ~24h of real time, but blocks may still lag behind
+//                 headers. ZMQ wakes up and fires for the remaining blocks.
+//
+// On startup/restart we prime the cache (5 blocks if not synced, 200 if synced).
+// The first ZMQ event that sees blocks === headers triggers a background 200-block
+// prime so the insights page data is ready.
+// On bitcoind stop (e.g. network switch), the cache is cleared to avoid serving
+// stale blocks from the old chain.
+
 import {setTimeout} from 'timers/promises'
+import {EventEmitter} from 'node:events'
 
 import type WebSocket from 'ws'
 import PQueue from 'p-queue'
 
 import {rpcClient} from '../bitcoind/rpc-client.js'
+import {bitcoind} from '../bitcoind/bitcoind.js'
 import {blockStream} from './zmq-subscriber.js'
 
-import type {
-	BlocksResponse,
-	BlockSummary,
-	BlockReward,
-	BlockSizeSample,
-	FeeRatePoint,
-	RawBlock,
-	RawTransaction,
-} from '#types'
-
-// Partial type of bitcoind's getblockstats RPC
-type BlockStatsLite = {
-	height: number
-	subsidy: number
-	totalfee: number
-	total_weight: number
-	total_size: number
-	avgfeerate: number
-	feerate_percentiles: number[]
-	time: number
-	blockhash: string
-	txs: number
-}
+import type {Block, RawBlock, RawTransaction} from '#types'
 
 const rpcQueue = new PQueue({concurrency: 10})
 
-// Get block stats for height
-// caches the BLOCK_STATS_CACHE_DEPTH most recent blocks
-const BLOCK_STATS_CACHE_DEPTH = 200
-const blockStatsCache = new Map<number, BlockStatsLite>()
-async function getBlockStats(height: number) {
-	// Check if we have a cached value and return early if so
-	const cached = blockStatsCache.get(height)
-	if (cached) return cached
+// --- Pure helpers ---
 
-	// If not, fetch the block stats over RPC and cache the result
-	console.log(`fetching stats for block ${height}`)
-	const blockStats = await rpcClient.command<BlockStatsLite>('getblockstats', height)
-	blockStatsCache.set(height, blockStats)
+function computeFeeRatePercentiles(txs: RawTransaction[]): {p10: number; p50: number; p90: number} {
+	// Filter out coinbase transactions (no fee field)
+	const feeRates = txs
+		.filter((tx) => tx.fee != null)
+		.map((tx) => Math.round((tx.fee! * 1e8) / tx.vsize))
+		.sort((a, b) => a - b)
 
-	// If we've exceeded the cache depth, delete the oldest entries
-	if (blockStatsCache.size > BLOCK_STATS_CACHE_DEPTH) {
-		const keys = Array.from(blockStatsCache.keys())
-		const sortedKeys = keys.sort((a, b) => a - b)
-		const keysToDelete = sortedKeys.slice(0, blockStatsCache.size - BLOCK_STATS_CACHE_DEPTH)
-		keysToDelete.forEach((key) => blockStatsCache.delete(key))
-	}
+	if (feeRates.length === 0) return {p10: 0, p50: 0, p90: 0}
 
-	return blockStats
+	const pick = (p: number) => feeRates[Math.min(Math.floor((p / 100) * feeRates.length), feeRates.length - 1)]
+	return {p10: pick(10), p50: pick(50), p90: pick(90)}
 }
 
-// Get stats for the latest N blocks
-async function getLatestBlocks(limit: number) {
-	// Get the tip height
-	const tip = await rpcClient.command<number>('getblockcount')
-
-	// Loop backwards over most recent n blocks from tip
-	const blocks = []
-	for (let i = 0; i < limit; i++) {
-		const height = tip - i
-		if (height < 0) break
-		blocks.push(rpcQueue.add(() => getBlockStats(height)))
-	}
-
-	// Reverse the blocks to get them in chronological order
-	blocks.reverse()
-
-	return Promise.all(blocks) as Promise<BlockStatsLite[]>
-}
-
-// Block rewards (subsidy + fee totals)
-export async function rewards(limit = 144): Promise<BlockReward[]> {
-	const stats = await getLatestBlocks(limit)
-	return stats.map((s) => ({
-		height: s.height,
-		subsidySat: s.subsidy,
-		feesSat: s.totalfee,
-		time: s.time,
-	}))
-}
-
-// Total block sizes
-export async function blockSizes(limit = 144): Promise<BlockSizeSample[]> {
-	const stats = await getLatestBlocks(limit)
-	return stats.map((s) => ({
-		height: s.height,
-		sizeBytes: s.total_size,
-		time: s.time,
-	}))
-}
-
-// Fee-rate percentiles (p10/p50/p90)
-export async function feeRates(limit = 144): Promise<FeeRatePoint[]> {
-	const stats = await getLatestBlocks(limit)
-	return stats.map((s) => {
-		const [p10, , p50, , p90] = s.feerate_percentiles ?? [0, 0, 0, 0, 0]
-		return {height: s.height, p10, p50, p90, time: s.time}
-	})
-}
-
-const BLOCK_CACHE_DEPTH = 5
-const blockCache = new Map<number, BlockSummary>()
-
-async function getBlock(height: number) {
-	// Check if we have a cached value and return early if so
-	const cached = blockCache.get(height)
-	if (cached) return cached
-
-	// If not, fetch the raw block over RPC and cache the result
-	console.log(`fetching raw block ${height}`)
-	const blockHash = await rpcClient.command<string>('getblockhash', height)
-	const raw = await rpcClient.command<RawBlock>('getblock', blockHash, 2)
-
-	// Format the raw block into a summary
-	const summary: BlockSummary = {
-		hash: raw.hash,
-		height: raw.height,
-		time: raw.time,
-		txs: raw.nTx,
-		size: raw.size,
-		transactionGrid: transactionGrid(raw.tx, 20),
-	}
-
-	// Save in cache
-	blockCache.set(height, summary)
-
-	// If we've exceeded the cache depth, delete the oldest entries
-	if (blockCache.size > BLOCK_CACHE_DEPTH) {
-		const keys = Array.from(blockCache.keys())
-		const sortedKeys = keys.sort((a, b) => a - b)
-		const keysToDelete = sortedKeys.slice(0, blockCache.size - BLOCK_CACHE_DEPTH)
-		keysToDelete.forEach((key) => blockCache.delete(key))
-	}
-
-	return summary
+function computeSubsidy(height: number): number {
+	const halvings = Math.floor(height / 210_000)
+	if (halvings >= 64) return 0
+	return Math.floor(50e8 / 2 ** halvings)
 }
 
 function transactionGrid(transactions: RawTransaction[], gridSize: number) {
@@ -165,7 +79,7 @@ function transactionGrid(transactions: RawTransaction[], gridSize: number) {
 		}
 	}
 
-	// Calculte the number of squares to represent the total weight for each threshold
+	// Calculate the number of squares to represent the total weight for each threshold
 	for (const chunk of squareSizes) {
 		const chunkPercentageOfGrid = Math.pow(chunk.size / gridSize, 2)
 		const chunkPercentageOfBlock = chunk.totalWeight / TOTAL_BLOCK_SIZE
@@ -174,75 +88,160 @@ function transactionGrid(transactions: RawTransaction[], gridSize: number) {
 	}
 
 	// Cleanup output
-	const output = squareSizes
+	return squareSizes
 		.filter((chunk) => chunk.numberOfBlocks > 0)
 		.map(({size, numberOfBlocks}) => ({size, numberOfBlocks}))
-
-	return output
 }
 
-// Latest N block summaries
-export async function list(limit = 20): Promise<BlocksResponse> {
-	// get the current tip height to use as the starting point
+function rawToBlock(raw: RawBlock): Block {
+	const feesSat = Math.round(
+		raw.tx.reduce((sum: number, tx) => sum + (tx.fee ?? 0), 0) * 1e8,
+	)
+
+	return {
+		hash: raw.hash,
+		height: raw.height,
+		time: raw.time,
+		size: raw.size,
+		weight: raw.weight,
+		txCount: raw.nTx,
+		subsidySat: computeSubsidy(raw.height),
+		feesSat,
+		feeRates: computeFeeRatePercentiles(raw.tx),
+		transactionGrid: transactionGrid(raw.tx, 20),
+	}
+}
+
+// --- Single unified cache ---
+
+const CACHE_DEPTH = 200
+const blockCache = new Map<number, Block>()
+
+function evictOldEntries() {
+	if (blockCache.size <= CACHE_DEPTH) return
+	const sortedKeys = Array.from(blockCache.keys()).sort((a, b) => a - b)
+	const keysToDelete = sortedKeys.slice(0, blockCache.size - CACHE_DEPTH)
+	keysToDelete.forEach((key) => blockCache.delete(key))
+}
+
+async function getBlock(height: number): Promise<Block> {
+	const cached = blockCache.get(height)
+	if (cached) return cached
+
+	console.log(`[blocks] fetching block ${height}`)
+	const blockHash = await rpcClient.command<string>('getblockhash', height)
+	const raw = await rpcClient.command<RawBlock>('getblock', blockHash, 2)
+	const block = rawToBlock(raw)
+
+	blockCache.set(height, block)
+	evictOldEntries()
+
+	return block
+}
+
+// --- Frontend-facing reads (async, fetch-on-miss during IBD/catch-up, cache hits when synced) ---
+
+export async function list(limit = 200): Promise<Block[]> {
 	const tipHeight = await rpcClient.command<number>('getblockcount')
 
-	// fetch hashes then summaries in batch RPC style
 	const blocks = (await Promise.all(
-		Array.from({length: limit}, (_, i) => rpcQueue.add(() => getBlock(tipHeight - i))),
-	)) as BlockSummary[]
+		Array.from({length: Math.min(limit, tipHeight + 1)}, (_, i) =>
+			rpcQueue.add(() => getBlock(tipHeight - i)),
+		),
+	)) as Block[]
 
-	return {blocks}
+	// Return in chronological order (oldest first)
+	return blocks.reverse()
 }
 
-// WebSocket push for new blocks
+// --- ZMQ-driven cache updates (replaces the 30s polling loop) ---
+
+// Central emitter for processed new blocks — WebSocket clients subscribe to this
+const newBlockEmitter = new EventEmitter()
+
+let processing = false
+let fullPrimeComplete = false
+
+// Bitcoin Core's ZMQ block notifiers are silent during IBD, so this only fires
+// when IBD is complete. During post-IBD catch-up (blocks < headers), we skip
+// until the node reaches the tip. Once at the tip, we fetch the new block by
+// hash, cache it, and broadcast to WebSocket clients.
+blockStream.on('block', async (hash: string) => {
+	if (processing) return
+	processing = true
+	try {
+		const {blocks, headers} = await rpcClient.command<{blocks: number; headers: number}>('getblockchaininfo')
+		if (blocks !== headers) return // still catching up, skip — frontend fetch-on-miss handles it
+
+		// Fetch and cache the new block
+		const raw = await rpcClient.command<RawBlock>('getblock', hash, 2)
+		const block = rawToBlock(raw)
+		blockCache.set(block.height, block)
+		evictOldEntries()
+
+		// Broadcast to WebSocket clients
+		newBlockEmitter.emit('block', block)
+
+		// On first at-tip event after startup/IBD, prime the full cache in background
+		// so the insights page has 200 blocks ready
+		if (!fullPrimeComplete) {
+			fullPrimeComplete = true
+			console.log('[blocks] at tip, priming full cache in background')
+			list(CACHE_DEPTH).catch((err) => console.error('[blocks] background prime error:', err))
+		}
+	} catch (err) {
+		console.error('[blocks] ZMQ handler error:', err)
+	} finally {
+		processing = false
+	}
+})
+
+// --- WebSocket (subscribes to processed blocks, no RPC calls) ---
+
 export function wsStream(socket: WebSocket) {
-	const sendBlock = async (hash: string) => {
+	const send = (block: Block) => {
 		try {
-			// Check if we're at the known tip by comparing the block's height to known header height
-			const blockchainInfo = await rpcClient.command<{
-				blocks: number
-				headers: number
-			}>('getblockchaininfo')
-
-			// if we're not at the known tip, don't send the block via Websocket, the frontend will continue polling the REST API
-			if (blockchainInfo.blocks !== blockchainInfo.headers) return
-
-			// Get the full block data in one RPC call
-			const raw = await rpcClient.command<RawBlock>('getblock', hash, 2)
-
-			// Build the complete BlockSummary with fee tiers
-			const fullBlock: BlockSummary = {
-				hash: raw.hash,
-				height: raw.height,
-				time: raw.time,
-				txs: raw.nTx,
-				size: raw.size,
-				transactionGrid: transactionGrid(raw.tx, 20),
-			}
-
-			// TODO: could consider updating the cache here.
-			socket.send(JSON.stringify(fullBlock))
-		} catch (error) {
-			console.error(`Failed to fetch block ${hash}:`, error)
-			// Note: In practice, this should never happen since ZMQ fires after
-			// the block is fully connected. But if it does, the client will
-			// get the block on the next REST poll cycle.
+			socket.send(JSON.stringify(block))
+		} catch {
+			// Socket may have closed between emit and send
 		}
 	}
-
-	blockStream.on('block', sendBlock)
-	socket.on('close', () => blockStream.off('block', sendBlock))
+	newBlockEmitter.on('block', send)
+	socket.on('close', () => newBlockEmitter.off('block', send))
 }
 
-// Long running task to keep the cache primed
-const CACHE_LOADER_INTERVAL = 1000 * 30 // 30 seconds
-async function cacheLoader() {
-	await setTimeout(5000)
-	while (true) {
-		await list(BLOCK_CACHE_DEPTH).catch(() => {})
-		await getLatestBlocks(BLOCK_STATS_CACHE_DEPTH).catch(() => {})
-		await setTimeout(CACHE_LOADER_INTERVAL)
-	}
+// --- Cache prime ---
+// Prime the cache so frontend requests are fast once the node is synced.
+// If already synced, prime the full 200 blocks. If in IBD/catch-up, prime
+// just 5 blocks — the full prime happens when the first ZMQ at-tip event arrives.
+
+async function prime() {
+	await setTimeout(5000) // wait for bitcoind to be ready
+	const {blocks, headers} = await rpcClient.command<{blocks: number; headers: number}>('getblockchaininfo')
+	const atTip = blocks === headers
+	if (atTip) fullPrimeComplete = true
+	console.log(`[blocks] prime: ${atTip ? CACHE_DEPTH : 5} blocks (${atTip ? 'synced' : 'not synced'})`)
+	await list(atTip ? CACHE_DEPTH : 5)
 }
-// Fire immediately and then every minute
-cacheLoader().catch(() => {})
+
+function reset() {
+	blockCache.clear()
+	fullPrimeComplete = false
+	processing = false
+}
+
+// --- Bitcoind lifecycle ---
+// When bitcoind restarts (e.g. user switches network), the in-memory cache
+// would serve stale blocks from the old chain. Clear it on stop, re-prime on start.
+
+bitcoind.events.on('stop', () => {
+	console.log('[blocks] bitcoind stopped, clearing cache')
+	reset()
+})
+
+bitcoind.events.on('start', () => {
+	console.log('[blocks] bitcoind started, priming cache')
+	prime().catch((err) => console.error('[blocks] prime error:', err))
+})
+
+prime().catch((err) => console.error('[blocks] init error:', err))

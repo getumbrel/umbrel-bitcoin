@@ -3,7 +3,7 @@ import * as THREE from 'three'
 import {useFrame} from '@react-three/fiber'
 import {useFBO} from '@react-three/drei'
 
-import type {BlockSummary} from '#types'
+import type {Block} from '#types'
 
 // Tetris grid parameters
 const GRID_SIZE = 20 // Grid is 20x20
@@ -243,7 +243,7 @@ export function Transactions({
 	faceSize: number
 	planeZ: number
 	isHovered?: boolean
-	block: BlockSummary[]
+	block: Block
 }) {
 	const squares = useMemo(() => {
 		const squares = []

@@ -1,9 +1,9 @@
-import {useState, useEffect, useRef} from 'react'
+import {useState, useEffect, useRef, useMemo} from 'react'
 import {useThree} from '@react-three/fiber'
 
 import {useSyncStatus} from '@/hooks/useSyncStatus'
 import {syncStage} from '@/lib/sync-progress'
-import {useLatestBlocks} from '@/hooks/useLatestBlocks'
+import {useBlocks} from '@/hooks/useBlocks'
 
 import {AnimatedCube} from './AnimatedCube'
 import {useGlobalMouse} from './useGlobalMouse'
@@ -11,20 +11,25 @@ import {useSyncProgress} from './useSyncProgress'
 import {DISPLAY_CONFIG} from './display.config'
 import {ANIMATION_CONFIG} from './animation.config'
 
-import type {BlockSummary} from '#types'
+import type {Block} from '#types'
 import type {CubeData} from './types'
 
 export function Scene() {
 	const {clock} = useThree()
 	const [cubes, setCubes] = useState<CubeData[]>([])
-	const prevBlocksRef = useRef<BlockSummary[]>([])
+	const prevBlocksRef = useRef<Block[]>([])
 	const globalMouse = useGlobalMouse()
 	const syncProgress = useSyncProgress()
 
 	// Sync status and blocks
 	const {data: syncStatus} = useSyncStatus()
 	const stage = syncStage(syncStatus)
-	const {data: blocks = [], isLoading: isLoadingBlocks} = useLatestBlocks({stage})
+	const {data: rawBlocks = [], isLoading: isLoadingBlocks} = useBlocks({limit: 5, stage})
+	// REST returns oldest-first (for charts). Reverse to newest-first for the cube layout
+	// where the newest block enters from the left and old blocks slide right.
+	// Memoized to keep a stable reference — without this, the useEffects below that depend
+	// on `blocks` would re-fire on every render (new array from .reverse()).
+	const blocks = useMemo(() => [...rawBlocks].reverse(), [rawBlocks])
 	const isLoading = stage === 'pre-headers' || stage === 'headers' || stage === 'IBD' || isLoadingBlocks
 
 	// Initialize cubes
@@ -46,6 +51,8 @@ export function Scene() {
 
 		// Check for new block
 		const hasNewBlock = prevBlocksRef.current.length > 0 && blocks[0]?.height !== prevBlocksRef.current[0]?.height
+
+		let cleanupTimer: ReturnType<typeof setTimeout> | undefined
 
 		if (hasNewBlock) {
 			const currentTime = clock.elapsedTime
@@ -97,7 +104,7 @@ export function Scene() {
 			})
 
 			// Clean up after animations complete
-			setTimeout(() => {
+			cleanupTimer = setTimeout(() => {
 				setCubes((prevCubes) => {
 					// Remove exiting cubes and reset animations
 					return prevCubes
@@ -113,6 +120,8 @@ export function Scene() {
 		}
 
 		prevBlocksRef.current = [...blocks]
+
+		return () => clearTimeout(cleanupTimer)
 	}, [blocks, isLoading, clock])
 
 	// Update blocks data for non-animating cubes

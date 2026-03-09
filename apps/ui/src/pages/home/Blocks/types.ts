@@ -1,4 +1,4 @@
-import type {BlockSummary, SyncStatus} from '#types'
+import type {Block, SyncStatus} from '#types'
 import type {SyncStage} from '@/lib/sync-progress'
 
 // Animation phases
@@ -18,7 +18,7 @@ export interface CubeAnimationState {
 export interface AnimatedCubeProps {
 	index: number
 	baseX: number
-	block?: BlockSummary
+	block?: Block
 	isLoading: boolean
 	animationState: CubeAnimationState
 	onAnimationComplete?: () => void
@@ -35,6 +35,6 @@ export interface AnimatedCubeProps {
 // Cube data structure
 export interface CubeData {
 	key: string
-	block?: BlockSummary
+	block?: Block
 	animationState: CubeAnimationState
 }

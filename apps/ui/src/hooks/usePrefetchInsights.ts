@@ -1,7 +1,7 @@
 import {useEffect} from 'react'
 import {useQueryClient} from '@tanstack/react-query'
 
-import type {BlockReward, BlockSizeSample, FeeRatePoint, Stats} from '#types'
+import type {Block, Stats} from '#types'
 import type {PeerInfo} from '#types'
 
 import {api} from '@/lib/api'
@@ -18,16 +18,8 @@ export function usePrefetchInsights() {
 				queryFn: () => api<Stats>('/rpc/stats'),
 			})
 			queryClient.prefetchQuery({
-				queryKey: ['rpc', 'blocks', 'rewards', NUM_BLOCKS],
-				queryFn: () => api<BlockReward[]>(`/rpc/blocks/rewards?limit=${NUM_BLOCKS}`),
-			})
-			queryClient.prefetchQuery({
-				queryKey: ['rpc', 'blocks', 'size', NUM_BLOCKS],
-				queryFn: () => api<BlockSizeSample[]>(`/rpc/blocks/size?limit=${NUM_BLOCKS}`),
-			})
-			queryClient.prefetchQuery({
-				queryKey: ['rpc', 'blocks', 'fees', NUM_BLOCKS],
-				queryFn: () => api<FeeRatePoint[]>(`/rpc/blocks/fees?limit=${NUM_BLOCKS}`),
+				queryKey: ['rpc', 'blocks', NUM_BLOCKS],
+				queryFn: () => api<Block[]>(`/rpc/blocks?limit=${NUM_BLOCKS}`),
 			})
 			queryClient.prefetchQuery({
 				queryKey: ['rpc', 'peers', 'info'],

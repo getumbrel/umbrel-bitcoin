@@ -7,7 +7,7 @@ import {ChartContainer, ChartTooltip} from '@/components/ui/chart'
 import {ChartCard, DEFAULT_CHART_MARGIN, DEFAULT_GRID_PROPS, makeXAxis, makeYAxis} from './ChartDefaults'
 import {sliceLast24h, findClosestDataPoint, calculateHoursAgo, hoursToMs} from '@/lib/chartHelpers'
 
-import {useFeeRates} from '@/hooks/useFeeRates'
+import {useBlocks} from '@/hooks/useBlocks'
 import {useSyncStatus} from '@/hooks/useSyncStatus'
 import {syncStage} from '@/lib/sync-progress'
 
@@ -27,7 +27,7 @@ export default function FeeRateChart() {
 
 	// 144 blocks is exactly 24 hours at 1 block per 10 min.
 	// 200 blocks ensures we have 24 hours of data even at worst-case historical block times
-	const {data: raw = [], isLoading} = useFeeRates(200, {enabled: !inIBD})
+	const {data: raw = [], isLoading} = useBlocks({limit: 200, stage})
 
 	// slice the last 24 hours of data
 	const {slice} = sliceLast24h(raw)
@@ -35,9 +35,9 @@ export default function FeeRateChart() {
 	const chartData = slice.map((p) => ({
 		block: p.height,
 		hoursAgo: calculateHoursAgo(p.time),
-		p10: p.p10,
-		p50: p.p50,
-		p90: p.p90,
+		p10: p.feeRates.p10,
+		p50: p.feeRates.p50,
+		p90: p.feeRates.p90,
 	}))
 
 	// Defer the data to avoid blocking the main thread and allow the chart to render immediately and the dock tab to animate smoothly

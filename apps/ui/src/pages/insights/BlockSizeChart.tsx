@@ -15,7 +15,7 @@ import {
 	mbToBytes,
 } from '@/lib/chartHelpers'
 
-import {useBlockSize} from '@/hooks/useBlockSize'
+import {useBlocks} from '@/hooks/useBlocks'
 import {syncStage} from '@/lib/sync-progress'
 import {useSyncStatus} from '@/hooks/useSyncStatus'
 
@@ -35,7 +35,7 @@ export default function BlockSizeChart() {
 
 	// 144 blocks is exactly 24 hours at 1 block per 10 min.
 	// 200 blocks ensures we have 24 hours of data even at worst-case historical block times
-	const {data: raw = [], isLoading} = useBlockSize(200, {enabled: !inIBD})
+	const {data: raw = [], isLoading} = useBlocks({limit: 200, stage})
 
 	// slice the last 24 hours of data
 	const {slice} = sliceLast24h(raw)
@@ -43,7 +43,7 @@ export default function BlockSizeChart() {
 	const chartData = slice.map((p) => ({
 		block: p.height,
 		hoursAgo: calculateHoursAgo(p.time),
-		sizeMB: bytesToMB(p.sizeBytes),
+		sizeMB: bytesToMB(p.size),
 	}))
 
 	// Defer the data to avoid blocking the main thread and allow the chart to render immediately and the dock tab to animate smoothly

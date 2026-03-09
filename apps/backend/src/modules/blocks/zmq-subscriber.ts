@@ -5,20 +5,45 @@ import {EventEmitter} from 'node:events'
 
 import zmq from 'zeromq'
 
+import {bitcoind} from '../bitcoind/bitcoind.js'
+
 // This emits the block hash whenever a new block is announced
 export const blockStream = new EventEmitter()
 
-// Subscribe to ZMQ `hashblock` and push hashes into `blockStream`
+let currentSubscriber: zmq.Subscriber | null = null
+let generation = 0
+
 async function startBlockSubscriber(): Promise<void> {
-	const subscriber = new zmq.Subscriber()
+	const gen = ++generation
 
-	subscriber.connect(`tcp://0.0.0.0:${process.env['ZMQ_HASHBLOCK_PORT'] || '28334'}`)
-	subscriber.subscribe('hashblock')
+	const sub = new zmq.Subscriber()
+	currentSubscriber = sub
+	sub.connect(`tcp://0.0.0.0:${process.env['ZMQ_HASHBLOCK_PORT'] || '28334'}`)
+	sub.subscribe('hashblock')
 
-	for await (const [, hashBuffer] of subscriber) {
-		const hash = hashBuffer.toString('hex')
-		blockStream.emit('block', hash)
+	for await (const [, hashBuffer] of sub) {
+		if (gen !== generation) break
+		blockStream.emit('block', hashBuffer.toString('hex'))
 	}
 }
 
-startBlockSubscriber().catch((err) => console.error('ZMQ subscriber crashed:', err))
+function stopBlockSubscriber() {
+	generation++
+	if (currentSubscriber) {
+		console.log('[block-subscriber] Stopping block subscriber')
+		currentSubscriber.close()
+		currentSubscriber = null
+	}
+}
+
+// Tear down on stop/exit, restart on start. The handler in blocks.ts already
+// guards against catch-up events (blocks !== headers), so no sync gate needed here.
+bitcoind.events.on('stop', stopBlockSubscriber)
+bitcoind.events.on('exit', stopBlockSubscriber)
+
+bitcoind.events.on('start', () => {
+	console.log('[block-subscriber] Bitcoind started, starting block subscriber')
+	startBlockSubscriber().catch((err) => console.error('ZMQ hashblock subscriber crashed:', err))
+})
+
+startBlockSubscriber().catch((err) => console.error('ZMQ hashblock subscriber crashed:', err))

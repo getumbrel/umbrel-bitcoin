@@ -81,20 +81,18 @@ export type RawBlock = {
 	tx: RawTransaction[]
 }
 
-export type BlockSummary = {
+// Unified block type used throughout the app (backend cache, API, frontend)
+export type Block = {
 	hash: string
 	height: number
 	time: number
-	txs: number
 	size: number
-	transactionGrid: {
-		size: number
-		numberOfBlocks: number
-	}[]
-}
-
-export type BlocksResponse = {
-	blocks: BlockSummary[]
+	weight: number
+	txCount: number
+	subsidySat: number
+	feesSat: number
+	feeRates: {p10: number; p50: number; p90: number}
+	transactionGrid: {size: number; numberOfBlocks: number}[]
 }
 
 // TODO: Replace these 2 below with actual types
@@ -114,27 +112,6 @@ export type SyncStatus = {
 	isInitialBlockDownload: boolean
 	blockHeight: number
 	validatedHeaderHeight: number
-}
-
-export type BlockReward = {
-	height: number
-	subsidySat: number
-	feesSat: number
-	time: number
-}
-
-export type BlockSizeSample = {
-	height: number
-	sizeBytes: number
-	time: number
-}
-
-export type FeeRatePoint = {
-	height: number
-	p10: number // 10th-percentile
-	p50: number // 50th-percentile
-	p90: number // 90th-percentile
-	time: number
 }
 
 export type Stats = {
