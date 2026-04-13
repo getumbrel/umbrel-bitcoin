@@ -36,6 +36,29 @@ await app.register(helmet, {
 
 await app.register(fastifyWs)
 
+// Detect dead WebSocket connections. Without this, a client whose network
+// drops silently (no close frame) leaves a phantom connection that leaks
+// listeners forever — especially on the /ws/bitcoind/exit endpoint which
+// rarely sends data and would never trigger TCP failure detection.
+const HEARTBEAT_MS = 30_000
+const aliveClients = new WeakSet<import('ws').WebSocket>()
+
+app.websocketServer.on('connection', (ws) => {
+	aliveClients.add(ws)
+	ws.on('pong', () => aliveClients.add(ws))
+})
+
+setInterval(() => {
+	for (const ws of app.websocketServer.clients) {
+		if (!aliveClients.has(ws)) {
+			ws.terminate()
+			continue
+		}
+		aliveClients.delete(ws)
+		ws.ping()
+	}
+}, HEARTBEAT_MS)
+
 // serve ui static files from dist/public in production
 app.register(fastifyStatic, {
 	root: path.join(__dirname, 'public'),
