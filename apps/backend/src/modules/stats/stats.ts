@@ -6,8 +6,8 @@ import type {Stats} from '#types'
 export async function summary(): Promise<Stats> {
 	const [peerSum, mempool, chainInfo] = await Promise.all([
 		peerCount(), // already cached 5s in peers.ts
-		rpcClient.command('getmempoolinfo'),
-		rpcClient.command('getblockchaininfo'),
+		rpcClient.command<{usage: number}>('getmempoolinfo'),
+		rpcClient.command<{size_on_disk: number}>('getblockchaininfo'),
 	])
 
 	const {startedAt, running} = bitcoind.status()

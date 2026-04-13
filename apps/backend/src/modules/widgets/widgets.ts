@@ -40,7 +40,7 @@ function calcSyncPercent(syncStatus: SyncStatus | undefined): number {
 }
 
 export async function stats() {
-	const [statsData, miningInfo] = await Promise.all([summary(), rpcClient.command('getmininginfo')])
+	const [statsData, miningInfo] = await Promise.all([summary(), rpcClient.command<{networkhashps: number}>('getmininginfo')])
 
 	const mempoolFormatted = formatBytes(statsData.mempoolBytes)
 	const chainFormatted = formatBytes(statsData.chainBytes)
