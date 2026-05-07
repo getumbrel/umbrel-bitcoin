@@ -5,6 +5,9 @@ import fse from 'fs-extra'
 // bitcoind binary
 export const BITCOIND_BIN = process.env['BITCOIND_BIN'] || 'bitcoind'
 
+// bitcoin wrapper binary used for multiprocess mode
+export const BITCOIN_BIN = process.env['BITCOIN_BIN'] || 'bitcoin'
+
 // Absolute path to the monorepo root
 export const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../../../')
 

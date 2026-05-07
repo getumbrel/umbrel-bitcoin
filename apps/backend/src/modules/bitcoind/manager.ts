@@ -5,15 +5,18 @@ import readline from 'node:readline'
 import fse from 'fs-extra'
 
 import type {ExitInfo} from '#types'
-import {DEFAULT_BITCOIN_CORE_VERSION} from '#settings'
+import {AVAILABLE_BITCOIN_CORE_VERSIONS, DEFAULT_BITCOIN_CORE_VERSION} from '#settings'
 
 import {
+	BITCOIN_BIN,
 	BITCOIND_BIN,
 	BITCOIN_DIR,
 	SETTINGS_JSON,
 	BITCOIN_CORE_VERSIONS_DIR,
 	BITCOIN_CORE_CURRENT_SYMLINK,
 } from '../../lib/paths.js'
+
+const IPC_MIN_BITCOIN_CORE_VERSION = 'v30.2' satisfies (typeof AVAILABLE_BITCOIN_CORE_VERSIONS)[number]
 
 // Version helpers
 // TODO: determine whether these would be better as async/await (and therefor entire start() as well)
@@ -28,14 +31,38 @@ function getVersionFromSettings(): string {
 	return DEFAULT_BITCOIN_CORE_VERSION
 }
 
-function isVersionInstalled(version: string): boolean {
+function getIpcFromSettings(): boolean {
 	try {
-		// Check if the bitcoind binary exists and is executable
-		fse.accessSync(`${BITCOIN_CORE_VERSIONS_DIR}/${version}/bitcoind`, fse.constants.X_OK)
+		const json = fse.readJsonSync(SETTINGS_JSON)
+		return json.ipc === true
+	} catch {}
+	return false
+}
+
+function supportsIpc(version: string): boolean {
+	const versionIdx = AVAILABLE_BITCOIN_CORE_VERSIONS.indexOf(
+		version as (typeof AVAILABLE_BITCOIN_CORE_VERSIONS)[number],
+	)
+	const minVersionIdx = AVAILABLE_BITCOIN_CORE_VERSIONS.indexOf(IPC_MIN_BITCOIN_CORE_VERSION)
+	// AVAILABLE_BITCOIN_CORE_VERSIONS is newest -> oldest, so lower indexes are newer versions.
+	return versionIdx !== -1 && minVersionIdx !== -1 && versionIdx <= minVersionIdx
+}
+
+function executableExists(path: string): boolean {
+	try {
+		fse.accessSync(path, fse.constants.X_OK)
 		return true
 	} catch {
 		return false
 	}
+}
+
+function isVersionInstalled(version: string, ipcEnabled: boolean): boolean {
+	const versionDir = `${BITCOIN_CORE_VERSIONS_DIR}/${version}`
+	if (!executableExists(`${versionDir}/bitcoind`)) return false
+	if (!ipcEnabled) return true
+
+	return executableExists(`${versionDir}/bitcoin`) && executableExists(`${versionDir}/bitcoin-node`)
 }
 
 // Stream helper that turns the chunked `Readable` into complete, trimmed lines
@@ -62,6 +89,7 @@ function onLine(src: Readable, callback: (line: string) => void) {
 
 type BitcoindManagerOptions = {
 	binary?: string
+	multiprocessBinary?: string
 	datadir?: string
 	extraArgs?: string[]
 }
@@ -69,6 +97,7 @@ type BitcoindManagerOptions = {
 export class BitcoindManager {
 	private child: ChildProcessWithoutNullStreams | null = null
 	private readonly bin: string
+	private readonly multiprocessBin: string
 	private readonly datadir: string
 	private readonly extraArgs: string[]
 	public versionInfo: {implementation: string; version: string}
@@ -97,8 +126,14 @@ export class BitcoindManager {
 	// flag to prevent emitting an exit event if we are purposefully stopping bitcoind (e.g., changing config via the UI)
 	private expectingExit = false
 
-	constructor({binary = BITCOIND_BIN, datadir = BITCOIN_DIR, extraArgs = []}: BitcoindManagerOptions = {}) {
+	constructor({
+		binary = BITCOIND_BIN,
+		multiprocessBinary = BITCOIN_BIN,
+		datadir = BITCOIN_DIR,
+		extraArgs = [],
+	}: BitcoindManagerOptions = {}) {
 		this.bin = binary
+		this.multiprocessBin = multiprocessBinary
 		this.datadir = datadir
 
 		// Grab extra flags from env, if present
@@ -124,9 +159,9 @@ export class BitcoindManager {
 		this.lastError = err
 	}
 
-	private getBinaryVersionInfo() {
+	private getBinaryVersionInfo(binary = this.bin) {
 		try {
-			const firstLine = execFileSync(this.bin, ['--version']).toString().split('\n')[0]
+			const firstLine = execFileSync(binary, ['--version']).toString().split('\n')[0]
 			const implementation = firstLine.replace(/(?:daemon|RPC client)?\s*version.*$/i, '').trim()
 			const version = (firstLine.match(/v\d+\.\d+\.\d+/) ?? ['unknown'])[0]
 			return {implementation, version}
@@ -135,19 +170,38 @@ export class BitcoindManager {
 		}
 	}
 
-	// Spawn bitcoind as a child process
+	private startCommand(ipcEnabled: boolean): {binary: string; args: string[]; mode: string} {
+		if (!ipcEnabled) {
+			return {
+				binary: this.bin,
+				args: [`-datadir=${this.datadir}`, ...this.extraArgs],
+				mode: 'monolithic',
+			}
+		}
+
+		const hasIpcBind = this.extraArgs.some((arg) => arg === '-ipcbind' || arg.startsWith('-ipcbind='))
+		return {
+			binary: this.multiprocessBin,
+			args: ['-m', 'node', `-datadir=${this.datadir}`, ...(hasIpcBind ? [] : ['-ipcbind=unix']), ...this.extraArgs],
+			mode: 'multiprocess-ipc',
+		}
+	}
+
+	// Spawn Bitcoin Core as a child process
 	// TODO: decide if we want to auto-restart on exit ever
 	start() {
 		// return early if already running
 		if (this.child) return
 
 		const version = getVersionFromSettings()
+		const ipcEnabled = getIpcFromSettings() && supportsIpc(version)
 
 		// We ensure the requested version exists before touching the symlink
-		if (!isVersionInstalled(version)) {
+		if (!isVersionInstalled(version, ipcEnabled)) {
 			// Reflect the desired version in versionInfo so the UI shows intent, not the current symlink
 			this.versionInfo = {...this.versionInfo, version}
-			const msg = `Bitcoin Core version "${version}" is not installed (missing: ${BITCOIN_CORE_VERSIONS_DIR}/${version}/bitcoind).`
+			const requiredBinaries = ipcEnabled ? 'bitcoind, bitcoin, bitcoin-node' : 'bitcoind'
+			const msg = `Bitcoin Core version "${version}" is not installed (missing required executable(s): ${requiredBinaries} in ${BITCOIN_CORE_VERSIONS_DIR}/${version}).`
 			this.lastError = new Error(msg)
 			this.exitInfo = {
 				code: null,
@@ -164,20 +218,22 @@ export class BitcoindManager {
 		// flip the single pointer used by both daemon and CLI
 		execFileSync('ln', ['-sfn', `${BITCOIN_CORE_VERSIONS_DIR}/${version}`, BITCOIN_CORE_CURRENT_SYMLINK])
 
-		// Refresh binary version info (the PATH 'bitcoind' now resolves to the target bitcoind binary)
-		this.versionInfo = this.getBinaryVersionInfo()
+		const command = this.startCommand(ipcEnabled)
+
+		// Refresh binary version info (the PATH now resolves to the target Bitcoin Core binary)
+		this.versionInfo = this.getBinaryVersionInfo(command.binary)
 
 		// Clear any previous log tail
 		this.logRing.length = 0
 
 		this.startedAt = Date.now()
 
-		this.child = spawn(this.bin, [`-datadir=${this.datadir}`, ...this.extraArgs], {
+		this.child = spawn(command.binary, command.args, {
 			stdio: ['pipe', 'pipe', 'pipe'],
 		}) as ChildProcessWithoutNullStreams
 
 		this.lastError = null
-		console.log('[bitcoind-manager] spawned PID', this.child.pid)
+		console.log('[bitcoind-manager] spawned PID', this.child.pid, `(${command.mode})`)
 
 		// Emit start event for zmq hashtx subscriber
 		this.events.emit('start')

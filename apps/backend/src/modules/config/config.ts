@@ -26,7 +26,7 @@ const BITCOIN_CONF_BANNER = [
 ].join('\n')
 
 // Keys that should NOT be written to bitcoin.conf
-const NON_BITCOIN_CONF_KEYS = new Set<keyof SettingsSchema>(['version'])
+const NON_BITCOIN_CONF_KEYS = new Set<keyof SettingsSchema>(['version', 'ipc'])
 
 // In-memory cache of the current settings
 // We update this cache with the latest settings every time we update the settings.json file

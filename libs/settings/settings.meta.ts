@@ -8,7 +8,7 @@
 // IMPORTANT:
 // - Any version added here needs to be added in the Dockerfile
 // - The array of versions must be newest → oldest. We do a simple index comparison to compare versions, so lower index = newer.
-export const AVAILABLE_BITCOIN_CORE_VERSIONS = ['v30.2', 'v30.0', 'v29.2'] as const
+export const AVAILABLE_BITCOIN_CORE_VERSIONS = ['v31.0', 'v30.2', 'v30.0', 'v29.2'] as const
 
 // Default Bitcoin Core version used by bitcoind manager (always the newest version in the array)
 export const DEFAULT_BITCOIN_CORE_VERSION = AVAILABLE_BITCOIN_CORE_VERSIONS[0]
@@ -483,7 +483,7 @@ export const settingsMetadata = {
 		removedIn: 'v30.0',
 	},
 
-	/* ===== RPC & REST tab ===== */
+	/* ===== Interfaces tab ===== */
 	rest: {
 		tab: 'rpc-rest',
 		kind: 'toggle',
@@ -507,6 +507,21 @@ export const settingsMetadata = {
 		min: 1,
 		default: 128,
 		unit: 'requests',
+	},
+
+	ipc: {
+		tab: 'rpc-rest',
+		kind: 'toggle',
+		label: 'IPC Mining Interface',
+		bitcoinLabel: 'ipcbind',
+		description:
+			'Allow apps on your Umbrel to connect to Bitcoin Core over its IPC mining interface. This is required for Stratum V2 apps to request block templates and submit mined blocks from your node.',
+		subDescription:
+			'Requires Bitcoin Core v30.2 or newer. This uses Bitcoin Core multiprocess mode and its experimental IPC interface. Leave this disabled unless an app you use requires it.',
+		default: false,
+		// Bitcoin Core v30.0 was removed from the standard upstream download path after the wallet migration bug.
+		// We intentionally avoid a special-case rebuild of that withdrawn release, so IPC support starts at v30.2.
+		introducedIn: 'v30.2',
 	},
 
 	/* ===== Version tab ===== */

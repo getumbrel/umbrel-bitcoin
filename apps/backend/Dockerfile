@@ -4,17 +4,17 @@
 # hot-reloading backend container (the UI dev server lives in its own
 # apps/ui/Dockerfile; both share a hoisted node_modules volume in the compose file).
 #
-# * production: `docker build ...` produces a single self-contained image with backend + UI + bitcoind
-# single final image that contains
+# * production: `docker build ...` produces a single self-contained image containing:
 #  – compiled backend
 #  – bundled React UI (Vite output → dist/public)
 #  – compiled shared libs (libs/settings, libs/shared-types)
-#  – bitcoind + bitcoin-cli binaries
+#  – Bitcoin Core binaries
 
 ###########################################
-# Bitcoind
+# Bitcoin Core
 ###########################################
 # https://github.com/getumbrel/docker-bitcoind
+FROM ghcr.io/getumbrel/docker-bitcoind:v31.0 AS bitcoind_31_0
 FROM ghcr.io/getumbrel/docker-bitcoind:v30.2 AS bitcoind_30_2
 FROM ghcr.io/getumbrel/docker-bitcoind:v30.0 AS bitcoind_30_0
 FROM ghcr.io/getumbrel/docker-bitcoind:v29.2 AS bitcoind_29_2
@@ -48,23 +48,35 @@ WORKDIR /repo/apps/backend
 
 VOLUME /data
 
-# bitcoind binaries
-RUN mkdir -p /opt/bitcoind/v30.2 /opt/bitcoind/v30.0 /opt/bitcoind/v29.2
-COPY --from=bitcoind_30_2 /bin/bitcoind    /opt/bitcoind/v30.2/bitcoind
-COPY --from=bitcoind_30_2 /bin/bitcoin-cli /opt/bitcoind/v30.2/bitcoin-cli
-COPY --from=bitcoind_30_0 /bin/bitcoind    /opt/bitcoind/v30.0/bitcoind
-COPY --from=bitcoind_30_0 /bin/bitcoin-cli /opt/bitcoind/v30.0/bitcoin-cli
-COPY --from=bitcoind_29_2 /bin/bitcoind    /opt/bitcoind/v29.2/bitcoind
-COPY --from=bitcoind_29_2 /bin/bitcoin-cli /opt/bitcoind/v29.2/bitcoin-cli
+# Bitcoin Core binaries:
+# - bitcoind: normal monolithic daemon
+# - bitcoin-cli: RPC client used by the backend and manual container execs
+# - bitcoin + bitcoin-node: multiprocess IPC mode, available in v31.0/v30.2 here
+RUN mkdir -p /opt/bitcoind/v31.0 /opt/bitcoind/v30.2 /opt/bitcoind/v30.0 /opt/bitcoind/v29.2
+COPY --from=bitcoind_31_0 /bin/bitcoind     /opt/bitcoind/v31.0/bitcoind
+COPY --from=bitcoind_31_0 /bin/bitcoin-cli  /opt/bitcoind/v31.0/bitcoin-cli
+COPY --from=bitcoind_31_0 /bin/bitcoin      /opt/bitcoind/v31.0/bitcoin
+COPY --from=bitcoind_31_0 /usr/bin/bitcoin-node /opt/bitcoind/v31.0/bitcoin-node
+COPY --from=bitcoind_30_2 /bin/bitcoind     /opt/bitcoind/v30.2/bitcoind
+COPY --from=bitcoind_30_2 /bin/bitcoin-cli  /opt/bitcoind/v30.2/bitcoin-cli
+COPY --from=bitcoind_30_2 /bin/bitcoin      /opt/bitcoind/v30.2/bitcoin
+COPY --from=bitcoind_30_2 /usr/bin/bitcoin-node /opt/bitcoind/v30.2/bitcoin-node
+COPY --from=bitcoind_30_0 /bin/bitcoind     /opt/bitcoind/v30.0/bitcoind
+COPY --from=bitcoind_30_0 /bin/bitcoin-cli  /opt/bitcoind/v30.0/bitcoin-cli
+COPY --from=bitcoind_29_2 /bin/bitcoind     /opt/bitcoind/v29.2/bitcoind
+COPY --from=bitcoind_29_2 /bin/bitcoin-cli  /opt/bitcoind/v29.2/bitcoin-cli
 
-# Give 1000:1000 write permisions to /opt/bitcoind (just directory) so we can flip the symbolic link while the container runs as 1000:1000
+# Give 1000:1000 write permissions to /opt/bitcoind itself so we can flip
+# the current-version symlink while the container runs as 1000:1000.
 RUN chown 1000:1000 /opt/bitcoind
 
-# Symbolic link for default bitcoind binary
+# Symbolic links for default Bitcoin Core binaries
 # By default we point to the latest version of Bitcoin Core
-RUN ln -sfn /opt/bitcoind/v30.2 /opt/bitcoind/current
-RUN ln -sfn /opt/bitcoind/current/bitcoind    /usr/local/bin/bitcoind
-RUN ln -sfn /opt/bitcoind/current/bitcoin-cli /usr/local/bin/bitcoin-cli
+RUN ln -sfn /opt/bitcoind/v31.0 /opt/bitcoind/current
+RUN ln -sfn /opt/bitcoind/current/bitcoind     /usr/local/bin/bitcoind
+RUN ln -sfn /opt/bitcoind/current/bitcoin-cli  /usr/local/bin/bitcoin-cli
+RUN ln -sfn /opt/bitcoind/current/bitcoin      /usr/local/bin/bitcoin
+RUN ln -sfn /opt/bitcoind/current/bitcoin-node /usr/local/bin/bitcoin-node
 
 # Symlink for datadir so bitcoin-cli auto-finds the RPC cookie
 # Allows exec'ing bitcoin-cli inside the container without specifying credentials
@@ -96,9 +108,9 @@ WORKDIR /app
 
 # Install production dependencies only
 # Note: import-map lives in package.json, so is also needed so Node can resolve "#settings/#types"
-  COPY package*.json ./
-  COPY apps/backend/package*.json apps/backend/
-  RUN npm ci --omit=dev --install-strategy=hoisted --ignore-scripts
+COPY package*.json ./
+COPY apps/backend/package*.json apps/backend/
+RUN npm ci --omit=dev --install-strategy=hoisted --ignore-scripts
 
 # Backend JS bundle
 COPY --from=app-builder /repo/apps/backend/dist ./dist
@@ -110,23 +122,35 @@ COPY --from=app-builder /repo/apps/ui/dist ./dist/public
 COPY --from=app-builder /repo/libs/settings/dist ./libs/settings/dist
 COPY --from=app-builder /repo/libs/shared-types/dist ./libs/shared-types/dist
 
-# bitcoind binaries
-RUN mkdir -p /opt/bitcoind/v30.2 /opt/bitcoind/v30.0 /opt/bitcoind/v29.2
-COPY --from=bitcoind_30_2 /bin/bitcoind    /opt/bitcoind/v30.2/bitcoind
-COPY --from=bitcoind_30_2 /bin/bitcoin-cli /opt/bitcoind/v30.2/bitcoin-cli
-COPY --from=bitcoind_30_0 /bin/bitcoind    /opt/bitcoind/v30.0/bitcoind
-COPY --from=bitcoind_30_0 /bin/bitcoin-cli /opt/bitcoind/v30.0/bitcoin-cli
-COPY --from=bitcoind_29_2 /bin/bitcoind    /opt/bitcoind/v29.2/bitcoind
-COPY --from=bitcoind_29_2 /bin/bitcoin-cli /opt/bitcoind/v29.2/bitcoin-cli
+# Bitcoin Core binaries:
+# - bitcoind: normal monolithic daemon
+# - bitcoin-cli: RPC client used by the backend and manual container execs
+# - bitcoin + bitcoin-node: multiprocess IPC mode, available in v31.0/v30.2 here
+RUN mkdir -p /opt/bitcoind/v31.0 /opt/bitcoind/v30.2 /opt/bitcoind/v30.0 /opt/bitcoind/v29.2
+COPY --from=bitcoind_31_0 /bin/bitcoind     /opt/bitcoind/v31.0/bitcoind
+COPY --from=bitcoind_31_0 /bin/bitcoin-cli  /opt/bitcoind/v31.0/bitcoin-cli
+COPY --from=bitcoind_31_0 /bin/bitcoin      /opt/bitcoind/v31.0/bitcoin
+COPY --from=bitcoind_31_0 /usr/bin/bitcoin-node /opt/bitcoind/v31.0/bitcoin-node
+COPY --from=bitcoind_30_2 /bin/bitcoind     /opt/bitcoind/v30.2/bitcoind
+COPY --from=bitcoind_30_2 /bin/bitcoin-cli  /opt/bitcoind/v30.2/bitcoin-cli
+COPY --from=bitcoind_30_2 /bin/bitcoin      /opt/bitcoind/v30.2/bitcoin
+COPY --from=bitcoind_30_2 /usr/bin/bitcoin-node /opt/bitcoind/v30.2/bitcoin-node
+COPY --from=bitcoind_30_0 /bin/bitcoind     /opt/bitcoind/v30.0/bitcoind
+COPY --from=bitcoind_30_0 /bin/bitcoin-cli  /opt/bitcoind/v30.0/bitcoin-cli
+COPY --from=bitcoind_29_2 /bin/bitcoind     /opt/bitcoind/v29.2/bitcoind
+COPY --from=bitcoind_29_2 /bin/bitcoin-cli  /opt/bitcoind/v29.2/bitcoin-cli
 
-# Give 1000:1000 write permisions to /opt/bitcoind (just directory) so we can flip the symbolic link while the container runs as 1000:1000
+# Give 1000:1000 write permissions to /opt/bitcoind itself so we can flip
+# the current-version symlink while the container runs as 1000:1000.
 RUN chown 1000:1000 /opt/bitcoind
 
-# Symbolic link for default bitcoind binary
+# Symbolic links for default Bitcoin Core binaries
 # By default we point to the latest version of Bitcoin Core
-RUN ln -sfn /opt/bitcoind/v30.2 /opt/bitcoind/current
-RUN ln -sfn /opt/bitcoind/current/bitcoind    /usr/local/bin/bitcoind
-RUN ln -sfn /opt/bitcoind/current/bitcoin-cli /usr/local/bin/bitcoin-cli
+RUN ln -sfn /opt/bitcoind/v31.0 /opt/bitcoind/current
+RUN ln -sfn /opt/bitcoind/current/bitcoind     /usr/local/bin/bitcoind
+RUN ln -sfn /opt/bitcoind/current/bitcoin-cli  /usr/local/bin/bitcoin-cli
+RUN ln -sfn /opt/bitcoind/current/bitcoin      /usr/local/bin/bitcoin
+RUN ln -sfn /opt/bitcoind/current/bitcoin-node /usr/local/bin/bitcoin-node
 
 # Symlink for datadir so bitcoin-cli auto-finds the RPC cookie
 # Allows exec'ing bitcoin-cli inside the container without specifying credentials

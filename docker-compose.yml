@@ -53,9 +53,10 @@ services:
       # BITCOIN_DIR: bitcoin-dir-override
       # APP_STATE_DIR: app-state-dir-override
 
-      # BITCOIND BINARY SETTINGS
+      # BITCOIN CORE BINARY SETTINGS
       # BITCOIND_BIN: bitcoind-binary-path-override
-      BITCOIND_EXTRA_ARGS: '-deprecatedrpc=create_bdb' # used to pass extra startup flags to bitcoind
+      # BITCOIN_BIN: bitcoin-wrapper-binary-path-override
+      BITCOIND_EXTRA_ARGS: '-deprecatedrpc=create_bdb' # used to pass extra startup flags to Bitcoin Core
 
       # BITCOIND CONF FILE SETTINGS
       APPS_SUBNET: '10.21.0.0/16' # used for rpcallowip

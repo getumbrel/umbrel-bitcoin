@@ -560,7 +560,7 @@ export default function SettingsCard() {
 	const tabs = [
 		{value: 'peers', label: 'Peer Settings'},
 		{value: 'optimization', label: 'Optimization'},
-		{value: 'rpc-rest', label: 'RPC and REST'},
+		{value: 'rpc-rest', label: 'Interfaces'},
 		{value: 'network', label: 'Network Selection'},
 		{value: 'version', label: 'Bitcoin Core Version'},
 		{value: 'advanced', label: 'Advanced'},
