@@ -74,8 +74,10 @@ function updateFormWhenVersionChanges(
 	const defaults = DefaultValuesForVersion(targetVersion) as Record<string, unknown>
 	for (const key of Object.keys(targetMetadata)) {
 		const isNewKey = !previousKeys.has(key)
-		if (isNewKey) {
-			// We avoid marking dirty or triggering per-field validation and instead do a single revalidation pass below
+		const currentValue = form.getValues(key as any)
+		if (isNewKey && currentValue === undefined) {
+			// We avoid marking dirty or triggering per-field validation and instead do a single revalidation pass below.
+			// If a hidden field still has a value, preserve it when switching back to a version that supports it.
 			form.setValue(key as any, (defaults as any)[key], {shouldValidate: false, shouldDirty: false})
 		}
 	}
