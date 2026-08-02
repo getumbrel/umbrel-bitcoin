@@ -1,5 +1,6 @@
 // This module is responsible for migrating the JSON config from the previous app (umbel-config.json) to this app's equivalent settings.json
 // It will run on first boot after the update and coerce the values to the new schema if needed.
+import os from 'node:os'
 import path from 'node:path'
 import fse from 'fs-extra'
 import {ZodError} from 'zod'
@@ -133,7 +134,7 @@ export async function migrateLegacyConfig(): Promise<SettingsSchema | undefined>
 
 	try {
 		const latestVersion = resolveVersion(LATEST)
-		const defaultValues = DefaultValuesForVersion(latestVersion)
+		const defaultValues = DefaultValuesForVersion(latestVersion, {totalRamBytes: os.totalmem()})
 		// Merge defaults for latest Bitcoin Core version with coerced legacy values and validate against the
 		// versioned schema to produce a clean, current settings.json
 		const validated = schemaForVersion(LATEST).parse({

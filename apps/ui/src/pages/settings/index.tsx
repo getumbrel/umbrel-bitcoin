@@ -49,7 +49,7 @@ import {
 	type SelectedVersion,
 } from '#settings'
 
-import {useSettings, useUpdateSettings, useRestoreDefaults} from '@/hooks/useSettings'
+import {useSettings, useSystemInfo, useUpdateSettings, useRestoreDefaults} from '@/hooks/useSettings'
 import {useBitcoindExitInfo} from '@/hooks/useBitcoindExitInfo'
 import IncompatibleSettingsAlert from './IncompatibleSettingsAlert.js'
 
@@ -64,14 +64,15 @@ function updateFormWhenVersionChanges(
 	form: ReturnType<typeof useForm>,
 	previousKeys: Set<string>,
 	selectedVersion: SelectedVersion,
+	totalRamBytes?: number,
 ) {
 	// Derive the settings metadata for the target Core version
 	const targetVersion = resolveVersion(selectedVersion)
-	const targetMetadata = settingsMetadataForVersion(targetVersion)
+	const targetMetadata = settingsMetadataForVersion(targetVersion, {totalRamBytes})
 
 	// Derive defaults for the target version and set them ONLY for settings that did not exist in the previous version
 	// e.g., if prev version was v30.0 and user switches to v29.2 there will be a new setting called `maxorphantx` that needs to be set to the default value for v29.2
-	const defaults = DefaultValuesForVersion(targetVersion) as Record<string, unknown>
+	const defaults = DefaultValuesForVersion(targetVersion, {totalRamBytes}) as Record<string, unknown>
 	for (const key of Object.keys(targetMetadata)) {
 		const isNewKey = !previousKeys.has(key)
 		const currentValue = form.getValues(key as any)
@@ -165,6 +166,8 @@ function FieldRenderer({
 }) {
 	const option = settingsMetadata[name] as Option
 	const disabled = useInputsDisabled()
+	// Total system RAM, used to seed RAM-aware defaults (e.g. dbcache) on version switches
+	const {data: systemInfo} = useSystemInfo()
 
 	// Number fields (e.g., dbcache)
 	if (option.kind === 'number') {
@@ -359,7 +362,7 @@ function FieldRenderer({
 									// and revalidate with the new schema for that version
 									if (name === 'version') {
 										const previousKeys = new Set(Object.keys(settingsMetadata))
-										updateFormWhenVersionChanges(form, previousKeys, v as SelectedVersion)
+										updateFormWhenVersionChanges(form, previousKeys, v as SelectedVersion, systemInfo?.totalRamBytes)
 									}
 								}}
 								disabled={disabled}
@@ -403,6 +406,8 @@ export default function SettingsCard() {
 
 	// Form data state
 	const {data: initialSettings, isLoading} = useSettings()
+	// Total system RAM, used to compute RAM-aware defaults (e.g. dbcache)
+	const {data: systemInfo} = useSystemInfo()
 	const updateSettings = useUpdateSettings()
 	const restoreDefaults = useRestoreDefaults()
 	// Save dialog controlled state to avoid any double-open edge cases
@@ -442,7 +447,10 @@ export default function SettingsCard() {
 	// 2) Map the selection to a specific Core version (e.g., 'latest' → 'v30.0')
 	const targetVersion = resolveVersion(selectedVersion as SelectedVersion)
 	// 3) Materialize version-aware metadata used to render the fields and constraints
-	const settingsMetadata = useMemo(() => settingsMetadataForVersion(targetVersion), [targetVersion])
+	const settingsMetadata = useMemo(
+		() => settingsMetadataForVersion(targetVersion, {totalRamBytes: systemInfo?.totalRamBytes}),
+		[targetVersion, systemInfo?.totalRamBytes],
+	)
 
 	// Clear search if navigated here with clearSearch parameter (e.g., from "View logs" button in bitcoind crash toast)
 	useEffect(() => {

@@ -85,6 +85,21 @@ export type VersionedOption = Option & {
 	versionOverrides?: Partial<Record<BitcoinCoreVersion, VersionOverrides>>
 }
 
+// RAM-aware default for -dbcache, mirroring Bitcoin Core v31.0+ (bitcoin/bitcoin#34692):
+// 1024 MiB on systems with at least 4 GiB of detected RAM, 450 MiB otherwise.
+// We apply the same rule regardless of the selected Core version so that older versions
+// (whose built-in default is a flat 450 MiB) benefit as well. An undersized cache is
+// continuously filled and emptied at steady state, causing sustained write amplification
+// on the underlying disk (the full UTXO working set is repeatedly rewritten into LevelDB).
+export const DBCACHE_BASE_DEFAULT_MIB = 450
+export const DBCACHE_HIGH_DEFAULT_MIB = 1024
+export const DBCACHE_HIGH_DEFAULT_MIN_RAM_BYTES = 4096 * 1024 * 1024
+
+export function defaultDbcacheMiB(totalRamBytes?: number): number {
+	if (totalRamBytes && totalRamBytes >= DBCACHE_HIGH_DEFAULT_MIN_RAM_BYTES) return DBCACHE_HIGH_DEFAULT_MIB
+	return DBCACHE_BASE_DEFAULT_MIB
+}
+
 // NOTE: this is the single source of truth for the settings metadata. Everything is derived from this object (versioned metadata, versioned schema, default values, UI fields, etc).
 // TypeScript infers the type of the object literals below based on the `kind` property.
 export const settingsMetadata = {
@@ -297,13 +312,16 @@ export const settingsMetadata = {
 		label: 'Cache Size',
 		bitcoinLabel: 'dbcache',
 		description:
-			'Choose the size of the UTXO set to store in RAM. A larger cache can speed up the initial synchronization of your Bitcoin node, but after the initial sync is complete, a larger cache value does not significantly improve performance and may use more RAM than needed.',
+			'Choose the size of the UTXO cache to keep in RAM. A larger cache speeds up the initial synchronization of your Bitcoin node and reduces disk activity afterwards: whenever the cache fills up it is emptied to disk, so an undersized cache causes the UTXO set to be rewritten over and over. The default matches Bitcoin Core: 1024 MiB on systems with at least 4 GiB of RAM, 450 MiB otherwise.',
 		min: 4,
 		// We don't set the max here because bitcoind will just automatically cap at 16_384 without erroring
 		// and this max value has traditionally increased over time with newer releases
 		// max: 16_384,
 		step: 1,
-		default: 450,
+		// The actual default is RAM-aware and applied in settingsMetadataForVersion() (see defaultDbcacheMiB).
+		// This static value is the fallback when the total system RAM is unknown (e.g. during the first
+		// browser render, before the UI has fetched it from the backend).
+		default: DBCACHE_BASE_DEFAULT_MIB,
 		unit: 'MiB',
 	},
 
@@ -568,7 +586,8 @@ export function resolveVersion(desired: SelectedVersion): BitcoinCoreVersion {
 }
 
 // Creates the version‑specific metadata for a given Bitcoin Core version:
-export function settingsMetadataForVersion(version: BitcoinCoreVersion) {
+// `options.totalRamBytes` (when known) is used to compute RAM-aware defaults (currently just dbcache).
+export function settingsMetadataForVersion(version: BitcoinCoreVersion, options?: {totalRamBytes?: number}) {
 	const metadata: Record<string, Option> = {}
 	const versionIdx = AVAILABLE_BITCOIN_CORE_VERSIONS.indexOf(version)
 
@@ -592,12 +611,18 @@ export function settingsMetadataForVersion(version: BitcoinCoreVersion) {
 		metadata[key] = merged as unknown as Option
 	}
 
+	// Apply the RAM-aware dbcache default when the total system RAM is known
+	if (metadata['dbcache']) {
+		metadata['dbcache'] = {...metadata['dbcache'], default: defaultDbcacheMiB(options?.totalRamBytes)} as Option
+	}
+
 	return metadata
 }
 
 // Compute default form values for a given Bitcoin Core version.
-export function DefaultValuesForVersion(version: BitcoinCoreVersion) {
-	const metadata = settingsMetadataForVersion(version)
+// `options.totalRamBytes` (when known) is used to compute RAM-aware defaults (currently just dbcache).
+export function DefaultValuesForVersion(version: BitcoinCoreVersion, options?: {totalRamBytes?: number}) {
+	const metadata = settingsMetadataForVersion(version, options)
 	const defaults = {} as Record<string, unknown>
 	for (const key in metadata) defaults[key] = (metadata as Record<string, {default: unknown}>)[key].default
 	return defaults

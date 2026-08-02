@@ -53,6 +53,7 @@ export default fp(async (app: FastifyInstance) => {
 	const configBase = `${BASE}/config`
 
 	app.get(`${configBase}/settings`, config.getSettings)
+	app.get(`${configBase}/system-info`, config.getSystemInfo)
 
 	app.patch(`${configBase}/settings`, async (req) => {
 		// Validation is handled in config.updateSettings(). Zod errors become 400 via the global handler.

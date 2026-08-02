@@ -1,5 +1,6 @@
 // TODO: break out some config-helpers into a separate file
 
+import os from 'node:os'
 import path from 'node:path'
 import {createHmac, randomBytes} from 'node:crypto'
 import fse from 'fs-extra'
@@ -37,7 +38,7 @@ let cachedSettings: SettingsSchema | undefined
 function mergeWithDefaults(partial: Partial<SettingsSchema>): SettingsSchema {
 	const selectedVersion = ((partial as {version?: SelectedVersion})?.version ?? LATEST) as SelectedVersion
 	const resolvedVersion = resolveVersion(selectedVersion)
-	const defaults = DefaultValuesForVersion(resolvedVersion) as Record<string, unknown>
+	const defaults = DefaultValuesForVersion(resolvedVersion, {totalRamBytes: os.totalmem()}) as Record<string, unknown>
 	return {...defaults, ...partial} as SettingsSchema
 }
 
@@ -370,6 +371,11 @@ export async function getSettings(): Promise<SettingsSchema> {
 	return cachedSettings
 }
 
+// System information the UI needs to mirror the backend's RAM-aware defaults (e.g. dbcache)
+export async function getSystemInfo(): Promise<{totalRamBytes: number}> {
+	return {totalRamBytes: os.totalmem()}
+}
+
 // Update settings.json, umbrel-bitcoin.conf + bitcoin.conf, and restarts bitcoind
 export async function updateSettings(patch: Partial<SettingsSchema>): Promise<SettingsSchema> {
 	const current = await getSettings()
@@ -382,7 +388,7 @@ export async function updateSettings(patch: Partial<SettingsSchema>): Promise<Se
 
 	// Merge defaults for resolved version → current → patch, then validate via dynamic schema
 	const mergedWithDefaults = {
-		...(DefaultValuesForVersion(resolvedVersion) as Record<string, unknown>),
+		...(DefaultValuesForVersion(resolvedVersion, {totalRamBytes: os.totalmem()}) as Record<string, unknown>),
 		...(current as Record<string, unknown>),
 		...(patch as Record<string, unknown>),
 	}
@@ -417,7 +423,7 @@ export async function restoreDefaults(): Promise<SettingsSchema> {
 	const selectedVersion = ((current as {version?: SelectedVersion} | undefined)?.version ?? LATEST) as SelectedVersion
 	const resolvedVersion = resolveVersion(selectedVersion)
 	const defaults = {
-		...(DefaultValuesForVersion(resolvedVersion) as Record<string, unknown>),
+		...(DefaultValuesForVersion(resolvedVersion, {totalRamBytes: os.totalmem()}) as Record<string, unknown>),
 		version: selectedVersion,
 	} as SettingsSchema
 

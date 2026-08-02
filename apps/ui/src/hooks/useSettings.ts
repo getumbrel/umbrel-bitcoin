@@ -3,6 +3,16 @@ import {toast} from 'sonner'
 import {api} from '@/lib/api'
 import type {SettingsSchema} from '#settings'
 
+// System info used to mirror the backend's RAM-aware defaults (e.g. dbcache).
+// Total RAM never changes while the app is open, so cache it forever.
+export function useSystemInfo() {
+	return useQuery({
+		queryKey: ['config', 'system-info'],
+		queryFn: () => api<{totalRamBytes: number}>('/config/system-info'),
+		staleTime: Infinity,
+	})
+}
+
 // TODO: set actual cache times. We don't expect settings to change until the user updates them.
 export function useSettings() {
 	return useQuery({
