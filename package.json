@@ -6,6 +6,9 @@
 		"apps/*"
 	],
 	"type": "module",
+	"engines": {
+		"node": ">=24.19.0"
+	},
 	"scripts": {
 		"dev": "npm run --workspace apps/backend dev & npm run --workspace apps/ui dev",
 		"lint": "eslint .",
@@ -25,8 +28,8 @@
 		"typescript": "^5.8.3"
 	},
 	"dependencies": {
-		"@fastify/helmet": "^13.0.1",
-		"zod": "^3.25.67"
+		"@fastify/helmet": "13.1.0",
+		"zod": "3.25.76"
 	},
 	"imports": {
 		"#settings": "./libs/settings/dist/index.js",

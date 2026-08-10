@@ -23,7 +23,7 @@ FROM ghcr.io/getumbrel/docker-bitcoind:v29.2 AS bitcoind_29_2
 # Dependencies layer — install every workspace deps
 # Functions as a shared cache for dev & app-builder stages
 ##########################################################
-FROM node:20-slim AS deps
+FROM node:24.19.0-slim@sha256:3638d9a6fe4030bd716be989438248074489337ba3275657f93595428be4fc03 AS deps
 WORKDIR /repo
 
 # Copy only dependency manifests to keep this layer cache-friendly
@@ -103,14 +103,14 @@ RUN tsc -b libs/shared-types libs/settings apps/backend \
 ########################################
 # runtime stage — final production image
 ########################################
-FROM node:20-slim AS runtime
+FROM node:24.19.0-slim@sha256:3638d9a6fe4030bd716be989438248074489337ba3275657f93595428be4fc03 AS runtime
 WORKDIR /app
 
 # Install production dependencies only
 # Note: import-map lives in package.json, so is also needed so Node can resolve "#settings/#types"
 COPY package*.json ./
 COPY apps/backend/package*.json apps/backend/
-RUN npm ci --omit=dev --install-strategy=hoisted --ignore-scripts
+RUN npm ci --workspace apps/backend --include-workspace-root --omit=dev --omit=optional --install-strategy=hoisted --ignore-scripts
 
 # Backend JS bundle
 COPY --from=app-builder /repo/apps/backend/dist ./dist

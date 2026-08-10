@@ -24,10 +24,8 @@
 		"@radix-ui/react-switch": "^1.2.5",
 		"@radix-ui/react-tabs": "^1.1.11",
 		"@radix-ui/react-tooltip": "^1.2.7",
-		"@react-spring/three": "^10.0.1",
 		"@react-three/drei": "^10.0.8",
 		"@react-three/fiber": "^9.1.2",
-		"@shadergradient/react": "^2.0.25",
 		"@tanstack/react-query": "^5.75.7",
 		"@tanstack/react-table": "^8.21.3",
 		"@wojtekmaj/react-qr-svg": "^2.0.0",
@@ -45,8 +43,7 @@
 		"react-dom": "^19.1.0",
 		"react-error-boundary": "^6.0.0",
 		"react-globe.gl": "^2.33.2",
-		"react-router-dom": "^7.6.0",
-		"react-spring": "^10.0.0",
+		"react-router-dom": "7.18.2",
 		"recharts": "^2.15.3",
 		"sonner": "^2.0.5",
 		"tailwind-merge": "^3.3.0",
@@ -61,7 +58,7 @@
 		"@vitejs/plugin-react": "^4.4.1",
 		"tailwindcss": "^4.1.7",
 		"tw-animate-css": "^1.2.9",
-		"vite": "^6.3.5",
+		"vite": "6.4.3",
 		"vite-plugin-svgr": "^4.3.0"
 	}
 }
