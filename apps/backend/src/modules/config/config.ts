@@ -64,8 +64,11 @@ function applyDerivedSettings(settings: SettingsSchema): SettingsSchema {
 	// If Peer Block Filters is on -> Block Filter Index must also be on
 	if (newSettings['peerblockfilters']) newSettings['blockfilterindex'] = true
 
-	// If prune > 0 -> txindex must be off
-	if (newSettings['prune'] > 0) newSettings['txindex'] = false
+	// If prune > 0 -> incompatible transaction indexes must be off
+	if (newSettings['prune'] > 0) {
+		newSettings['txindex'] = false
+		if ('txospenderindex' in newSettings) newSettings['txospenderindex'] = false
+	}
 
 	// If proxy is on, but onlynet doesn't include clearnet and tor -> disable proxy
 	if (
@@ -73,6 +76,15 @@ function applyDerivedSettings(settings: SettingsSchema): SettingsSchema {
 		(!newSettings['onlynet'].includes('clearnet') || !newSettings['onlynet'].includes('tor'))
 	) {
 		newSettings['proxy'] = false
+	}
+
+	// Private broadcast requires at least one privacy network for outgoing connections
+	if (
+		newSettings['privatebroadcast'] &&
+		!newSettings['onlynet'].includes('tor') &&
+		!newSettings['onlynet'].includes('i2p')
+	) {
+		newSettings['privatebroadcast'] = false
 	}
 
 	return newSettings
@@ -130,6 +142,12 @@ function generateBaseConfLines(settings: SettingsSchema): string[] {
 				lines.push('listen=1')
 				lines.push(`listenonion=${flag(nets.includes('tor'))}`)
 				lines.push(`i2pacceptincoming=${flag(nets.includes('i2p'))}`)
+				break
+			}
+
+			// Core treats asmap=0 as a filename, so omit the option when disabled
+			case 'asmap': {
+				if (value) lines.push('asmap=1')
 				break
 			}
 

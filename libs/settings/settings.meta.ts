@@ -122,6 +122,42 @@ export const settingsMetadata = {
 		disabledMessage: 'Both Clearnet and Tor outgoing connections must be enabled to enable this',
 	},
 
+	privatebroadcast: {
+		tab: 'peers',
+		kind: 'toggle',
+		label: 'Privately Broadcast Transactions',
+		bitcoinLabel: 'privatebroadcast',
+		description:
+			"Broadcast transactions submitted by connected apps through Bitcoin Core's sendrawtransaction interface over dedicated, short-lived connections routed through Tor or I2P. This helps conceal the originating IP address and makes separate transactions harder to link.",
+		subDescription:
+			"Requires Tor or I2P to be enabled for outgoing connections. It is incompatible with the connect option in Custom bitcoin.conf overrides; Bitcoin Core will not start with both enabled. A privately broadcast transaction will not appear in your node's mempool until another peer relays it back. Transactions sent by Bitcoin Core's built-in wallet are not affected.",
+		default: false,
+		// Although introduced in v31.0, only expose this from v31.1. Bitcoin Core v31.1 fixes an IP address
+		// leak where some private broadcast connections could be made over clearnet instead of the privacy network.
+		// https://github.com/bitcoin/bitcoin/blob/master/doc/release-notes/release-notes-31.1.md#privatebroadcast
+		introducedIn: 'v31.1',
+		disabledWhen: {
+			onlynet: (v: unknown) => {
+				const onlynets = v as string[]
+				return !onlynets.includes('tor') && !onlynets.includes('i2p')
+			},
+		},
+		disabledMessage: 'At least one outgoing Tor or I2P network must be enabled',
+	},
+
+	asmap: {
+		tab: 'peers',
+		kind: 'toggle',
+		label: 'Diversify Clearnet Peers Across Providers',
+		bitcoinLabel: 'asmap',
+		description:
+			"Use Bitcoin Core's bundled map to group IPv4 and IPv6 peers by their internet provider or hosting network (Autonomous System) when selecting connections. This improves peer diversity by helping prevent too many of your peers from coming from the same network.",
+		subDescription:
+			'Only affects clearnet peer selection. It does not hide your IP address or route traffic through Tor.',
+		default: false,
+		introducedIn: 'v31.0',
+	},
+
 	listen: {
 		tab: 'peers',
 		kind: 'multi',
@@ -318,7 +354,7 @@ export const settingsMetadata = {
 		description:
 			'Save storage space by pruning (deleting) old blocks and keeping only a limited copy of the blockchain. It may take some time for your node to become responsive after you turn on pruning.',
 		subDescription:
-			'⚠ txindex is incompatible with a pruned node. It will be automatically disabled when you save with pruning enabled. Note that some connected apps and services may not work with a pruned blockchain. If you turn off pruning after turning it on, you will need to redownload the entire blockchain.',
+			'⚠ Transaction Indexing (txindex) and Transaction Output Spender Index (txospenderindex) are incompatible with a pruned node and will be automatically disabled when you save with pruning enabled. Note that some connected apps and services may not work with a pruned blockchain. If you turn off pruning after turning it on, you will need to redownload the entire blockchain.',
 		// bitcoind units are MiB, but we use GB here for UX
 		// 1 MiB = allow manual pruning via RPC, >=550 MiB =
 		// automatically prune block files to stay under the specified
@@ -342,6 +378,21 @@ export const settingsMetadata = {
 		// bitcoin core default is false, but we our default is true
 		default: true,
 		/** UI hint: disable when prune > 0 */
+		disabledWhen: {prune: (v: unknown) => (v as number) > 0},
+		disabledMessage: 'automatically disabled when pruning is enabled',
+	},
+
+	txospenderindex: {
+		tab: 'optimization',
+		kind: 'toggle',
+		label: 'Transaction Output Spender Index',
+		bitcoinLabel: 'txospenderindex',
+		description:
+			'Build an index that lets connected apps quickly find which confirmed transaction spent a particular Bitcoin transaction output.',
+		subDescription:
+			'⚠ Requires significant additional storage that grows over time and a lengthy initial indexing pass. It cannot be used with pruning; enabling pruning automatically disables it. Disabling it later does not delete its existing index data. Enable it only if a connected app or custom integration uses gettxspendingprevout.',
+		default: false,
+		introducedIn: 'v31.0',
 		disabledWhen: {prune: (v: unknown) => (v as number) > 0},
 		disabledMessage: 'automatically disabled when pruning is enabled',
 	},
