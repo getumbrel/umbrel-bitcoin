@@ -14,19 +14,19 @@
 # Bitcoin Core
 ###########################################
 # https://github.com/getumbrel/docker-bitcoind
-FROM ghcr.io/getumbrel/docker-bitcoind:v31.1 AS bitcoind_31_1
-FROM ghcr.io/getumbrel/docker-bitcoind:v31.0 AS bitcoind_31_0
-FROM ghcr.io/getumbrel/docker-bitcoind:v30.3 AS bitcoind_30_3
-FROM ghcr.io/getumbrel/docker-bitcoind:v30.2 AS bitcoind_30_2
-FROM ghcr.io/getumbrel/docker-bitcoind:v30.0 AS bitcoind_30_0
-FROM ghcr.io/getumbrel/docker-bitcoind:v29.4 AS bitcoind_29_4
-FROM ghcr.io/getumbrel/docker-bitcoind:v29.2 AS bitcoind_29_2
+FROM ghcr.io/getumbrel/docker-bitcoind:v31.1@sha256:e0a94f8390f4fee796faba306719860a1ba61e8fa841416bca26fd4e1e94cb8c AS bitcoind_31_1
+FROM ghcr.io/getumbrel/docker-bitcoind:v31.0@sha256:89185fc2792a9824cbe18f7ad4ead02a3a9a14adf5b34eb42f60ebec36201fa0 AS bitcoind_31_0
+FROM ghcr.io/getumbrel/docker-bitcoind:v30.3@sha256:eb0ceb12b51a884943e92c76cdbb80205e2c29d936d0cdd48845074b6f5f4c06 AS bitcoind_30_3
+FROM ghcr.io/getumbrel/docker-bitcoind:v30.2@sha256:28d1630adbf31fddcc1536954066b03de555ccd98e12aa48479e48da03ce076b AS bitcoind_30_2
+FROM ghcr.io/getumbrel/docker-bitcoind:v30.0@sha256:f5826a32aed9287cc5ffdec0996f5272634c4b346529cb8627224986ff555101 AS bitcoind_30_0
+FROM ghcr.io/getumbrel/docker-bitcoind:v29.4@sha256:6d2fe6b5016f3dc9e0dc9acb099282fb1c4defc54a904ea052a8a9e74a9cad87 AS bitcoind_29_4
+FROM ghcr.io/getumbrel/docker-bitcoind:v29.2@sha256:381c3df19bb16bc5f5e99998de84225a5838754903a6bb75dcea529354d91120 AS bitcoind_29_2
 
 ##########################################################
 # Dependencies layer — install every workspace deps
 # Functions as a shared cache for dev & app-builder stages
 ##########################################################
-FROM node:24-slim AS deps
+FROM node:24.19.0-slim@sha256:3638d9a6fe4030bd716be989438248074489337ba3275657f93595428be4fc03 AS deps
 WORKDIR /repo
 
 # Copy only dependency manifests to keep this layer cache-friendly
@@ -116,7 +116,7 @@ RUN tsc -b libs/shared-types libs/settings apps/backend \
 ########################################
 # runtime stage — final production image
 ########################################
-FROM node:24-slim AS runtime
+FROM node:24.19.0-slim@sha256:3638d9a6fe4030bd716be989438248074489337ba3275657f93595428be4fc03 AS runtime
 WORKDIR /app
 
 # Install production dependencies only
