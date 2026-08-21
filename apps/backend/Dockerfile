@@ -123,7 +123,9 @@ WORKDIR /app
 # Note: import-map lives in package.json, so is also needed so Node can resolve "#settings/#types"
 COPY package*.json ./
 COPY apps/backend/package*.json apps/backend/
-RUN npm ci --omit=dev --install-strategy=hoisted --ignore-scripts
+# npm is only needed to install dependencies; remove it from the production image to reduce runtime attack surface.
+RUN npm ci --omit=dev --install-strategy=hoisted --ignore-scripts \
+ && rm -rf /root/.npm /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
 
 # Backend JS bundle
 COPY --from=app-builder /repo/apps/backend/dist ./dist
