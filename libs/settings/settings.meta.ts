@@ -303,6 +303,9 @@ export const settingsMetadata = {
 		// and this max value has traditionally increased over time with newer releases
 		// max: 16_384,
 		step: 1,
+		// Bitcoin Core v31+ defaults to 1024 MiB when it detects at least 4 GiB of RAM, but warns that
+		// containers may overestimate available memory. Keep 450 MiB for Umbrel's shared app environment.
+		// TODO: Revisit whether Umbrel should keep overriding Bitcoin Core's version- and hardware-specific default.
 		default: 450,
 		unit: 'MiB',
 	},
@@ -368,7 +371,8 @@ export const settingsMetadata = {
 		max: 100_000,
 		unit: 'bytes',
 		versionOverrides: {
-			// v30.0 changed the default and max so we declare a tiny diff for v29.2
+			// v30.0 changed the default and max, so v29.x releases retain the previous values.
+			'v29.4': {default: 83, max: 83},
 			'v29.2': {default: 83, max: 83},
 		},
 	},
