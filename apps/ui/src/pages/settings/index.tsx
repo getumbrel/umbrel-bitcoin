@@ -371,11 +371,26 @@ function FieldRenderer({
 								</SelectTrigger>
 
 								<SelectContent className='bg-[#272727] shadow-[inset_0_-1px_1px_0_rgba(255,255,255,0.2),_inset_0_1px_1px_0_rgba(0,0,0,0.36)] text-white border-none'>
-									{option.options.map((opt) => (
-										<SelectItem key={opt.value} value={opt.value} className='cursor-pointer'>
-											{opt.label}
-										</SelectItem>
-									))}
+									{option.options.map((opt) => {
+										// Keep every option registered with Radix while settings load. Dynamically adding a saved
+										// value after form.reset() makes Radix briefly emit an empty value. Withdrawn versions are
+										// therefore hidden and disabled in the menu, rather than removed from the collection.
+										// form.reset(initialSettings) also updates defaultValues, so this comparison uses the last
+										// persisted value rather than the live draft and allows an unsaved change to be undone.
+										const persistedValue = form.formState.defaultValues?.[name]
+										const unavailable = opt.selectable === false && opt.value !== persistedValue
+
+										return (
+											<SelectItem
+												key={opt.value}
+												value={opt.value}
+												disabled={unavailable}
+												className={unavailable ? 'hidden' : 'cursor-pointer'}
+											>
+												{opt.label}
+											</SelectItem>
+										)
+									})}
 								</SelectContent>
 							</Select>
 						</div>

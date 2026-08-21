@@ -48,7 +48,7 @@ interface BooleanOption extends BaseOption {
 
 interface SelectOption extends BaseOption {
 	kind: 'select'
-	options: {value: string; label: string}[]
+	options: {value: string; label: string; selectable?: boolean}[]
 	default: string
 }
 
@@ -592,7 +592,14 @@ export const settingsMetadata = {
 			'⚠ If you choose to stay on a specific version, please make sure your chosen version is up to date with the latest security fixes.',
 		options: [
 			{value: LATEST, label: 'Always use the latest version'},
-			...AVAILABLE_BITCOIN_CORE_VERSIONS.map((version) => ({value: version, label: version})),
+			// Preserve existing v30.0 pins, but hide the withdrawn release from users who are not already pinned.
+			// Bitcoin Core withdrew it because a failed wallet migration could delete files from the wallet directory.
+			// https://bitcoincore.org/en/2026/01/05/wallet-migration-bug/
+			...AVAILABLE_BITCOIN_CORE_VERSIONS.map((version) => ({
+				value: version,
+				label: version,
+				selectable: version !== 'v30.0',
+			})),
 		],
 		default: LATEST,
 	},
