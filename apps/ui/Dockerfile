@@ -1,5 +1,5 @@
 # Minimal image for development only
-FROM node:20-slim AS dev
+FROM node:24-slim AS dev
 WORKDIR /repo/apps/ui
 
 # Nothing is copied; the compose bind-mount supplies code and tsconfig.

@@ -26,7 +26,7 @@ FROM ghcr.io/getumbrel/docker-bitcoind:v29.2 AS bitcoind_29_2
 # Dependencies layer — install every workspace deps
 # Functions as a shared cache for dev & app-builder stages
 ##########################################################
-FROM node:20-slim AS deps
+FROM node:24-slim AS deps
 WORKDIR /repo
 
 # Copy only dependency manifests to keep this layer cache-friendly
@@ -116,7 +116,7 @@ RUN tsc -b libs/shared-types libs/settings apps/backend \
 ########################################
 # runtime stage — final production image
 ########################################
-FROM node:20-slim AS runtime
+FROM node:24-slim AS runtime
 WORKDIR /app
 
 # Install production dependencies only

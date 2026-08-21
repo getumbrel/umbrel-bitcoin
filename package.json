@@ -5,6 +5,9 @@
 	"workspaces": [
 		"apps/*"
 	],
+	"engines": {
+		"node": ">=24 <25"
+	},
 	"type": "module",
 	"scripts": {
 		"dev": "npm run --workspace apps/backend dev & npm run --workspace apps/ui dev",
