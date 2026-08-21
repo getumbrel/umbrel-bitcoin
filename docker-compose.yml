@@ -110,7 +110,7 @@ services:
       - ./data/__node_modules_linux__:/repo/node_modules # shares same deps cache as backend container
     command: ['npm', 'run', 'dev', '--', '--host']
     ports:
-      - '5173:5173' # localhost:5173 for ui
+      - '127.0.0.1:5173:5173' # localhost:5173 for ui
     environment:
       VITE_API_BASE: http://backend:3000
     networks: [devnet]
