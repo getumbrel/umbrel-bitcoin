@@ -13,6 +13,7 @@
 # Build artefacts (you can add more as they appear)
 **/dist
 **/build
+**/*.tsbuildinfo
 
 # Local data mounts – we don't need them inside the build context
 data

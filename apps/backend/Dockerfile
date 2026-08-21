@@ -14,9 +14,12 @@
 # Bitcoin Core
 ###########################################
 # https://github.com/getumbrel/docker-bitcoind
+FROM ghcr.io/getumbrel/docker-bitcoind:v31.1 AS bitcoind_31_1
 FROM ghcr.io/getumbrel/docker-bitcoind:v31.0 AS bitcoind_31_0
+FROM ghcr.io/getumbrel/docker-bitcoind:v30.3 AS bitcoind_30_3
 FROM ghcr.io/getumbrel/docker-bitcoind:v30.2 AS bitcoind_30_2
 FROM ghcr.io/getumbrel/docker-bitcoind:v30.0 AS bitcoind_30_0
+FROM ghcr.io/getumbrel/docker-bitcoind:v29.4 AS bitcoind_29_4
 FROM ghcr.io/getumbrel/docker-bitcoind:v29.2 AS bitcoind_29_2
 
 ##########################################################
@@ -51,18 +54,28 @@ VOLUME /data
 # Bitcoin Core binaries:
 # - bitcoind: normal monolithic daemon
 # - bitcoin-cli: RPC client used by the backend and manual container execs
-# - bitcoin + bitcoin-node: multiprocess IPC mode, available in v31.0/v30.2 here
-RUN mkdir -p /opt/bitcoind/v31.0 /opt/bitcoind/v30.2 /opt/bitcoind/v30.0 /opt/bitcoind/v29.2
+# - bitcoin + bitcoin-node: multiprocess IPC mode, available in bundled v30.2+ releases
+RUN mkdir -p /opt/bitcoind/v31.1 /opt/bitcoind/v31.0 /opt/bitcoind/v30.3 /opt/bitcoind/v30.2 /opt/bitcoind/v30.0 /opt/bitcoind/v29.4 /opt/bitcoind/v29.2
+COPY --from=bitcoind_31_1 /bin/bitcoind     /opt/bitcoind/v31.1/bitcoind
+COPY --from=bitcoind_31_1 /bin/bitcoin-cli  /opt/bitcoind/v31.1/bitcoin-cli
+COPY --from=bitcoind_31_1 /bin/bitcoin      /opt/bitcoind/v31.1/bitcoin
+COPY --from=bitcoind_31_1 /usr/bin/bitcoin-node /opt/bitcoind/v31.1/bitcoin-node
 COPY --from=bitcoind_31_0 /bin/bitcoind     /opt/bitcoind/v31.0/bitcoind
 COPY --from=bitcoind_31_0 /bin/bitcoin-cli  /opt/bitcoind/v31.0/bitcoin-cli
 COPY --from=bitcoind_31_0 /bin/bitcoin      /opt/bitcoind/v31.0/bitcoin
 COPY --from=bitcoind_31_0 /usr/bin/bitcoin-node /opt/bitcoind/v31.0/bitcoin-node
+COPY --from=bitcoind_30_3 /bin/bitcoind     /opt/bitcoind/v30.3/bitcoind
+COPY --from=bitcoind_30_3 /bin/bitcoin-cli  /opt/bitcoind/v30.3/bitcoin-cli
+COPY --from=bitcoind_30_3 /bin/bitcoin      /opt/bitcoind/v30.3/bitcoin
+COPY --from=bitcoind_30_3 /usr/bin/bitcoin-node /opt/bitcoind/v30.3/bitcoin-node
 COPY --from=bitcoind_30_2 /bin/bitcoind     /opt/bitcoind/v30.2/bitcoind
 COPY --from=bitcoind_30_2 /bin/bitcoin-cli  /opt/bitcoind/v30.2/bitcoin-cli
 COPY --from=bitcoind_30_2 /bin/bitcoin      /opt/bitcoind/v30.2/bitcoin
 COPY --from=bitcoind_30_2 /usr/bin/bitcoin-node /opt/bitcoind/v30.2/bitcoin-node
 COPY --from=bitcoind_30_0 /bin/bitcoind     /opt/bitcoind/v30.0/bitcoind
 COPY --from=bitcoind_30_0 /bin/bitcoin-cli  /opt/bitcoind/v30.0/bitcoin-cli
+COPY --from=bitcoind_29_4 /bin/bitcoind     /opt/bitcoind/v29.4/bitcoind
+COPY --from=bitcoind_29_4 /bin/bitcoin-cli  /opt/bitcoind/v29.4/bitcoin-cli
 COPY --from=bitcoind_29_2 /bin/bitcoind     /opt/bitcoind/v29.2/bitcoind
 COPY --from=bitcoind_29_2 /bin/bitcoin-cli  /opt/bitcoind/v29.2/bitcoin-cli
 
@@ -72,7 +85,7 @@ RUN chown 1000:1000 /opt/bitcoind
 
 # Symbolic links for default Bitcoin Core binaries
 # By default we point to the latest version of Bitcoin Core
-RUN ln -sfn /opt/bitcoind/v31.0 /opt/bitcoind/current
+RUN ln -sfn /opt/bitcoind/v31.1 /opt/bitcoind/current
 RUN ln -sfn /opt/bitcoind/current/bitcoind     /usr/local/bin/bitcoind
 RUN ln -sfn /opt/bitcoind/current/bitcoin-cli  /usr/local/bin/bitcoin-cli
 RUN ln -sfn /opt/bitcoind/current/bitcoin      /usr/local/bin/bitcoin
@@ -125,18 +138,28 @@ COPY --from=app-builder /repo/libs/shared-types/dist ./libs/shared-types/dist
 # Bitcoin Core binaries:
 # - bitcoind: normal monolithic daemon
 # - bitcoin-cli: RPC client used by the backend and manual container execs
-# - bitcoin + bitcoin-node: multiprocess IPC mode, available in v31.0/v30.2 here
-RUN mkdir -p /opt/bitcoind/v31.0 /opt/bitcoind/v30.2 /opt/bitcoind/v30.0 /opt/bitcoind/v29.2
+# - bitcoin + bitcoin-node: multiprocess IPC mode, available in bundled v30.2+ releases
+RUN mkdir -p /opt/bitcoind/v31.1 /opt/bitcoind/v31.0 /opt/bitcoind/v30.3 /opt/bitcoind/v30.2 /opt/bitcoind/v30.0 /opt/bitcoind/v29.4 /opt/bitcoind/v29.2
+COPY --from=bitcoind_31_1 /bin/bitcoind     /opt/bitcoind/v31.1/bitcoind
+COPY --from=bitcoind_31_1 /bin/bitcoin-cli  /opt/bitcoind/v31.1/bitcoin-cli
+COPY --from=bitcoind_31_1 /bin/bitcoin      /opt/bitcoind/v31.1/bitcoin
+COPY --from=bitcoind_31_1 /usr/bin/bitcoin-node /opt/bitcoind/v31.1/bitcoin-node
 COPY --from=bitcoind_31_0 /bin/bitcoind     /opt/bitcoind/v31.0/bitcoind
 COPY --from=bitcoind_31_0 /bin/bitcoin-cli  /opt/bitcoind/v31.0/bitcoin-cli
 COPY --from=bitcoind_31_0 /bin/bitcoin      /opt/bitcoind/v31.0/bitcoin
 COPY --from=bitcoind_31_0 /usr/bin/bitcoin-node /opt/bitcoind/v31.0/bitcoin-node
+COPY --from=bitcoind_30_3 /bin/bitcoind     /opt/bitcoind/v30.3/bitcoind
+COPY --from=bitcoind_30_3 /bin/bitcoin-cli  /opt/bitcoind/v30.3/bitcoin-cli
+COPY --from=bitcoind_30_3 /bin/bitcoin      /opt/bitcoind/v30.3/bitcoin
+COPY --from=bitcoind_30_3 /usr/bin/bitcoin-node /opt/bitcoind/v30.3/bitcoin-node
 COPY --from=bitcoind_30_2 /bin/bitcoind     /opt/bitcoind/v30.2/bitcoind
 COPY --from=bitcoind_30_2 /bin/bitcoin-cli  /opt/bitcoind/v30.2/bitcoin-cli
 COPY --from=bitcoind_30_2 /bin/bitcoin      /opt/bitcoind/v30.2/bitcoin
 COPY --from=bitcoind_30_2 /usr/bin/bitcoin-node /opt/bitcoind/v30.2/bitcoin-node
 COPY --from=bitcoind_30_0 /bin/bitcoind     /opt/bitcoind/v30.0/bitcoind
 COPY --from=bitcoind_30_0 /bin/bitcoin-cli  /opt/bitcoind/v30.0/bitcoin-cli
+COPY --from=bitcoind_29_4 /bin/bitcoind     /opt/bitcoind/v29.4/bitcoind
+COPY --from=bitcoind_29_4 /bin/bitcoin-cli  /opt/bitcoind/v29.4/bitcoin-cli
 COPY --from=bitcoind_29_2 /bin/bitcoind     /opt/bitcoind/v29.2/bitcoind
 COPY --from=bitcoind_29_2 /bin/bitcoin-cli  /opt/bitcoind/v29.2/bitcoin-cli
 
@@ -146,7 +169,7 @@ RUN chown 1000:1000 /opt/bitcoind
 
 # Symbolic links for default Bitcoin Core binaries
 # By default we point to the latest version of Bitcoin Core
-RUN ln -sfn /opt/bitcoind/v31.0 /opt/bitcoind/current
+RUN ln -sfn /opt/bitcoind/v31.1 /opt/bitcoind/current
 RUN ln -sfn /opt/bitcoind/current/bitcoind     /usr/local/bin/bitcoind
 RUN ln -sfn /opt/bitcoind/current/bitcoin-cli  /usr/local/bin/bitcoin-cli
 RUN ln -sfn /opt/bitcoind/current/bitcoin      /usr/local/bin/bitcoin
