@@ -34,6 +34,8 @@ await app.register(helmet, {
 	},
 })
 
+// No connection cap: these receive-only streams serve a single-user app behind Umbrel's trust boundary.
+// Revisit if the backend becomes directly exposed or multi-tenant.
 await app.register(fastifyWs)
 
 // Detect dead WebSocket connections. Without this, a client whose network

@@ -144,7 +144,8 @@ function rawToBlock(raw: RawBlock): Block {
 
 // --- Single unified cache ---
 
-const CACHE_DEPTH = 200
+export const MAX_BLOCKS_LIMIT = 200
+const CACHE_DEPTH = MAX_BLOCKS_LIMIT
 const blockCache = new Map<number, Block>()
 
 function evictOldEntries() {
@@ -190,7 +191,7 @@ async function getBlockFull(height: number): Promise<Block> {
 
 export async function list(limit = 200): Promise<Block[]> {
 	const tipHeight = await rpcClient.command<number>('getblockcount')
-	const count = Math.min(limit, tipHeight + 1)
+	const count = Math.min(limit, MAX_BLOCKS_LIMIT, tipHeight + 1)
 
 	// Use lightweight fetch for bulk reads (insights charts).
 	// Home page requests (limit ≤ 5) use full fetch for transactionGrid.

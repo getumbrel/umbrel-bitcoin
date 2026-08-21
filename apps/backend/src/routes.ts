@@ -2,6 +2,7 @@ import {randomBytes} from 'node:crypto'
 
 import fp from 'fastify-plugin'
 import type {FastifyError, FastifyInstance} from 'fastify'
+import PQueue from 'p-queue'
 import {ZodError} from 'zod'
 
 import * as bitcoind from './modules/bitcoind/bitcoind.js'
@@ -17,6 +18,9 @@ import * as widgets from './modules/widgets/widgets.js'
 import {type SettingsSchema} from '#settings'
 
 const WS_TOKEN = randomBytes(16).toString('hex')
+
+// Config mutations write shared files and restart Bitcoin Core, so run each complete operation sequentially.
+const configMutationQueue = new PQueue({concurrency: 1})
 
 // We attach a global error handler for all routes (see bottom of this file)
 export default fp(async (app: FastifyInstance) => {
@@ -43,7 +47,20 @@ export default fp(async (app: FastifyInstance) => {
 	app.get(`${rpcBase}/peers/count`, peers.peerCount)
 	app.get(`${rpcBase}/peers/locations`, peers.peerLocations)
 
-	app.get<{Querystring: {limit?: number}}>(`${rpcBase}/blocks`, (req) => blocks.list(req.query.limit))
+	app.get<{Querystring: {limit?: number}}>(
+		`${rpcBase}/blocks`,
+		{
+			schema: {
+				querystring: {
+					type: 'object',
+					properties: {
+						limit: {type: 'integer', minimum: 1, maximum: blocks.MAX_BLOCKS_LIMIT},
+					},
+				},
+			},
+		},
+		(req) => blocks.list(req.query.limit),
+	)
 
 	// connect routes
 	const connectBase = `${BASE}/connect`
@@ -57,10 +74,10 @@ export default fp(async (app: FastifyInstance) => {
 	app.patch(`${configBase}/settings`, async (req) => {
 		// Validation is handled in config.updateSettings(). Zod errors become 400 via the global handler.
 		const patch = req.body as Partial<SettingsSchema>
-		return config.updateSettings(patch)
+		return configMutationQueue.add(() => config.updateSettings(patch))
 	})
 
-	app.post(`${configBase}/restore-defaults`, config.restoreDefaults)
+	app.post(`${configBase}/restore-defaults`, () => configMutationQueue.add(() => config.restoreDefaults()))
 
 	app.get(`${configBase}/custom-options`, async () => ({
 		lines: await config.getCustomOptions(),
@@ -68,8 +85,10 @@ export default fp(async (app: FastifyInstance) => {
 
 	app.patch(`${configBase}/custom-options`, async (req) => {
 		const {lines = ''} = req.body as {lines?: string}
-		const savedLines = await config.updateCustomOptions(lines)
-		return {lines: savedLines}
+		return configMutationQueue.add(async () => {
+			const savedLines = await config.updateCustomOptions(lines)
+			return {lines: savedLines}
+		})
 	})
 
 	// umbrelOS widget routes
