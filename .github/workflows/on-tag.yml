@@ -17,7 +17,7 @@ jobs:
           echo "TAG=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
           echo "VERSION=${GITHUB_REF#refs/*/v}" >> $GITHUB_ENV
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       - name: Login to GitHub Container Registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.repository_owner }}" --password-stdin
@@ -30,6 +30,6 @@ jobs:
           docker buildx build \
             --platform linux/amd64,linux/arm64 \
             --file apps/backend/Dockerfile \
-            --build-arg VERSION=${{ env.VERSION }} \
-            --tag ghcr.io/${{ github.repository }}:${{ env.TAG }} \
+            --build-arg "VERSION=${VERSION}" \
+            --tag "ghcr.io/${GITHUB_REPOSITORY}:${TAG}" \
             --push .
