@@ -1,5 +1,5 @@
 # Minimal image for development only
-FROM node:24.19.0-slim@sha256:3638d9a6fe4030bd716be989438248074489337ba3275657f93595428be4fc03 AS dev
+FROM node:24.22.1-slim@sha256:55fb5f5a527ea2c5c4a95f963e48ef90aa38c7b346054fdc8ee9957a2b55d205 AS dev
 WORKDIR /repo/apps/ui
 
 # Nothing is copied; the compose bind-mount supplies code and tsconfig.
