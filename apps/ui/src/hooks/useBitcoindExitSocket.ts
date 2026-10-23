@@ -6,7 +6,7 @@ import {useNavigate} from 'react-router-dom'
 import {useQueryClient} from '@tanstack/react-query'
 import {toast} from 'sonner'
 
-import {useWebSocketToken} from './useWebSocketToken'
+import {subscribeWebSocket} from '../lib/websocket.js'
 
 import type {ExitInfo} from '#types'
 
@@ -16,12 +16,8 @@ const TOAST_ID = 'bitcoind-exit'
 export function useBitcoindExitSocket() {
 	const qc = useQueryClient()
 	const navigate = useNavigate()
-	const {data} = useWebSocketToken()
 
 	useEffect(() => {
-		if (!data?.token) return
-		const ws = new WebSocket(`${location.origin.replace(/^http/, 'ws')}/api/ws/bitcoind/exit?token=${data?.token}`)
-
 		const showToast = () => {
 			toast.error('Bitcoin Core stopped unexpectedly', {
 				id: TOAST_ID,
@@ -34,34 +30,34 @@ export function useBitcoindExitSocket() {
 			})
 		}
 
-		ws.onmessage = (event) => {
-			const msg = JSON.parse(event.data)
+		return subscribeWebSocket('bitcoind/exit', {
+			onMessage: (event) => {
+				const msg = JSON.parse(event.data)
 
-			// The backend sends a snapshot immediately after the client connects
-			// If the snapshot shows that bitcoind is running -> clear state & dismiss toast
-			if (msg.type === 'snapshot' && msg.running) {
-				qc.setQueryData(['bitcoind', 'exit'], null)
-				toast.dismiss(TOAST_ID)
-				return
-			}
+				// The backend sends a snapshot immediately after the client connects
+				// If the snapshot shows that bitcoind is running -> clear state & dismiss toast
+				if (msg.type === 'snapshot' && msg.running) {
+					qc.setQueryData(['bitcoind', 'exit'], null)
+					toast.dismiss(TOAST_ID)
+					return
+				}
 
-			// If the snapshot shows that bitcoind is not running -> cache the exit info & show toast
-			if (msg.type === 'snapshot' && !msg.running && msg.exit) {
-				const info = msg.exit as ExitInfo
-				qc.setQueryData(['bitcoind', 'exit'], info)
-				showToast()
-				return
-			}
+				// If the snapshot shows that bitcoind is not running -> cache the exit info & show toast
+				if (msg.type === 'snapshot' && !msg.running && msg.exit) {
+					const info = msg.exit as ExitInfo
+					qc.setQueryData(['bitcoind', 'exit'], info)
+					showToast()
+					return
+				}
 
-			// If we get a live "exit" event (bitcoind just crashed while the socket is open) -> cache the exit info & show toast
-			if (msg.type === 'exit') {
-				const info = msg as ExitInfo
-				qc.setQueryData(['bitcoind', 'exit'], info)
-				showToast()
-				return
-			}
-		}
-
-		return () => ws.close()
-	}, [qc, navigate, data?.token])
+				// If we get a live "exit" event (bitcoind just crashed while the socket is open) -> cache the exit info & show toast
+				if (msg.type === 'exit') {
+					const info = msg as ExitInfo
+					qc.setQueryData(['bitcoind', 'exit'], info)
+					showToast()
+					return
+				}
+			},
+		})
+	}, [qc, navigate])
 }

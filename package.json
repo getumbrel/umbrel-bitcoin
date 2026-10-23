@@ -11,6 +11,7 @@
 	"type": "module",
 	"scripts": {
 		"dev": "npm run --workspace apps/backend dev & npm run --workspace apps/ui dev",
+		"test": "node --test tests/*.test.mjs",
 		"lint": "eslint .",
 		"lint:fix": "eslint --fix .",
 		"typecheck": "tsc -p tsconfig.base.json --noEmit",

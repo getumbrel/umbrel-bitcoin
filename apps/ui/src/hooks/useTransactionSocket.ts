@@ -1,35 +1,25 @@
 import {useEffect, useState} from 'react'
 
-import {useWebSocketToken} from './useWebSocketToken'
+import {subscribeWebSocket} from '../lib/websocket.js'
 
 export function useTransactionSocket(): number {
 	const [txCount, setTxCount] = useState(0)
-	const {data} = useWebSocketToken()
 
 	useEffect(() => {
-		if (!data?.token) return
-
-		const ws = new WebSocket(`${location.origin.replace(/^http/, 'ws')}/api/ws/transactions?token=${data?.token}`)
-
-		ws.onmessage = (e) => {
-			try {
-				// The backend sends one “txPing” frame every 33 ms, with
-				// `count` = number of transactions in that slice.
-				const {type, count = 1} = JSON.parse(e.data)
-				if (type === 'txPing') setTxCount((t) => t + count)
-			} catch {
-				// fallback for unexpected payloads
-				setTxCount((t) => t + 1)
-			}
-		}
-
-		// In dev, React StrictMode double-invokes effects (mount → unmount → mount).
-		// The first unmount closes the WebSocket before it connects, triggering a
-		// harmless "WebSocket is closed before the connection is established" error.
-		// This does not happen in production.
-		ws.onerror = console.error
-		return () => ws.close()
-	}, [data?.token])
+		return subscribeWebSocket('transactions', {
+			onMessage: (e) => {
+				try {
+					// The backend sends one “txPing” frame every 33 ms, with
+					// `count` = number of transactions in that slice.
+					const {type, count = 1} = JSON.parse(e.data)
+					if (type === 'txPing') setTxCount((t) => t + count)
+				} catch {
+					// fallback for unexpected payloads
+					setTxCount((t) => t + 1)
+				}
+			},
+		})
+	}, [])
 
 	return txCount
 }

@@ -11,10 +11,11 @@ import type {SyncStage} from '@/lib/sync-progress'
 // Data flow:
 //   1. Initial fetch on mount (or when stage transitions to 'synced')
 //   2. Real-time updates via useBlockStream (single global WebSocket in Layout)
-//   3. refetchOnWindowFocus (React Query default) catches up after tab blur
+//   3. Refetch when the block stream connects/reconnects to catch up missed blocks.
+//   4. refetchOnWindowFocus (React Query default) catches up after tab blur
 //
 // No polling — WebSocket is the primary update channel, REST is only for
-// initial load and focus recovery.
+// initial load, connection recovery and focus recovery.
 
 export function useBlocks({limit = 200, stage}: {limit?: number; stage: SyncStage}) {
 	return useQuery<Block[]>({
