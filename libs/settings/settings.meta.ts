@@ -152,12 +152,14 @@ export const settingsMetadata = {
 		description:
 			"Broadcast transactions submitted by connected apps through Bitcoin Core's sendrawtransaction interface over dedicated, short-lived connections routed through Tor or I2P. This helps conceal the originating IP address and makes separate transactions harder to link.",
 		subDescription:
-			"Requires Tor or I2P to be enabled for outgoing connections. It is incompatible with the connect option in Custom bitcoin.conf overrides; Bitcoin Core will not start with both enabled. A privately broadcast transaction will not appear in your node's mempool until another peer relays it back. Transactions sent by Bitcoin Core's built-in wallet are not affected.",
+			"Bitcoin Core marks this feature as experimental and best-effort. Requires Tor or I2P to be enabled for outgoing connections. It is incompatible with the connect option in Custom bitcoin.conf overrides; Bitcoin Core will not start with both enabled. A privately broadcast transaction will not appear in your node's mempool until another peer relays it back. Transactions sent by Bitcoin Core's built-in wallet are not affected.",
 		default: false,
-		// Although introduced in v31.0, only expose this from v31.1. Bitcoin Core v31.1 fixes an IP address
-		// leak where some private broadcast connections could be made over clearnet instead of the privacy network.
+		// Although introduced in v31.0, only expose this from v32.1. Bitcoin Core v31.1 and v32.1 each fix an IP
+		// address leak where some private broadcast connections could be made over clearnet instead of the privacy
+		// network. The v32.1 fix (a v1 retry after a failed v2 connection skipping the Tor proxy) was not backported to v31.x.
 		// https://github.com/bitcoin/bitcoin/blob/master/doc/release-notes/release-notes-31.1.md#privatebroadcast
-		introducedIn: 'v31.1',
+		// https://github.com/bitcoin/bitcoin/blob/master/doc/release-notes/release-notes-32.1.md#p2p-and-network-changes
+		introducedIn: 'v32.1',
 		disabledWhen: {
 			onlynet: (v: unknown) => {
 				const onlynets = v as string[]
@@ -276,8 +278,28 @@ export const settingsMetadata = {
 		description:
 			"Set the maximum number of peers your node can connect to simultaneously. By managing this, you can optimize your node's network usage and system resources based on your device's capacity. A higher value enables your node to maintain more connections, potentially improving network stability and data sharing. A lower value conserves system resources and bandwidth, which may be beneficial for devices with limited capabilities.",
 		step: 1,
-		default: 125,
+		// Bitcoin Core v32 default changed from 125 to 200 to add inbound capacity for block-relay-only peers.
+		// We never overwrite a users saved value, so only fresh installs will get initially set to the new default.
+		default: 200,
 		unit: 'peers',
+		versionOverrides: overridesBefore('v32.1', {default: 125}),
+	},
+
+	inboundrelaypercent: {
+		tab: 'peers',
+		kind: 'number',
+		label: 'Max Incoming Transaction Relay Peers',
+		bitcoinLabel: 'inboundrelaypercent',
+		description:
+			'Set the maximum percentage of incoming peer connections that can relay transactions with your node. The remaining incoming connections are only used to relay blocks, which uses less memory and bandwidth. When the limit is reached, your node disconnects an incoming transaction relay peer to make room.',
+		subDescription:
+			'Only affects incoming connections, so this has no effect unless your node accepts incoming connections. To keep the incoming connection limits used before Bitcoin Core v32, set this to 100 and Max Peer Connections to 125.',
+		min: 0,
+		max: 100,
+		step: 1,
+		default: 50,
+		unit: '%',
+		introducedIn: 'v32.1',
 	},
 
 	maxreceivebuffer: {
@@ -366,6 +388,23 @@ export const settingsMetadata = {
 		// TODO: Revisit whether Umbrel should keep overriding Bitcoin Core's version- and hardware-specific default.
 		default: 450,
 		unit: 'MiB',
+	},
+
+	prevoutfetchthreads: {
+		tab: 'optimization',
+		kind: 'number',
+		label: 'Block Validation Prefetch Threads',
+		bitcoinLabel: 'prevoutfetchthreads',
+		description:
+			'Set the number of threads used to read the coins spent by each block from disk in parallel while validating it. This can speed up block validation, especially during the initial sync when those coins are not already in the cache.',
+		subDescription: 'Set to 0 to disable parallel prefetching.',
+		min: 0,
+		// Bitcoin Core caps values above 16 without erroring
+		max: 16,
+		step: 1,
+		default: 8,
+		unit: 'threads',
+		introducedIn: 'v32.1',
 	},
 
 	prune: {
@@ -581,6 +620,27 @@ export const settingsMetadata = {
 		min: 1,
 		default: 128,
 		unit: 'requests',
+	},
+
+	rpcmaxconnections: {
+		tab: 'rpc-rest',
+		kind: 'number',
+		label: 'Max RPC Connections',
+		bitcoinLabel: 'rpcmaxconnections',
+		description:
+			'Set the maximum number of clients (e.g., connected wallets or other apps) that can be connected to your node over RPC and REST at the same time. Additional connections wait until a slot opens up.',
+		subDescription:
+			'⚠ Setting this too low can cause connected apps to slow down or time out when many apps are using your node at once.',
+		step: 1,
+		// Bitcoin Core's default is 16, which upstream chose for single-user RPC use. Many apps on an Umbrel share
+		// the RPC server, so we allow as many connected clients as our RPC work queue allows queued requests.
+		// Values above 16 make bitcoind abort at startup if it cannot reserve enough file descriptors (for these
+		// connections plus maxconnections), so we also cap this well below typical container limits.
+		min: 1,
+		max: 1024,
+		default: 128,
+		unit: 'connections',
+		introducedIn: 'v32.1',
 	},
 
 	ipc: {
