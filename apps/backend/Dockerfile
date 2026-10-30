@@ -24,6 +24,16 @@
 # - bitcoind: normal monolithic daemon
 # - bitcoin-cli: RPC client used by the backend and manual container execs
 # - bitcoin + bitcoin-node: multiprocess IPC mode, available in bundled v30.2+ releases
+FROM ghcr.io/getumbrel/docker-bitcoind:v32.1@sha256:21181ae7f34176f6e9541f821b0b2b2e8cb09a00ae28175098b18e70f832edf7 AS bitcoind_32_1
+RUN mkdir -p /opt/bitcoind/v32.1 \
+ && cp -p /bin/bitcoind /bin/bitcoin-cli /bin/bitcoin /usr/bin/bitcoin-node /opt/bitcoind/v32.1/ \
+ && find /opt -type d -exec touch -d @0 {} +
+
+FROM ghcr.io/getumbrel/docker-bitcoind:v31.2@sha256:4379dba6da9dd3dd93d9dcfc7579dab42658002db46b94e2c4a997817838fe26 AS bitcoind_31_2
+RUN mkdir -p /opt/bitcoind/v31.2 \
+ && cp -p /bin/bitcoind /bin/bitcoin-cli /bin/bitcoin /usr/bin/bitcoin-node /opt/bitcoind/v31.2/ \
+ && find /opt -type d -exec touch -d @0 {} +
+
 FROM ghcr.io/getumbrel/docker-bitcoind:v31.1@sha256:e0a94f8390f4fee796faba306719860a1ba61e8fa841416bca26fd4e1e94cb8c AS bitcoind_31_1
 RUN mkdir -p /opt/bitcoind/v31.1 \
  && cp -p /bin/bitcoind /bin/bitcoin-cli /bin/bitcoin /usr/bin/bitcoin-node /opt/bitcoind/v31.1/ \
@@ -32,6 +42,11 @@ RUN mkdir -p /opt/bitcoind/v31.1 \
 FROM ghcr.io/getumbrel/docker-bitcoind:v31.0@sha256:89185fc2792a9824cbe18f7ad4ead02a3a9a14adf5b34eb42f60ebec36201fa0 AS bitcoind_31_0
 RUN mkdir -p /opt/bitcoind/v31.0 \
  && cp -p /bin/bitcoind /bin/bitcoin-cli /bin/bitcoin /usr/bin/bitcoin-node /opt/bitcoind/v31.0/ \
+ && find /opt -type d -exec touch -d @0 {} +
+
+FROM ghcr.io/getumbrel/docker-bitcoind:v30.4@sha256:ecd45fa9f96e7f9bbafcd029033fed17ffbdaccd08fa636c587f3afddf505a0c AS bitcoind_30_4
+RUN mkdir -p /opt/bitcoind/v30.4 \
+ && cp -p /bin/bitcoind /bin/bitcoin-cli /bin/bitcoin /usr/bin/bitcoin-node /opt/bitcoind/v30.4/ \
  && find /opt -type d -exec touch -d @0 {} +
 
 FROM ghcr.io/getumbrel/docker-bitcoind:v30.3@sha256:eb0ceb12b51a884943e92c76cdbb80205e2c29d936d0cdd48845074b6f5f4c06 AS bitcoind_30_3
@@ -47,6 +62,11 @@ RUN mkdir -p /opt/bitcoind/v30.2 \
 FROM ghcr.io/getumbrel/docker-bitcoind:v30.0@sha256:f5826a32aed9287cc5ffdec0996f5272634c4b346529cb8627224986ff555101 AS bitcoind_30_0
 RUN mkdir -p /opt/bitcoind/v30.0 \
  && cp -p /bin/bitcoind /bin/bitcoin-cli /opt/bitcoind/v30.0/ \
+ && find /opt -type d -exec touch -d @0 {} +
+
+FROM ghcr.io/getumbrel/docker-bitcoind:v29.5@sha256:8f4b707f183fc7ef960e4424b4aa92a9acaeb7765cee4430ec9bba59fd75346d AS bitcoind_29_5
+RUN mkdir -p /opt/bitcoind/v29.5 \
+ && cp -p /bin/bitcoind /bin/bitcoin-cli /opt/bitcoind/v29.5/ \
  && find /opt -type d -exec touch -d @0 {} +
 
 FROM ghcr.io/getumbrel/docker-bitcoind:v29.4@sha256:6d2fe6b5016f3dc9e0dc9acb099282fb1c4defc54a904ea052a8a9e74a9cad87 AS bitcoind_29_4
@@ -91,11 +111,15 @@ VOLUME /data
 # Bitcoin Core binaries (see the Bitcoin Core section above)
 COPY --link --from=bitcoind_29_2 /opt /opt
 COPY --link --from=bitcoind_29_4 /opt /opt
+COPY --link --from=bitcoind_29_5 /opt /opt
 COPY --link --from=bitcoind_30_0 /opt /opt
 COPY --link --from=bitcoind_30_2 /opt /opt
 COPY --link --from=bitcoind_30_3 /opt /opt
+COPY --link --from=bitcoind_30_4 /opt /opt
 COPY --link --from=bitcoind_31_0 /opt /opt
 COPY --link --from=bitcoind_31_1 /opt /opt
+COPY --link --from=bitcoind_31_2 /opt /opt
+COPY --link --from=bitcoind_32_1 /opt /opt
 
 # Give 1000:1000 write permissions to /opt/bitcoind itself so we can flip
 # the current-version symlink while the container runs as 1000:1000.
@@ -103,7 +127,7 @@ RUN chown 1000:1000 /opt/bitcoind
 
 # Symbolic links for default Bitcoin Core binaries
 # By default we point to the latest version of Bitcoin Core
-RUN ln -sfn /opt/bitcoind/v31.1 /opt/bitcoind/current
+RUN ln -sfn /opt/bitcoind/v32.1 /opt/bitcoind/current
 RUN ln -sfn /opt/bitcoind/current/bitcoind     /usr/local/bin/bitcoind
 RUN ln -sfn /opt/bitcoind/current/bitcoin-cli  /usr/local/bin/bitcoin-cli
 RUN ln -sfn /opt/bitcoind/current/bitcoin      /usr/local/bin/bitcoin
@@ -142,11 +166,15 @@ FROM node:24.22.1-slim@sha256:55fb5f5a527ea2c5c4a95f963e48ef90aa38c7b346054fdc8e
 # number) to keep the existing layers in place.
 COPY --link --from=bitcoind_29_2 /opt /opt
 COPY --link --from=bitcoind_29_4 /opt /opt
+COPY --link --from=bitcoind_29_5 /opt /opt
 COPY --link --from=bitcoind_30_0 /opt /opt
 COPY --link --from=bitcoind_30_2 /opt /opt
 COPY --link --from=bitcoind_30_3 /opt /opt
+COPY --link --from=bitcoind_30_4 /opt /opt
 COPY --link --from=bitcoind_31_0 /opt /opt
 COPY --link --from=bitcoind_31_1 /opt /opt
+COPY --link --from=bitcoind_31_2 /opt /opt
+COPY --link --from=bitcoind_32_1 /opt /opt
 
 WORKDIR /app
 
@@ -174,7 +202,7 @@ RUN chown 1000:1000 /opt/bitcoind
 
 # Symbolic links for default Bitcoin Core binaries
 # By default we point to the latest version of Bitcoin Core
-RUN ln -sfn /opt/bitcoind/v31.1 /opt/bitcoind/current
+RUN ln -sfn /opt/bitcoind/v32.1 /opt/bitcoind/current
 RUN ln -sfn /opt/bitcoind/current/bitcoind     /usr/local/bin/bitcoind
 RUN ln -sfn /opt/bitcoind/current/bitcoin-cli  /usr/local/bin/bitcoin-cli
 RUN ln -sfn /opt/bitcoind/current/bitcoin      /usr/local/bin/bitcoin

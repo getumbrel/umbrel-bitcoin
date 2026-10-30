@@ -8,7 +8,19 @@
 // IMPORTANT:
 // - Any version added here needs to be added in the Dockerfile
 // - The array of versions must be newest → oldest. We do a simple index comparison to compare versions, so lower index = newer.
-export const AVAILABLE_BITCOIN_CORE_VERSIONS = ['v31.1', 'v31.0', 'v30.3', 'v30.2', 'v30.0', 'v29.4', 'v29.2'] as const
+export const AVAILABLE_BITCOIN_CORE_VERSIONS = [
+	'v32.1',
+	'v31.2',
+	'v31.1',
+	'v31.0',
+	'v30.4',
+	'v30.3',
+	'v30.2',
+	'v30.0',
+	'v29.5',
+	'v29.4',
+	'v29.2',
+] as const
 
 // Default Bitcoin Core version used by bitcoind manager (always the newest version in the array)
 export const DEFAULT_BITCOIN_CORE_VERSION = AVAILABLE_BITCOIN_CORE_VERSIONS[0]
@@ -83,6 +95,16 @@ export type VersionedOption = Option & {
 	introducedIn?: BitcoinCoreVersion // inclusive
 	removedIn?: BitcoinCoreVersion // exclusive
 	versionOverrides?: Partial<Record<BitcoinCoreVersion, VersionOverrides>>
+}
+
+// Applies the same overrides to every version older than `version` (exclusive).
+// Useful for keeping a previous value on older versions when a newer Bitcoin Core release changes it.
+function overridesBefore(
+	version: BitcoinCoreVersion,
+	overrides: VersionOverrides,
+): Partial<Record<BitcoinCoreVersion, VersionOverrides>> {
+	const versionIdx = AVAILABLE_BITCOIN_CORE_VERSIONS.indexOf(version)
+	return Object.fromEntries(AVAILABLE_BITCOIN_CORE_VERSIONS.slice(versionIdx + 1).map((v) => [v, overrides]))
 }
 
 // NOTE: this is the single source of truth for the settings metadata. Everything is derived from this object (versioned metadata, versioned schema, default values, UI fields, etc).
@@ -421,11 +443,8 @@ export const settingsMetadata = {
 		min: 0,
 		max: 100_000,
 		unit: 'bytes',
-		versionOverrides: {
-			// v30.0 changed the default and max, so v29.x releases retain the previous values.
-			'v29.4': {default: 83, max: 83},
-			'v29.2': {default: 83, max: 83},
-		},
+		// v30.0 changed the default and max, so v29.x releases retain the previous values.
+		versionOverrides: overridesBefore('v30.0', {default: 83, max: 83}),
 	},
 
 	permitbaremultisig: {
