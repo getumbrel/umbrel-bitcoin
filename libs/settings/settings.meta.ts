@@ -30,6 +30,62 @@ export const LATEST = 'latest' as const
 export const VERSION_CHOICES = [LATEST, ...AVAILABLE_BITCOIN_CORE_VERSIONS] as const
 export type SelectedVersion = (typeof VERSION_CHOICES)[number]
 
+// Warnings for packaged versions with known problems.
+// Users who have chosen to stay on one of these versions keep running it, but the UI warns them in the header and
+// on the version settings tab, and suggests a version to switch to.
+export type VersionWarning = {
+	label: string // short label shown in the header
+	title: string // heading for the warning on the version settings tab
+	message: string
+	switchTo: SelectedVersion
+	critical?: boolean // shown in red instead of amber
+	selectable?: boolean // false hides the version from new selections while preserving existing pins
+}
+
+const missingSecurityFixes = (fixedIn: BitcoinCoreVersion): VersionWarning => ({
+	label: `${fixedIn} available`,
+	title: 'Security fixes available',
+	message: `This version is missing security fixes that are available in ${fixedIn}.`,
+	switchTo: fixedIn,
+})
+
+const V29_END_OF_LIFE = 'Bitcoin Core 29.x is end of life and no longer receives security fixes.'
+const v29EndOfLife = (message = V29_END_OF_LIFE): VersionWarning => ({
+	label: 'End of life',
+	title: 'End of life',
+	message,
+	switchTo: LATEST,
+})
+
+export const BITCOIN_CORE_VERSION_WARNINGS: Partial<Record<BitcoinCoreVersion, VersionWarning>> = {
+	// https://bitcoincore.org/en/2026/10/28/disclose-fpausesend-oom/
+	// https://bitcoincore.org/en/2026/10/28/disclose-undo-overflow/
+	'v31.1': missingSecurityFixes('v31.2'),
+	'v31.0': missingSecurityFixes('v31.2'),
+	'v30.3': missingSecurityFixes('v30.4'),
+	'v30.2': missingSecurityFixes('v30.4'),
+	// Bitcoin Core withdrew v30.0 because a failed wallet migration could delete files from the wallet directory.
+	// https://bitcoincore.org/en/2026/01/05/wallet-migration-bug/
+	'v30.0': {
+		label: 'Withdrawn',
+		title: 'Withdrawn release',
+		message:
+			'Bitcoin Core withdrew this release because a failed wallet migration could delete files from the wallet directory. It is also missing security fixes that are available in v30.4.',
+		switchTo: 'v30.4',
+		critical: true,
+		selectable: false,
+	},
+	// https://bitcoincore.org/en/lifecycle/
+	'v29.5': v29EndOfLife(),
+	'v29.4': v29EndOfLife(`${V29_END_OF_LIFE} This version is also missing security fixes that are available in v29.5.`),
+	'v29.2': v29EndOfLife(`${V29_END_OF_LIFE} This version is also missing security fixes that are available in v29.5.`),
+}
+
+// Gets the warning for a selected version, if any. 'latest' always resolves to the newest version, which has none.
+export function versionWarning(selected: string | undefined): VersionWarning | undefined {
+	return BITCOIN_CORE_VERSION_WARNINGS[selected as BitcoinCoreVersion]
+}
+
 // Tabs for organization (used in the UI to group settings)
 export type Tab = 'peers' | 'optimization' | 'rpc-rest' | 'network' | 'version' | 'advanced'
 
@@ -60,7 +116,8 @@ interface BooleanOption extends BaseOption {
 
 interface SelectOption extends BaseOption {
 	kind: 'select'
-	options: {value: string; label: string; selectable?: boolean}[]
+	// Options with a group are listed under that group's heading
+	options: {value: string; label: string; selectable?: boolean; group?: string}[]
 	default: string
 }
 
@@ -670,14 +727,13 @@ export const settingsMetadata = {
 		subDescription:
 			'⚠ If you choose to stay on a specific version, please make sure your chosen version is up to date with the latest security fixes.',
 		options: [
-			{value: LATEST, label: 'Always use the latest version'},
-			// Preserve existing v30.0 pins, but hide the withdrawn release from users who are not already pinned.
-			// Bitcoin Core withdrew it because a failed wallet migration could delete files from the wallet directory.
-			// https://bitcoincore.org/en/2026/01/05/wallet-migration-bug/
+			{value: LATEST, label: 'Always use the latest version', group: 'Recommended'},
+			// Versions with known problems are listed separately so the recommended choices stand out
 			...AVAILABLE_BITCOIN_CORE_VERSIONS.map((version) => ({
 				value: version,
 				label: version,
-				selectable: version !== 'v30.0',
+				selectable: BITCOIN_CORE_VERSION_WARNINGS[version]?.selectable !== false,
+				group: BITCOIN_CORE_VERSION_WARNINGS[version] ? 'Older versions' : 'Recommended',
 			})),
 		],
 		default: LATEST,

@@ -14,7 +14,16 @@ import {Card, CardHeader, CardContent, CardFooter, CardTitle} from '@/components
 import {Tabs, TabsList, TabsTrigger, TabsContent} from '@/components/ui/tabs'
 import {Button} from '@/components/ui/button'
 import {Input} from '@/components/ui/input'
-import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from '@/components/ui/select'
+import {
+	Select,
+	SelectContent,
+	SelectGroup,
+	SelectItem,
+	SelectLabel,
+	SelectSeparator,
+	SelectTrigger,
+	SelectValue,
+} from '@/components/ui/select'
 import {
 	AlertDialog,
 	AlertDialogTrigger,
@@ -43,6 +52,7 @@ import {
 	settingsMetadataForVersion,
 	resolveVersion,
 	schemaForVersion,
+	versionWarning,
 	type SettingsSchema,
 	type Tab,
 	type Option,
@@ -52,6 +62,7 @@ import {
 import {useSettings, useUpdateSettings, useRestoreDefaults} from '@/hooks/useSettings'
 import {useBitcoindExitInfo} from '@/hooks/useBitcoindExitInfo'
 import IncompatibleSettingsAlert from './IncompatibleSettingsAlert.js'
+import VersionWarningAlert from './VersionWarningAlert'
 
 type SettingName = string
 
@@ -83,6 +94,13 @@ function updateFormWhenVersionChanges(
 	}
 	// We do a single revalidation pass so the versioned resolver applies the new schema
 	void form.trigger()
+}
+
+// Groups select options by their optional `group`, keeping their order. Options without a group form one unlabeled group.
+function groupSelectOptions<T extends {group?: string}>(options: T[]): [string | undefined, T[]][] {
+	const groups = new Map<string | undefined, T[]>()
+	for (const opt of options) groups.set(opt.group, [...(groups.get(opt.group) ?? []), opt])
+	return [...groups]
 }
 
 // Trigger for each tab
@@ -353,6 +371,9 @@ function FieldRenderer({
 								value={field.value}
 								defaultValue={option.default?.toString()}
 								onValueChange={(v) => {
+									// Radix can emit an empty value when the form resets before the options are registered
+									// (e.g., arriving on this tab with settings already cached). No option uses an empty value.
+									if (v === '') return
 									field.onChange(v) // keeps React-Hook-Form in sync
 
 									// if version field is changed, we need to update the form with any new defaults for settings that did not exist in the previous version
@@ -371,26 +392,32 @@ function FieldRenderer({
 								</SelectTrigger>
 
 								<SelectContent className='bg-[#272727] shadow-[inset_0_-1px_1px_0_rgba(255,255,255,0.2),_inset_0_1px_1px_0_rgba(0,0,0,0.36)] text-white border-none'>
-									{option.options.map((opt) => {
-										// Keep every option registered with Radix while settings load. Dynamically adding a saved
-										// value after form.reset() makes Radix briefly emit an empty value. Withdrawn versions are
-										// therefore hidden and disabled in the menu, rather than removed from the collection.
-										// form.reset(initialSettings) also updates defaultValues, so this comparison uses the last
-										// persisted value rather than the live draft and allows an unsaved change to be undone.
-										const persistedValue = form.formState.defaultValues?.[name]
-										const unavailable = opt.selectable === false && opt.value !== persistedValue
+									{groupSelectOptions(option.options).map(([group, options], groupIndex) => (
+										<SelectGroup key={group ?? groupIndex}>
+											{groupIndex > 0 && <SelectSeparator className='bg-white/10' />}
+											{group && <SelectLabel className='text-white/40 text-[11px]'>{group}</SelectLabel>}
+											{options.map((opt) => {
+												// Keep every option registered with Radix while settings load. Dynamically adding a saved
+												// value after form.reset() makes Radix briefly emit an empty value. Withdrawn versions are
+												// therefore hidden and disabled in the menu, rather than removed from the collection.
+												// form.reset(initialSettings) also updates defaultValues, so this comparison uses the last
+												// persisted value rather than the live draft and allows an unsaved change to be undone.
+												const persistedValue = form.formState.defaultValues?.[name]
+												const unavailable = opt.selectable === false && opt.value !== persistedValue
 
-										return (
-											<SelectItem
-												key={opt.value}
-												value={opt.value}
-												disabled={unavailable}
-												className={unavailable ? 'hidden' : 'cursor-pointer'}
-											>
-												{opt.label}
-											</SelectItem>
-										)
-									})}
+												return (
+													<SelectItem
+														key={opt.value}
+														value={opt.value}
+														disabled={unavailable}
+														className={unavailable ? 'hidden' : 'cursor-pointer'}
+													>
+														{opt.label}
+													</SelectItem>
+												)
+											})}
+										</SelectGroup>
+									))}
 								</SelectContent>
 							</Select>
 						</div>
@@ -458,6 +485,8 @@ export default function SettingsCard() {
 	const targetVersion = resolveVersion(selectedVersion as SelectedVersion)
 	// 3) Materialize version-aware metadata used to render the fields and constraints
 	const settingsMetadata = useMemo(() => settingsMetadataForVersion(targetVersion), [targetVersion])
+	// 4) Known problems with the selected version (shown as a warning on the version tab)
+	const selectedWarning = versionWarning(selectedVersion)
 
 	// Clear search if navigated here with clearSearch parameter (e.g., from "View logs" button in bitcoind crash toast)
 	useEffect(() => {
@@ -469,6 +498,12 @@ export default function SettingsCard() {
 			setSearchParams(newParams, {replace: true})
 		}
 	}, [searchParams, setSearchParams])
+
+	// Follow tab links while already on this page (e.g., the header's version warning links to ?tab=version)
+	const tabParam = searchParams.get('tab') ?? 'peers'
+	useEffect(() => {
+		setCurrentTab(tabParam)
+	}, [tabParam])
 
 	const {isDirty, isValid, isSubmitting} = form.formState
 
@@ -688,6 +723,18 @@ export default function SettingsCard() {
 														</AnimatePresence>
 													)}
 
+													{/* Warn when the selected version has known problems, with a shortcut to the suggested version */}
+													{tab.value === 'version' && selectedWarning && (
+														<VersionWarningAlert
+															warning={selectedWarning}
+															onSwitch={() => {
+																const previousKeys = new Set(Object.keys(settingsMetadata))
+																form.setValue('version', selectedWarning.switchTo, {shouldDirty: true})
+																updateFormWhenVersionChanges(form, previousKeys, selectedWarning.switchTo)
+															}}
+														/>
+													)}
+
 													{/* Special handling for advanced tab since it renders unique content (custom config editor etc.) */}
 													{/* Currently we don't have anything from settings.meta.ts that shows up in advanced. */}
 													{tab.value === 'advanced' && (
@@ -733,7 +780,8 @@ export default function SettingsCard() {
 												page.
 											</p>
 											{(() => {
-												const currentVersion = form.getValues().version ?? 'latest'
+												// The backend restores defaults for the saved version, not an unsaved selection
+												const currentVersion = initialSettings?.version ?? 'latest'
 												if (currentVersion !== 'latest') {
 													return (
 														<div className='bg-orange-500/10 border border-orange-500/20 rounded-md p-3'>

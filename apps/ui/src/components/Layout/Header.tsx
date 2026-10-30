@@ -1,5 +1,7 @@
 import clsx from 'clsx'
+import {Link} from 'react-router-dom'
 import {cn} from '@/lib/utils'
+import {versionWarning} from '#settings'
 
 // We import SVGs as React components via `?react` (SVGR):
 // This inlines the <svg>, so there's no extra HTTP request.
@@ -8,9 +10,14 @@ import Logo from '@/assets/logo.svg?react'
 
 import ConnectionDetails from '@/components/ConnectionDetails'
 import {useBitcoindVersion} from '@/hooks/useBitcoind'
+import {useSettings} from '@/hooks/useSettings'
 
 export default function Header({className}: {className?: string}) {
 	const {data: version, isLoading, isError} = useBitcoindVersion()
+	const {data: settings} = useSettings()
+
+	// Warn users who have chosen to stay on a version with known problems (e.g., missing security fixes)
+	const warning = versionWarning(settings?.version)
 
 	// placeholder text to prevent layout shift and fall back on error
 	const placeholder = 'Bitcoin Core'
@@ -38,6 +45,18 @@ export default function Header({className}: {className?: string}) {
 						>
 							{isLoading || isError ? placeholder : fullVersionString}
 						</span>
+						{warning && (
+							<Link
+								to='/settings?tab=version'
+								title={warning.message}
+								className={cn(
+									'block mt-1 md:mt-0 md:inline md:ml-2 whitespace-nowrap text-[12px] md:text-[13px] hover:underline',
+									warning.critical ? 'text-[#FF6B70]' : 'text-[#FBBF24]',
+								)}
+							>
+								⚠ {warning.label}
+							</Link>
+						)}
 					</p>
 				</div>
 			</div>
