@@ -83,7 +83,7 @@ RUN mkdir -p /opt/bitcoind/v29.2 \
 # Dependencies layer — install every workspace deps
 # Functions as a shared cache for dev & app-builder stages
 ##########################################################
-FROM node:24.22.1-slim@sha256:55fb5f5a527ea2c5c4a95f963e48ef90aa38c7b346054fdc8ee9957a2b55d205 AS deps
+FROM node:24.22.3-slim@sha256:dc26ae92c9fb15cf6b1d63e20f0944b2efe0f115b20e00be48fb23fceb061c54 AS deps
 WORKDIR /repo
 
 # Copy only dependency manifests to keep this layer cache-friendly
@@ -158,7 +158,7 @@ RUN tsc -b libs/shared-types libs/settings apps/backend \
 ########################################
 # runtime stage — final production image
 ########################################
-FROM node:24.22.1-slim@sha256:55fb5f5a527ea2c5c4a95f963e48ef90aa38c7b346054fdc8ee9957a2b55d205 AS runtime
+FROM node:24.22.3-slim@sha256:dc26ae92c9fb15cf6b1d63e20f0944b2efe0f115b20e00be48fb23fceb061c54 AS runtime
 
 # Bitcoin Core binaries (see the Bitcoin Core section above)
 # These come first so they sit directly on the base image. Docker can only reuse a layer it already has
